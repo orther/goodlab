@@ -1,7 +1,7 @@
 <p align="center">
-  <img src=".github/images/background.gif" width=500 alt="doomlab" />
+  <img src=".github/images/background.gif" width=500 alt="goonlab" />
   <br>
-  <img src=".github/images/servers.jpg" alt="doomlab" width=500 style="border-radius: 12px;"/>
+  <img src=".github/images/servers.jpg" alt="goonlab" width=500 style="border-radius: 12px;"/>
   <br>
   Homelab hardware: ThinkCenter M710q Tiny, Intel i5-7500T and 8GB RAM
   <br>

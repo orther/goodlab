@@ -1,5 +1,5 @@
 {
-  description = "doomlab-private: Private homelab configuration with FlakeHub integration";
+  description = "goonlab: Private homelab configuration with FlakeHub integration";
 
   inputs = {
     # Bootstrap with GitHub URLs first, will migrate to FlakeHub after CI is working

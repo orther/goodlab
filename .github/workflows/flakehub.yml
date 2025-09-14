@@ -26,6 +26,6 @@ jobs:
         uses: DeterminateSystems/flakehub-push@main
         with:
           visibility: private
-          name: orther/doomlab-private
+          name: orther/goonlab
           # Use rolling releases for main branch, or use semver tags for releases
           rolling: ${{ github.ref_name == 'main' }}
