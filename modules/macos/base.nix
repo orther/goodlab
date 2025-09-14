@@ -28,16 +28,16 @@
   };
 
   programs.zsh.enable = true;
-  security.pam.enableSudoTouchIdAuth = true;
+  security.pam.services.sudo_local.touchIdAuth = true;
 
   services = {
-    nix-daemon.enable = true;
     tailscale.enable = true;
   };
 
   users.users.orther.home = "/Users/orther";
 
   system = {
+    primaryUser = "orther";
     startup.chime = false;
     defaults = {
       loginwindow.LoginwindowText = "If lost, contact brandon@orther.dev";
