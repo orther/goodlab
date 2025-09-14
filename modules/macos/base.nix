@@ -5,19 +5,7 @@
   ];
 
   nix = {
-    package = pkgs.nix;
-    gc = {
-      automatic = true;
-      interval = {
-        Weekday = 0;
-        Hour = 0;
-        Minute = 0;
-      };
-      options = "--delete-older-than 7d";
-    };
-    optimise = {
-      automatic = true;
-    };
+    enable = false; # Disable nix-darwin's Nix management (using Determinate Nix)
     settings = {
       experimental-features = "nix-command flakes";
       trusted-users = [
