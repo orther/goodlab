@@ -1,25 +1,27 @@
 {
-  description = "doomlab";
+  description = "doomlab-private: Private homelab configuration with FlakeHub integration";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
-    impermanence.url = "github:nix-community/impermanence";
+    # Core NixOS packages via FlakeHub with semantic versioning
+    nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.2405.*";
+    impermanence.url = "https://flakehub.com/f/nix-community/impermanence/*";
 
     home-manager = {
-      url = "github:nix-community/home-manager/release-24.11";
+      url = "https://flakehub.com/f/nix-community/home-manager/0.2405.*";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
     nix-darwin = {
-      url = "github:LnL7/nix-darwin/nix-darwin-24.11";
+      url = "https://flakehub.com/f/LnL7/nix-darwin/*";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
     sops-nix = {
-      url = "github:Mic92/sops-nix";
+      url = "https://flakehub.com/f/Mic92/sops-nix/*";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Keep specialized inputs as GitHub for now (may not be on FlakeHub yet)
     nixarr = {
       url = "github:rasmus-kirk/nixarr";
       inputs.nixpkgs.follows = "nixpkgs";

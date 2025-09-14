@@ -9,14 +9,17 @@
 </p>
 
 [![nixos 24.11](https://img.shields.io/badge/NixOS-24.11-blue.svg?&logo=NixOS&logoColor=white)](https://nixos.org)
-[![blog post](https://img.shields.io/badge/blog%20post-snazzy-purple.svg)](https://chengeric.com/homelab?gh)
-![stars](https://img.shields.io/github/stars/orther/doomlab?logo=github&style=flat&color)
+[![FlakeHub](https://img.shields.io/badge/FlakeHub-Private-purple.svg)](https://flakehub.com)
+[![Determinate](https://img.shields.io/badge/Determinate-Nix-blue.svg)](https://determinate.systems)
 
 ## Highlights
 
-This repo contains the Nix configurations for my homelab, AMD Ryzen desktop, M1
+This **private repository** contains the Nix configurations for my homelab, AMD Ryzen desktop, M1
 MacBook Air, and work WSL setup.
 
+- ❄️ **FlakeHub integration** with semantic versioning for reliable dependency management
+- 🔒 **Private flakes** with authenticated access and caching via FlakeHub
+- 🚀 **Determinate Nix** distribution with enhanced performance and security features
 - ❄️ Nix flakes handle upstream dependencies and track latest stable release of Nixpkgs (currently 24.11)
 - 🏠 [home-manager](https://github.com/nix-community/home-manager) manages
   dotfiles
