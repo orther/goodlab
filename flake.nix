@@ -78,6 +78,11 @@
         specialArgs = {inherit inputs outputs;};
         modules = [./machines/mair/configuration.nix];
       };
+      stud = nix-darwin.lib.darwinSystem {
+        system = "aarch64-darwin"; # Specify system for stud
+        specialArgs = {inherit inputs outputs;};
+        modules = [./machines/stud/configuration.nix];
+      };
     };
 
     nixosConfigurations = {
