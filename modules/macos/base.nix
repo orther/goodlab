@@ -91,9 +91,9 @@
     };
   };
 
-  system.activationScripts.Wallpaper.text = ''
+  system.activationScripts.setupWallpaper.text = ''
     echo >&2 "Setting up wallpaper..."
-    osascript -e 'tell application "Finder" to set desktop picture to POSIX file "/System/Library/Desktop Pictures/Solid Colors/Black.png"'
+    sudo -u orther osascript -e 'tell application "Finder" to set desktop picture to POSIX file "/System/Library/Desktop Pictures/Solid Colors/Black.png"'
   '';
 
   system.stateVersion = 4;

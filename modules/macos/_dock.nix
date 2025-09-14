@@ -63,14 +63,14 @@ in {
           (entry: "${dockutil}/bin/dockutil --no-restart --add '${entry.path}' --section ${entry.section} ${entry.options}\n")
           cfg.entries;
       in {
-        system.activationScripts.postUserActivation.text = ''
+        system.activationScripts.setupDock.text = ''
           echo >&2 "Setting up the Dock..."
-          haveURIs="$(${dockutil}/bin/dockutil --list | ${pkgs.coreutils}/bin/cut -f2)"
+          haveURIs="$(sudo -u ${config.system.primaryUser} ${dockutil}/bin/dockutil --list | ${pkgs.coreutils}/bin/cut -f2)"
           if ! diff -wu <(echo -n "$haveURIs") <(echo -n '${wantURIs}') >&2 ; then
             echo >&2 "Resetting Dock."
-            ${dockutil}/bin/dockutil --no-restart --remove all
-            ${createEntries}
-            killall Dock
+            sudo -u ${config.system.primaryUser} ${dockutil}/bin/dockutil --no-restart --remove all
+            sudo -u ${config.system.primaryUser} sh -c '${createEntries}'
+            sudo -u ${config.system.primaryUser} killall Dock
           else
             echo >&2 "Dock setup complete."
           fi
