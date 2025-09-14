@@ -47,7 +47,8 @@
     };
     lsd = {
       enable = true;
-      enableAliases = true;
+      enableBashIntegration = true;
+      enableZshIntegration = true;
     };
     direnv = {
       enable = true;
