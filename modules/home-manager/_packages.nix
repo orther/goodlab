@@ -26,7 +26,6 @@
         htop
         hyperfine
         imagemagick
-        jdupes
         kopia
         neo-cowsay
         pandoc
