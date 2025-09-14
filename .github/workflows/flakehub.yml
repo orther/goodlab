@@ -1,0 +1,31 @@
+name: FlakeHub Private Publishing
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  flakehub-publish:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Determinate Nix
+        uses: DeterminateSystems/nix-installer-action@main
+        with:
+          source-url: https://install.determinate.systems/nix
+          extra-conf: |
+            trusted-public-keys = cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= flakehub.com-1:eZO5q4e4GCy0OfGWUTc6A6pTSqjyTb4Wg8m5G6HCFUA=
+            substituters = https://cache.nixos.org https://flakehub.com/cache
+
+      - name: Publish to FlakeHub (Private)
+        uses: DeterminateSystems/flakehub-push@main
+        with:
+          visibility: private
+          name: orther/doomlab-private
+          tag: ${{ github.ref_name }}
