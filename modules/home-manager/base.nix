@@ -55,10 +55,6 @@
       enableZshIntegration = true;
       nix-direnv.enable = true;
     };
-    asdf = {
-      enable = true;
-      enableZshIntegration = true;
-    };
     fastfetch.enable = true;
   };
 
