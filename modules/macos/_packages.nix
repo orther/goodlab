@@ -3,24 +3,25 @@
   inputs,
   ...
 }: {
-  imports = [
-    inputs.nix-homebrew.darwinModules.nix-homebrew
-  ];
+  # Temporarily disable nix-homebrew to avoid conflicts with existing installation
+  # imports = [
+  #   inputs.nix-homebrew.darwinModules.nix-homebrew
+  # ];
 
-  nix-homebrew = {
-    enable = true;
-    # NOTE: Disabled this until I migrate M1 Ultra to use Nix
-    # enableRosetta = true;
-    enableRosetta = false;
-    user = "orther";
-    mutableTaps = false;
-    taps = {
-      "homebrew/homebrew-bundle" = inputs.homebrew-bundle;
-      "homebrew/homebrew-cask" = inputs.homebrew-cask;
-      "homebrew/homebrew-core" = inputs.homebrew-core;
-    };
-    autoMigrate = true;
-  };
+  # nix-homebrew = {
+  #   enable = true;
+  #   # NOTE: Disabled this until I migrate M1 Ultra to use Nix
+  #   # enableRosetta = true;
+  #   enableRosetta = false;
+  #   user = "orther";
+  #   mutableTaps = true; # Allow existing taps to coexist
+  #   taps = {
+  #     "homebrew/homebrew-bundle" = inputs.homebrew-bundle;
+  #     "homebrew/homebrew-cask" = inputs.homebrew-cask;
+  #     "homebrew/homebrew-core" = inputs.homebrew-core;
+  #   };
+  #   autoMigrate = true;
+  # };
 
   homebrew = {
     enable = true;
@@ -35,7 +36,11 @@
     brews = [
       "trash"
     ];
-    taps = builtins.attrNames config.nix-homebrew.taps;
+    taps = [
+      "homebrew/bundle"
+      "homebrew/cask"
+      "homebrew/core"
+    ];
     casks = [
       "1password-cli"
       "1password"
