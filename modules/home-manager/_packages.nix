@@ -41,6 +41,7 @@
         if builtins.substring 0 3 osConfig.networking.hostName != "svr" && builtins.substring 0 2 osConfig.networking.hostName != "vm"
         then [
           alejandra
+          asdf-vm
           bun
           doppler
           flyctl

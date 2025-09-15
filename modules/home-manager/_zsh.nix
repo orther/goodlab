@@ -18,6 +18,12 @@
       if [[ $(uname -m) == 'arm64' ]] && [[ $(uname -s) == 'Darwin' ]]; then
         eval "$(/opt/homebrew/bin/brew shellenv)"
       fi
+
+      # Initialize asdf
+      if command -v asdf >/dev/null 2>&1; then
+        source "$(asdf where asdf)/asdf.sh"
+        source "$(asdf where asdf)/completions/asdf.bash"
+      fi
     '';
     plugins = [
       {
