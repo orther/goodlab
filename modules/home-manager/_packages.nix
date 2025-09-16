@@ -43,6 +43,7 @@
           alejandra
           asdf-vm
           bun
+          claude-code
           doppler
           flyctl
           just

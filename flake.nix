@@ -76,12 +76,22 @@
       mair = nix-darwin.lib.darwinSystem {
         system = "x86_64-darwin"; # Specify system for mair
         specialArgs = {inherit inputs outputs;};
-        modules = [./machines/mair/configuration.nix];
+        modules = [
+          ./machines/mair/configuration.nix
+          {
+            nixpkgs.config.allowUnfree = true;
+          }
+        ];
       };
       stud = nix-darwin.lib.darwinSystem {
         system = "aarch64-darwin"; # Specify system for stud
         specialArgs = {inherit inputs outputs;};
-        modules = [./machines/stud/configuration.nix];
+        modules = [
+          ./machines/stud/configuration.nix
+          {
+            nixpkgs.config.allowUnfree = true;
+          }
+        ];
       };
     };
 

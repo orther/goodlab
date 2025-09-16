@@ -34,6 +34,7 @@
       cleanup = "zap";
     };
     brews = [
+      "codex"
       "trash"
     ];
     taps = [
@@ -42,7 +43,6 @@
       "homebrew/core"
     ];
     casks = [
-      "1password-cli"
       "1password"
       "alacritty"
       "betterdisplay"
