@@ -1,5 +1,6 @@
 keys:
   - &noir age1hychfwplt2rpkzdxvz5lxy7zjf0dt0y6qrcwe2gvnm4mkelsnc7syu2y25
+  - &stud age1fma07s73cprstdh0ez9a5wz0h8nx8fkw04dv8drz6p25aj7qffqqnj35hv
   - &zinc age12pc2l7dyq0tlj0mm56vrwez6yr8nlve6vrucexf7x92dg7qlzcxskrf2tv
   - &vm age1aruj7g3pugj3knq2f5u02tzq6vu5edcjv25veudrsvtr2yzedpusssscpz
 creation_rules:
@@ -7,5 +8,6 @@ creation_rules:
     key_groups:
       - age:
           - *noir
+          - *stud
           - *zinc
           - *vm

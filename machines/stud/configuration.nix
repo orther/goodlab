@@ -5,6 +5,7 @@
 }: {
   imports = [
     inputs.home-manager.darwinModules.home-manager
+    inputs.sops-nix.darwinModules.sops
 
     ./hardware-configuration.nix
 
@@ -25,6 +26,11 @@
         ];
       };
     };
+  };
+
+  sops = {
+    defaultSopsFile = ./../../secrets/secrets.yaml;
+    age.keyFile = "/Users/orther/.config/sops/age/keys.txt";
   };
 
   networking = {
