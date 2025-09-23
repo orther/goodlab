@@ -9,6 +9,7 @@
 </p>
 
 [![nixos 24.11](https://img.shields.io/badge/NixOS-24.11-blue.svg?&logo=NixOS&logoColor=white)](https://nixos.org)
+[![Version](https://img.shields.io/github/v/tag/orther/goodlab?label=version&sort=semver)](https://github.com/orther/goodlab/releases)
 [![FlakeHub](https://img.shields.io/badge/FlakeHub-orther%2Fgoodlab-5b2be1)](https://flakehub.com/f/orther/goodlab)
 [![Determinate](https://img.shields.io/badge/Determinate-Nix-blue.svg)](https://determinate.systems)
 
