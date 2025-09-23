@@ -9,7 +9,7 @@
 </p>
 
 [![nixos 24.11](https://img.shields.io/badge/NixOS-24.11-blue.svg?&logo=NixOS&logoColor=white)](https://nixos.org)
-[![FlakeHub](https://img.shields.io/badge/FlakeHub-Enabled-purple.svg)](https://flakehub.com)
+[![FlakeHub](https://img.shields.io/badge/FlakeHub-orther%2Fgoodlab-5b2be1)](https://flakehub.com/f/orther/goodlab)
 [![Determinate](https://img.shields.io/badge/Determinate-Nix-blue.svg)](https://determinate.systems)
 
 ## Highlights
@@ -218,6 +218,16 @@ with how it appears on the official website.
 1. [Secure boot](https://github.com/nix-community/lanzaboote)
 2. Binary caching
 3. [Wireless remote unlocking](https://discourse.nixos.org/t/wireless-connection-within-initrd/38317/13)
+
+## Release checklist
+
+- Update `CHANGELOG.md` with the new version and date.
+- Ensure CI is green on `main` (flake checks, workflows).
+- Tag and publish to FlakeHub + GitHub Releases:
+  - `just release vX.Y.Z`
+- Verify on FlakeHub: https://flakehub.com/f/orther/goodlab
+- Review the draft GitHub Release; publish when satisfied.
+- Optional: run `just up` to refresh `flake.lock` in a follow‑up PR.
 
 ## Frequently used resources
 
