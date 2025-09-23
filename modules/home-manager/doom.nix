@@ -4,8 +4,8 @@
 
   programs.doom-emacs = {
     enable = true;
-    # Use upstream Emacs from nixpkgs; swap for emacsMacport if preferred.
-    emacsPackage = pkgs.emacs;
+    # Prefer native macOS build on Darwin; fallback to standard Emacs elsewhere.
+    emacsPackage = if pkgs.stdenv.isDarwin then pkgs.emacsMacport else pkgs.emacs;
     # Provide a minimal Doom config stored in-repo
     doomPrivateDir = ./doom.d;
   };

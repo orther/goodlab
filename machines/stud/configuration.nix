@@ -27,7 +27,6 @@
           ./../../modules/home-manager/1password.nix
           ./../../modules/home-manager/doom.nix
         ];
-        nixpkgs.overlays = lib.mkForce [];
       };
     };
   };
