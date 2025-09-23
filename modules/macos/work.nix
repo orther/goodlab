@@ -26,6 +26,23 @@
   # Used by HM modules to avoid packages that fetch from npm at build time (e.g., wrangler).
   local.corporateNetwork = true;
 
+  # Wrap pnpm on corporate hosts to bypass TLS validation during Node fetches
+  # used by pnpm-based builders (e.g., wrangler pnpm deps). This avoids
+  # UNABLE_TO_GET_ISSUER_CERT_LOCALLY errors behind MITM SSL proxies.
+  nixpkgs.overlays = [
+    (final: prev: let
+      realPnpm = prev.pnpm;
+      wrapped = prev.writeShellScriptBin "pnpm" ''
+        export NODE_OPTIONS="--use-openssl-ca ${NODE_OPTIONS:-}"
+        export NPM_CONFIG_STRICT_SSL=false
+        export NODE_TLS_REJECT_UNAUTHORIZED=0
+        exec "${realPnpm}/bin/pnpm" "$@"
+      '';
+    in {
+      pnpm = wrapped;
+    })
+  ];
+
   users.users.${config.system.primaryUser}.home = "/Users/${config.system.primaryUser}";
 
   system = {
