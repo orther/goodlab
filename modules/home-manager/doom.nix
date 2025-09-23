@@ -1,12 +1,21 @@
-{ inputs, pkgs, ... }:
+{ inputs, pkgs, lib, ... }:
 {
-  imports = [ inputs.nix-doom-emacs.hmModule ];
-
-  programs.doom-emacs = {
+  programs.emacs = {
     enable = true;
-    # Prefer native macOS build on Darwin; fallback to standard Emacs elsewhere.
-    emacsPackage = if pkgs.stdenv.isDarwin then pkgs.emacsMacport else pkgs.emacs;
-    # Provide a minimal Doom config stored in-repo
-    doomPrivateDir = ./doom.d;
+    package = if pkgs.stdenv.isDarwin then pkgs.emacsMacport else pkgs.emacs;
   };
+
+  # Link Doom core and your Doom config into $HOME
+  home.file.".config/emacs".source = inputs.doom-emacs;
+  home.file.".config/doom".source = ./doom.d;
+
+  # Ensure `doom` CLI is on PATH for activation scripts
+  home.sessionPath = lib.mkIf pkgs.stdenv.isDarwin (lib.mkAfter [ "$HOME/.config/emacs/bin" ]);
+
+  # Sync Doom packages after HM writes files (best-effort)
+  home.activation.doomSync = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+    if [ -x "$HOME/.config/emacs/bin/doom" ]; then
+      "$HOME/.config/emacs/bin/doom" -y sync || true
+    fi
+  '';
 }
