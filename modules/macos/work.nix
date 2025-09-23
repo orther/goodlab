@@ -22,10 +22,10 @@
     tailscale.enable = true;
   };
 
-  users.users.orther.home = "/Users/orther";
+  users.users.orther.home = "/Users/brandon.orther";
 
   system = {
-    primaryUser = "orther";
+    primaryUser = "brandon.orther";
     startup.chime = false;
     defaults = {
       loginwindow.LoginwindowText = "If lost, contact brandon.orther@nationsbenefits.com";
@@ -73,7 +73,7 @@
 
   system.activationScripts.setupWallpaper.text = ''
     echo >&2 "Setting up wallpaper..."
-    sudo -u orther osascript -e 'tell application "Finder" to set desktop picture to POSIX file "/System/Library/Desktop Pictures/Solid Colors/Black.png"'
+    sudo -u brandon.orther osascript -e 'tell application "Finder" to set desktop picture to POSIX file "/System/Library/Desktop Pictures/Solid Colors/Black.png"'
   '';
 
   system.stateVersion = 4;

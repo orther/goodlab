@@ -21,6 +21,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    nix-doom-emacs = {
+      url = "github:nix-community/nix-doom-emacs";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Keep specialized inputs as GitHub for now (may not be on FlakeHub yet)
     nixarr = {
       url = "github:rasmus-kirk/nixarr";
