@@ -33,7 +33,7 @@
     (final: prev: let
       realPnpm = prev.pnpm;
       wrapped = prev.writeShellScriptBin "pnpm" ''
-        export NODE_OPTIONS="--use-openssl-ca ${NODE_OPTIONS:-}"
+        export NODE_OPTIONS="--use-openssl-ca $NODE_OPTIONS"
         export NPM_CONFIG_STRICT_SSL=false
         export NODE_TLS_REJECT_UNAUTHORIZED=0
         exec "${realPnpm}/bin/pnpm" "$@"
