@@ -22,6 +22,10 @@
     tailscale.enable = true;
   };
 
+  # Mark this host as being on a corporate network with strict TLS interception.
+  # Used by HM modules to avoid packages that fetch from npm at build time (e.g., wrangler).
+  local.corporateNetwork = true;
+
   users.users.${config.system.primaryUser}.home = "/Users/${config.system.primaryUser}";
 
   system = {
