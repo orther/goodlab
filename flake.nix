@@ -98,6 +98,16 @@
           }
         ];
       };
+      nblap = nix-darwin.lib.darwinSystem {
+        system = "aarch64-darwin"; # Apple Silicon MacBook (work)
+        specialArgs = {inherit inputs outputs;};
+        modules = [
+          ./machines/nblap/configuration.nix
+          {
+            nixpkgs.config.allowUnfree = true;
+          }
+        ];
+      };
     };
 
     nixosConfigurations = {
