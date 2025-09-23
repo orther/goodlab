@@ -2,6 +2,7 @@
   imports = [
     ./_dock.nix
     ./_packages.nix
+    ./zscaler.nix
   ];
 
   nix = {
@@ -26,16 +27,35 @@
   # Used by HM modules to avoid packages that fetch from npm at build time (e.g., wrangler).
   local.corporateNetwork = true;
 
-  # Wrap pnpm on corporate hosts to bypass TLS validation during Node fetches
-  # used by pnpm-based builders (e.g., wrangler pnpm deps). This avoids
-  # UNABLE_TO_GET_ISSUER_CERT_LOCALLY errors behind MITM SSL proxies.
+  # Enable comprehensive Zscaler/corporate certificate management
+  # This handles system-wide SSL certificates for all tools (curl, npm, etc.)
+  # Complements Determinate Nix's automatic certificate handling
+  local.zscaler = {
+    enable = true;
+    autoDetect = true; # Automatically detect corporate environment
+    refreshInterval = 7200; # Refresh certificates every 2 hours
+    enableNotifications = false; # Disable notifications in corporate environment
+  };
+
+  # Wrap pnpm on corporate hosts to use corporate certificates first,
+  # falling back to TLS bypass if certificate handling fails.
+  # This provides a more secure approach than blanket TLS disabling.
   nixpkgs.overlays = [
     (final: prev: let
       realPnpm = prev.pnpm;
+      corporateCertPath = config.local.zscaler.certificatePath or "/etc/ssl/nix-corporate/ca-bundle.pem";
       wrapped = prev.writeShellScriptBin "pnpm" ''
-        export NODE_OPTIONS="--use-openssl-ca $NODE_OPTIONS"
-        export NPM_CONFIG_STRICT_SSL=false
-        export NODE_TLS_REJECT_UNAUTHORIZED=0
+        # Try to use corporate certificates first
+        if [[ -f "${corporateCertPath}" ]]; then
+          export NODE_EXTRA_CA_CERTS="${corporateCertPath}"
+          export SSL_CERT_FILE="${corporateCertPath}"
+          export NODE_OPTIONS="--use-openssl-ca $NODE_OPTIONS"
+        else
+          # Fallback: bypass TLS validation if certificates not available
+          echo >&2 "Warning: Corporate certificates not found, falling back to TLS bypass"
+          export NPM_CONFIG_STRICT_SSL=false
+          export NODE_TLS_REJECT_UNAUTHORIZED=0
+        fi
         exec "${realPnpm}/bin/pnpm" "$@"
       '';
     in {
