@@ -39,3 +39,21 @@ fix-sop-keystxt:
   mkdir -p ~/.config/sops/age
   sudo nix-shell --extra-experimental-features flakes -p ssh-to-age --run 'ssh-to-age -private-key -i /nix/secret/initrd/ssh_host_ed25519_key -o /home/orther/.config/sops/age/keys.txt'
   sudo chown -R orther:users ~/.config/sops/age
+
+release version='':
+  #!/usr/bin/env sh
+  set -euo pipefail
+  if [ -z "{{version}}" ]; then
+    echo "Usage: just release vX.Y.Z" >&2
+    exit 1
+  fi
+  if ! printf "%s" "{{version}}" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+    echo "Version must be like v1.2.3" >&2
+    exit 1
+  fi
+  if ! git diff --quiet || ! git diff --cached --quiet; then
+    echo "Working tree not clean. Commit or stash first." >&2
+    exit 1
+  fi
+  git tag -a "{{version}}" -m "Release {{version}}"
+  git push origin "{{version}}"

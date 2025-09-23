@@ -1,7 +1,7 @@
 <p align="center">
-  <img src=".github/images/background.gif" width=500 alt="goonlab" />
+  <img src=".github/images/background.gif" width=500 alt="goodlab" />
   <br>
-  <img src=".github/images/servers.jpg" alt="goonlab" width=500 style="border-radius: 12px;"/>
+  <img src=".github/images/servers.jpg" alt="goodlab" width=500 style="border-radius: 12px;"/>
   <br>
   Homelab hardware: ThinkCenter M710q Tiny, Intel i5-7500T and 8GB RAM
   <br>
@@ -9,16 +9,16 @@
 </p>
 
 [![nixos 24.11](https://img.shields.io/badge/NixOS-24.11-blue.svg?&logo=NixOS&logoColor=white)](https://nixos.org)
-[![FlakeHub](https://img.shields.io/badge/FlakeHub-Private-purple.svg)](https://flakehub.com)
+[![FlakeHub](https://img.shields.io/badge/FlakeHub-Enabled-purple.svg)](https://flakehub.com)
 [![Determinate](https://img.shields.io/badge/Determinate-Nix-blue.svg)](https://determinate.systems)
 
 ## Highlights
 
-This **private repository** contains the Nix configurations for my homelab, AMD Ryzen desktop, M1
+This public repository contains the Nix configurations for my homelab, AMD Ryzen desktop, M1
 MacBook Air, and work WSL setup.
 
 - ❄️ **FlakeHub integration** with semantic versioning for reliable dependency management
-- 🔒 **Private flakes** with authenticated access and caching via FlakeHub
+- 📦 **Binary caching** via FlakeHub for faster builds
 - 🚀 **Determinate Nix** distribution with enhanced performance and security features
 - ❄️ Nix flakes handle upstream dependencies and track latest stable release of Nixpkgs (currently 24.11)
 - 🏠 [home-manager](https://github.com/nix-community/home-manager) manages
@@ -35,11 +35,11 @@ MacBook Air, and work WSL setup.
   `nix` commands
 - 🤖 `flake.lock` updated daily via GitHub Action, servers are configured to
   automatically upgrade daily via
-  [`modules/nixos/auto-update.nix`](https://github.com/orther/goonlab/blob/main/modules/nixos/auto-update.nix)
+  [`modules/nixos/auto-update.nix`](https://github.com/orther/goodlab/blob/main/modules/nixos/auto-update.nix)
 - 🧱 Modular architecture promotes readability for me and copy-and-paste-ability
   for you
 - 📦
-  [Custom ready-made tarball and ISO](https://github.com/orther/goonlab/releases)
+  [Custom ready-made tarball and ISO](https://github.com/orther/goodlab/releases)
   for installing NixOS-on-WSL and NixOS, respectively
 
 ## Getting started
@@ -53,9 +53,43 @@ prompt you to install my configuration.
 > [!IMPORTANT] 
 > You'll need to run this script as sudo or have sudo permissions.
 
+Quick start (Apple Silicon, e.g., 2024 16" MacBook Pro):
+
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/orther/goonlab/main/install.sh)"
+curl -fsSL https://raw.githubusercontent.com/orther/goodlab/main/install.sh | bash
+. /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+nix run nix-darwin -- switch --flake github:orther/goodlab#stud
 ```
+
+Alternatively, run the installer script directly:
+
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/orther/goodlab/main/install.sh)"
+```
+
+Intel macOS quick start (e.g., 2019–2020 Intel Macs):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/orther/goodlab/main/install.sh | bash
+. /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+nix run nix-darwin -- switch --flake github:orther/goodlab#mair
+```
+
+### New host (macOS) checklist
+
+- Choose a hostname and copy an existing host as a template:
+  - Apple Silicon: copy `machines/stud/` → `machines/<host>/` and update names
+  - Intel: copy `machines/mair/` → `machines/<host>/` and update names
+- Set platform in `machines/<host>/hardware-configuration.nix`:
+  - `aarch64-darwin` (Apple Silicon) or `x86_64-darwin` (Intel)
+- Set names in `machines/<host>/configuration.nix` under `networking`:
+  - `hostName`, `computerName`, `localHostName`
+- SOPS keys (if needed for secrets):
+  - Generate Age key: `mkdir -p ~/.config/sops/age && age-keygen -o ~/.config/sops/age/keys.txt`
+  - Update recipients in repo: `just sopsupdate`
+  - Edit secrets: `just sopsedit`
+- Switch to the new host config:
+  - `nix run nix-darwin -- switch --flake github:orther/goodlab#<host>`
 
 ### NixOS (Linux)
 
@@ -76,7 +110,7 @@ On Linux, _running this script from the NixOS installation ISO_ will prepare
 your system for NixOS by partitioning drives and mounting them.
 
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/orther/goonlab/main/install.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/orther/goodlab/main/install.sh)"
 ```
 
 > [!TIP] 
@@ -85,7 +119,7 @@ bash -c "$(curl -fsSL https://raw.githubusercontent.com/orther/goonlab/main/inst
 > [Ventoy can automatically load the NixOS ISO file](https://chengeric.com/homelab/#remotely-entering-nixos-installer),
 > and you can enable connectivity by building your own custom ISO with your own
 > personal SSH key.
-> [The custom ISO released in this repo](https://github.com/orther/goonlab/releases)
+> [The custom ISO released in this repo](https://github.com/orther/goodlab/releases)
 > is baked with my own key.
 
 ### Windows Subsystem for Linux (WSL)
@@ -97,7 +131,7 @@ wsl --install --no-distribution
 ```
 
 2. Download `nixos-wsl.tar.gz` from
-   [the latest release](https://github.com/orther/goonlab/releases).
+   [the latest release](https://github.com/orther/goodlab/releases).
 
 3. Import the tarball into WSL:
 
@@ -131,6 +165,14 @@ To remotely deploy `MACHINE`, which has an IP address of `10.0.10.2`
 
 ```bash
 just deploy MACHINE 10.0.10.2
+
+### Create a release tag
+
+Create and push a version tag (triggers FlakeHub + GitHub Release):
+
+```bash
+just release v0.1.0
+```
 ```
 
 ### Edit secrets
@@ -139,13 +181,13 @@ Make sure each machine's public key is listed as entry in `.sops.yaml`. To
 modify `secrets/secrets.yaml`:
 
 ```bash
-just secrets-edit
+just sopsedit
 ```
 
 ### Syncing sops keys for a new machine
 
 ```bash
-just secrets-sync
+just sopsupdate
 ```
 
 ## Important caveats

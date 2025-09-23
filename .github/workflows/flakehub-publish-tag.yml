@@ -1,8 +1,8 @@
-name: "Publish every Git push to main to FlakeHub"
+name: "Publish tagged releases to FlakeHub"
 on:
   push:
-    branches:
-      - "main"
+    tags:
+      - "v*"
 jobs:
   flakehub-publish:
     runs-on: "ubuntu-latest"
@@ -10,13 +10,13 @@ jobs:
       id-token: "write"
       contents: "read"
     steps:
-      - uses: "actions/checkout@v5"
+      - uses: "actions/checkout@v4"
         with:
           persist-credentials: false
       - uses: "DeterminateSystems/determinate-nix-action@v3"
       - uses: "DeterminateSystems/flakehub-push@main"
         with:
           name: "orther/goodlab"
-          rolling: true
+          rolling: false
           visibility: "public"
           include-output-paths: false

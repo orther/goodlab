@@ -29,9 +29,10 @@ if [ "$(uname)" == "Darwin" ]; then
 
   # Completed
   echo -e "\n\033[1;32mAll steps completed successfully. nix-darwin is now ready to be installed.\033[0m\n"
-  echo -e "To install nix-darwin configuration, run the following commands:\n"
+  echo -e "To install nix-darwin configuration, run:\n"
   echo -e "\033[1m. /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh\033[0m\n"
-  echo -e "\033[1mnix run nix-darwin -- switch --flake github:orther/goonlab#mair\033[0m\n"
+  echo -e "Apple Silicon (ARM64): \033[1mnix run nix-darwin -- switch --flake github:orther/goodlab#stud\033[0m"
+  echo -e "Intel (x86_64):       \033[1mnix run nix-darwin -- switch --flake github:orther/goodlab#mair\033[0m\n"
   echo -e "Remember to add the new host public key to sops-nix!"
 elif [ "$(uname)" == "Linux" ]; then
   # Define disk
@@ -107,5 +108,5 @@ elif [ "$(uname)" == "Linux" ]; then
   echo -e "\n\033[1;32mAll steps completed successfully. NixOS is now ready to be installed.\033[0m\n"
   echo -e "Remember to commit and push the new server's public host key to sops-nix/update all sops encrypted files before installing!"
   echo -e "To install NixOS configuration for hostname, run the following command:\n"
-  echo -e "\033[1msudo nixos-install --no-root-passwd --root /mnt --flake github:orther/goonlab#hostname\033[0m\n"
+  echo -e "\033[1msudo nixos-install --no-root-passwd --root /mnt --flake github:orther/goodlab#hostname\033[0m\n"
 fi
