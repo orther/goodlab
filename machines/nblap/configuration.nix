@@ -30,6 +30,7 @@
         # Override defaults from HM base for this host
         home.username = lib.mkForce "brandon.orther";
         home.homeDirectory = lib.mkForce "/Users/brandon.orther";
+        nixpkgs.overlays = lib.mkForce [];
       };
     };
   };
