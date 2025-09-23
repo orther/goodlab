@@ -1,4 +1,4 @@
-{pkgs, ...}: {
+{ config, pkgs, lib, ... }: {
   imports = [
     ./_dock.nix
     ./_packages.nix
@@ -22,10 +22,10 @@
     tailscale.enable = true;
   };
 
-  users.users.orther.home = "/Users/brandon.orther";
+  users.users.${config.system.primaryUser}.home = "/Users/${config.system.primaryUser}";
 
   system = {
-    primaryUser = "brandon.orther";
+    primaryUser = lib.mkDefault "brandon.orther";
     startup.chime = false;
     defaults = {
       loginwindow.LoginwindowText = "If lost, contact brandon.orther@nationsbenefits.com";
@@ -73,7 +73,7 @@
 
   system.activationScripts.setupWallpaper.text = ''
     echo >&2 "Setting up wallpaper..."
-    sudo -u brandon.orther osascript -e 'tell application "Finder" to set desktop picture to POSIX file "/System/Library/Desktop Pictures/Solid Colors/Black.png"'
+    sudo -u ${config.system.primaryUser} osascript -e 'tell application "Finder" to set desktop picture to POSIX file "/System/Library/Desktop Pictures/Solid Colors/Black.png"'
   '';
 
   system.stateVersion = 4;

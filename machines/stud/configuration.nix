@@ -31,7 +31,7 @@
 
   sops = {
     defaultSopsFile = ./../../secrets/secrets.yaml;
-    age.keyFile = "/Users/orther/.config/sops/age/keys.txt";
+    age.keyFile = "/Users/${config.system.primaryUser}/.config/sops/age/keys.txt";
   };
 
   networking = {

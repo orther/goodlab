@@ -9,10 +9,10 @@
   ];
 
   home = {
-    username = "orther";
+    # Use the HM user name provided by the host configs; derive home path from it.
     homeDirectory = lib.mkMerge [
-      (lib.mkIf pkgs.stdenv.isLinux "/home/orther")
-      (lib.mkIf pkgs.stdenv.isDarwin "/Users/orther")
+      (lib.mkIf pkgs.stdenv.isLinux "/home/${config.home.username}")
+      (lib.mkIf pkgs.stdenv.isDarwin "/Users/${config.home.username}")
     ];
     stateVersion = "23.11";
     sessionVariables = lib.mkIf pkgs.stdenv.isDarwin {
