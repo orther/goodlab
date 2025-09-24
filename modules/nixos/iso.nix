@@ -1,4 +1,7 @@
 {
+  # Allow unfree packages needed on the ISO (e.g., ventoy)
+  nixpkgs.config.allowUnfree = true;
+
   imports = [
     ./_packages.nix
   ];

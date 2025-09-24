@@ -102,20 +102,16 @@
           "auto-update" = import ./modules/nixos/auto-update.nix;
         };
 
-        homeManagerModules = {
-          base = import ./modules/home-manager/base.nix;
-          fonts = import ./modules/home-manager/fonts.nix;
-          alacritty = import ./modules/home-manager/alacritty.nix;
-          doom = import ./modules/home-manager/doom.nix;
-          "1password" = import ./modules/home-manager/1password.nix;
-          desktop = import ./modules/home-manager/desktop.nix;
-        };
-
-        # Optional grouping under a single namespace for convenience
-        modules = {
-          darwin = self.darwinModules;
-          nixos = self.nixosModules;
-          homeManager = self.homeManagerModules;
+        # Home Manager module exports (nest under lib to avoid unknown output warnings)
+        lib = {
+          hmModules = {
+            base = import ./modules/home-manager/base.nix;
+            fonts = import ./modules/home-manager/fonts.nix;
+            alacritty = import ./modules/home-manager/alacritty.nix;
+            doom = import ./modules/home-manager/doom.nix;
+            "1password" = import ./modules/home-manager/1password.nix;
+            desktop = import ./modules/home-manager/desktop.nix;
+          };
         };
 
         darwinConfigurations = {
