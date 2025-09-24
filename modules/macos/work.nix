@@ -30,20 +30,6 @@
       tailscale.enable = true;
     };
 
-    # Mark this host as being on a corporate network with strict TLS interception.
-    # Used by HM modules to avoid packages that fetch from npm at build time (e.g., wrangler).
-    local.corporateNetwork = true;
-
-    # Enable comprehensive Zscaler/corporate certificate management
-    # This handles system-wide SSL certificates for all tools (curl, npm, etc.)
-    # Complements Determinate Nix's automatic certificate handling
-    local.zscaler = {
-      enable = true;
-      autoDetect = true; # Automatically detect corporate environment
-      refreshInterval = 7200; # Refresh certificates every 2 hours
-      enableNotifications = false; # Disable notifications in corporate environment
-    };
-
     # Wrap pnpm on corporate hosts to use corporate certificates first,
     # falling back to TLS bypass if certificate handling fails.
     # This provides a more secure approach than blanket TLS disabling.
@@ -110,6 +96,20 @@
     };
 
     local = {
+      # Mark this host as being on a corporate network with strict TLS interception.
+      # Used by HM modules to avoid packages that fetch from npm at build time (e.g., wrangler).
+      corporateNetwork = true;
+
+      # Enable comprehensive Zscaler/corporate certificate management
+      # This handles system-wide SSL certificates for all tools (curl, npm, etc.)
+      # Complements Determinate Nix's automatic certificate handling
+      zscaler = {
+        enable = true;
+        autoDetect = true; # Automatically detect corporate environment
+        refreshInterval = 7200; # Refresh certificates every 2 hours
+        enableNotifications = false; # Disable notifications in corporate environment
+      };
+
       dock = {
         enable = true;
         entries = [

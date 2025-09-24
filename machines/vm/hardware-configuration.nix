@@ -6,16 +6,21 @@
 {
   imports = [ ];
 
-  boot.initrd.availableKernelModules = [ "xhci_pci" "sr_mod" ];
-  boot.initrd.kernelModules = [ ];
-  
-  # LUKS encryption setup
-  boot.initrd.luks.devices."root" = {
-    device = "/dev/disk/by-uuid/706ca26b-e067-42a8-8595-49ac43931da0";
-    allowDiscards = true;
+  boot = {
+    initrd = {
+      availableKernelModules = [ "xhci_pci" "sr_mod" ];
+      kernelModules = [ ];
+
+      # LUKS encryption setup
+      luks.devices."root" = {
+        device = "/dev/disk/by-uuid/706ca26b-e067-42a8-8595-49ac43931da0";
+        allowDiscards = true;
+      };
+    };
+
+    kernelModules = [ ];
+    extraModulePackages = [ ];
   };
-  boot.kernelModules = [ ];
-  boot.extraModulePackages = [ ];
 
   fileSystems."/" =
     { device = "/dev/disk/by-uuid/79073eac-c19c-4c19-88b4-ddcff4e76c69";
