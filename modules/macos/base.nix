@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }: {
+{ config, _pkgs, lib, ... }: {
   imports = [
     ./_dock.nix
     ./_packages.nix

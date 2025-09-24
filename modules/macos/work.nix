@@ -1,4 +1,4 @@
-{ config, pkgs, lib, ... }: {
+{ config, _pkgs, lib, ... }: {
   options.local.corporateNetwork = lib.mkOption {
     type = lib.types.bool;
     default = false;
@@ -48,7 +48,7 @@
     # falling back to TLS bypass if certificate handling fails.
     # This provides a more secure approach than blanket TLS disabling.
     nixpkgs.overlays = [
-      (final: prev: let
+      (_final: prev: let
         realPnpm = prev.pnpm;
         corporateCertPath = config.local.zscaler.certificatePath or "/etc/ssl/nix-corporate/ca-bundle.pem";
         wrapped = prev.writeShellScriptBin "pnpm" ''
