@@ -63,6 +63,11 @@
       url = "github:nix-community/NixOS-WSL/main";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Formatting orchestrator (Stage 3)
+    treefmt-nix = {
+      url = "github:numtide/treefmt-nix";
+    };
   };
 
   outputs = inputs @ {
@@ -80,9 +85,39 @@
         "x86_64-linux"
       ];
 
-      perSystem = { pkgs, system, ... }: {
-        # Enables `nix fmt` at root of repo to format all nix files
-        formatter = pkgs.alejandra;
+      # Bring in treefmt-nix flake module
+      imports = [ inputs.treefmt-nix.flakeModule ];
+
+      perSystem = { config, pkgs, system, lib, ... }: {
+        # treefmt configuration (nix fmt)
+        treefmt = {
+          projectRootFile = "flake.nix";
+          programs.alejandra.enable = true;
+          programs.shfmt.enable = true;
+          programs.prettier.enable = true;
+        };
+
+        # Enables `nix fmt` at root of repo to format all supported files
+        formatter = config.treefmt.build.wrapper;
+
+        # Static analysis checks
+        checks = {
+          formatting = config.treefmt.build.check;
+          statix = pkgs.runCommand "statix-check" { nativeBuildInputs = [ pkgs.statix ]; } ''
+            export HOME=$(mktemp -d)
+            cd ${./.}
+            statix check .
+            mkdir -p $out
+            touch $out/success
+          '';
+          deadnix = pkgs.runCommand "deadnix-check" { nativeBuildInputs = [ pkgs.deadnix ]; } ''
+            export HOME=$(mktemp -d)
+            cd ${./.}
+            deadnix --fail
+            mkdir -p $out
+            touch $out/success
+          '';
+        };
       };
 
       flake = {

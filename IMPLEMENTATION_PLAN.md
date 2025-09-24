@@ -13,13 +13,13 @@
 **Goal**: Group and export reusable module sets (`outputs.modules.{nixos,darwin}`) and align `machines/*` to import shared modules by concern (core/workstations/homelab/vps).
 **Success Criteria**: `nix eval .#nixosModules` and `.darwinModules` expose expected module sets; one machine migrated to use new module layout.
 **Tests**: Evaluate module attributes; build a migrated machine config without errors.
-**Status**: In Progress
+**Status**: Complete
 
 ## Stage 3: Formatter and lint orchestration
 **Goal**: Add `treefmt-nix` with `alejandra`, `shfmt`, and `prettier`; wire `statix` and `deadnix` into `checks` via flake-parts.
 **Success Criteria**: `nix fmt` formats repo; `nix flake check` runs formatting and static analysis checks.
 **Tests**: Run `nix build .#checks.$SYSTEM.*` locally; verify non-zero exit on lint errors.
-**Status**: Not Started
+**Status**: In Progress
 
 ## Stage 4: Standardize devShells
 **Goal**: Add `numtide/devshell` via flake-parts; define `devShells.default` and role shells (`ops`, `dev`).
