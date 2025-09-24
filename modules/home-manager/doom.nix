@@ -15,7 +15,15 @@
   # Sync Doom packages after HM writes files (best-effort)
   home.activation.doomSync = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
     if [ -x "$HOME/.config/emacs/bin/doom" ]; then
-      "$HOME/.config/emacs/bin/doom" -y sync || true
+      export XDG_CACHE_HOME="''${XDG_CACHE_HOME:-$HOME/.cache}"
+      export XDG_DATA_HOME="''${XDG_DATA_HOME:-$HOME/.local/share}"
+      export XDG_STATE_HOME="''${XDG_STATE_HOME:-$HOME/.local/state}"
+      export DOOMLOCALDIR="$XDG_DATA_HOME/doom"
+      export DOOMDATA="$XDG_DATA_HOME/doom/data"
+      export DOOMCACHE="$XDG_CACHE_HOME/doom"
+      export DOOMSTATE="$XDG_STATE_HOME/doom"
+      export PATH="${pkgs.emacs}/bin:${pkgs.git}/bin:$PATH"
+      "$HOME/.config/emacs/bin/doom" sync || true
     fi
   '';
 }
