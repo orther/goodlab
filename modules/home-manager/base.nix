@@ -36,6 +36,7 @@
     git = {
       enable = true;
     };
+    ssh.enableDefaultConfig = false;
     helix = {
       enable = true;
       defaultEditor = true;
