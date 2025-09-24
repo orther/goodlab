@@ -64,7 +64,12 @@
   local = {
     dock = {
       enable = true;
-      entries = [];
+      entries = [
+        {path = "/Applications/Google Chrome.app";}
+        {path = "/Applications/Slack.app";}
+        {path = "/System/Applications/System Settings.app";}
+        {path = "/System/Applications/Launchpad.app";}
+      ];
     };
   };
 
