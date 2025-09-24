@@ -78,6 +78,15 @@
     sudo -u ${config.system.primaryUser} /usr/bin/hidutil property --set '{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0x700000039,"HIDKeyboardModifierMappingDst":0x7000000E0}]}' || true
   '';
 
+  system.activationScripts.setupTextReplacements.text = ''
+    echo >&2 "Configuring text replacements..."
+    sudo -u ${config.system.primaryUser} /usr/bin/defaults write -g NSUserDictionaryReplacementItems -array \
+      '{on = 1; replace = "@@nb"; with = "Brandon.Orther@nationsbenefits.com";}' \
+      '{on = 1; replace = "@@o"; with = "brandon@orther.dev";}' \
+      '{on = 1; replace = "@@c"; with = "brandon.orther@carecar.co";}'
+    sudo -u ${config.system.primaryUser} /usr/bin/killall cfprefsd || true
+  '';
+
   system.activationScripts.setupWallpaper.text = ''
     echo >&2 "Setting up wallpaper..."
     sudo -u ${config.system.primaryUser} osascript -e 'tell application "Finder" to set desktop picture to POSIX file "/System/Library/Desktop Pictures/Solid Colors/Black.png"'
