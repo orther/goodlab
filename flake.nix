@@ -102,20 +102,29 @@
 
         # Static analysis checks
         checks = {
-          formatting = config.treefmt.build.check;
+          # Use the treefmt wrapper directly to perform a failing check on unformatted files
+          formatting = pkgs.runCommand "treefmt-check" { nativeBuildInputs = [ config.treefmt.build.wrapper ]; } ''
+            export HOME=$(mktemp -d)
+            cd ${./.}
+            treefmt --fail-on-change
+            mkdir -p "$out"
+            touch "$out"/success
+          '';
+
           statix = pkgs.runCommand "statix-check" { nativeBuildInputs = [ pkgs.statix ]; } ''
             export HOME=$(mktemp -d)
             cd ${./.}
             statix check .
-            mkdir -p $out
-            touch $out/success
+            mkdir -p "$out"
+            touch "$out"/success
           '';
+
           deadnix = pkgs.runCommand "deadnix-check" { nativeBuildInputs = [ pkgs.deadnix ]; } ''
             export HOME=$(mktemp -d)
             cd ${./.}
             deadnix --fail
-            mkdir -p $out
-            touch $out/success
+            mkdir -p "$out"
+            touch "$out"/success
           '';
         };
       };
