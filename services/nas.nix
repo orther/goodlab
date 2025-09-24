@@ -1,9 +1,9 @@
-{ pkgs, ... }: {
+{pkgs, ...}: {
   environment.systemPackages = with pkgs; [
   ];
 
   services.rpcbind.enable = true;
-  
+
   # Mount the NFS share
   fileSystems."/mnt/docker-data" = {
     device = "10.4.0.50:/volume1/docker-data";
