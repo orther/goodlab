@@ -20,6 +20,22 @@
     "doom-emacs": {
       "flake": false,
       "locked": {
+        "lastModified": 1758598203,
+        "narHash": "sha256-jFDlDAXeYAMtwbYq59VE1rpcRhLsj4M2UUsROOXu3+Q=",
+        "owner": "doomemacs",
+        "repo": "doomemacs",
+        "rev": "7e711d53cac8badaaa1a458e3e80d16495832a50",
+        "type": "github"
+      },
+      "original": {
+        "owner": "doomemacs",
+        "repo": "doomemacs",
+        "type": "github"
+      }
+    },
+    "doom-emacs_2": {
+      "flake": false,
+      "locked": {
         "lastModified": 1662497747,
         "narHash": "sha256-4n7E1fqda7cn5/F2jTkOnKw1juG6XMS/FI9gqODL3aU=",
         "owner": "doomemacs",
@@ -336,7 +352,7 @@
     },
     "nix-doom-emacs": {
       "inputs": {
-        "doom-emacs": "doom-emacs",
+        "doom-emacs": "doom-emacs_2",
         "doom-snippets": "doom-snippets",
         "emacs-overlay": "emacs-overlay",
         "emacs-so-long": "emacs-so-long",
@@ -586,6 +602,7 @@
     },
     "root": {
       "inputs": {
+        "doom-emacs": "doom-emacs",
         "home-manager": "home-manager",
         "homebrew-bundle": "homebrew-bundle",
         "homebrew-cask": "homebrew-cask",

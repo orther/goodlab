@@ -79,6 +79,11 @@
     };
   };
 
+  system.activationScripts.remapCapsLock.text = ''
+    echo >&2 "Remapping Caps Lock to Control..."
+    sudo -u ${config.system.primaryUser} /usr/bin/hidutil property --set '{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0x700000039,"HIDKeyboardModifierMappingDst":0x7000000E0}]}' || true
+  '';
+
   system.activationScripts.setupWallpaper.text = ''
     echo >&2 "Setting up wallpaper..."
     sudo -u ${config.system.primaryUser} osascript -e 'tell application "Finder" to set desktop picture to POSIX file "/System/Library/Desktop Pictures/Solid Colors/Black.png"'

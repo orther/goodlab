@@ -58,5 +58,5 @@ let
     then builtins.filter (p: p != pkgs.wrangler) combined
     else combined;
 in {
-  home.packages = combined;
+  home.packages = combinedFiltered;
 }
