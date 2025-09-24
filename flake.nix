@@ -92,9 +92,11 @@
         # treefmt configuration (nix fmt)
         treefmt = {
           projectRootFile = "flake.nix";
-          programs.alejandra.enable = true;
-          programs.shfmt.enable = true;
-          programs.prettier.enable = true;
+          programs = {
+            alejandra.enable = true;
+            shfmt.enable = true;
+            prettier.enable = true;
+          };
         };
 
         # Enables `nix fmt` at root of repo to format all supported files
