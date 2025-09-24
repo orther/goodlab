@@ -1,6 +1,5 @@
-{pkgs, ...}: {
-  environment.systemPackages = with pkgs; [
-  ];
+{ pkgs, ... }: {
+  environment.systemPackages = with pkgs; [];
 
   services.rpcbind.enable = true;
 
@@ -14,5 +13,4 @@
       "actimeo=3"
     ];
   };
-
 }
