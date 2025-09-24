@@ -161,7 +161,7 @@
         darwinConfigurations = {
           mair = nix-darwin.lib.darwinSystem {
             system = "x86_64-darwin"; # Specify system for mair
-            specialArgs = { inherit inputs; outputs = self.outputs; };
+            specialArgs = { inherit inputs; inherit (self) outputs; };
             modules = [
               ./machines/mair/configuration.nix
               {
@@ -171,7 +171,7 @@
           };
           stud = nix-darwin.lib.darwinSystem {
             system = "aarch64-darwin"; # Specify system for stud
-            specialArgs = { inherit inputs; outputs = self.outputs; };
+            specialArgs = { inherit inputs; inherit (self) outputs; };
             modules = [
               ./machines/stud/configuration.nix
               {
@@ -181,7 +181,7 @@
           };
           nblap = nix-darwin.lib.darwinSystem {
             system = "aarch64-darwin"; # Apple Silicon MacBook (work)
-            specialArgs = { inherit inputs; outputs = self.outputs; };
+            specialArgs = { inherit inputs; inherit (self) outputs; };
             modules = [
               ./machines/nblap/configuration.nix
               {
@@ -194,7 +194,7 @@
         nixosConfigurations = {
           iso1chng = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
-            specialArgs = { inherit inputs; outputs = self.outputs; };
+            specialArgs = { inherit inputs; inherit (self) outputs; };
             modules = [
               (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
               ./machines/iso1chng/configuration.nix
@@ -203,7 +203,7 @@
 
           iso-aarch64 = nixpkgs.lib.nixosSystem {
             system = "aarch64-linux";
-            specialArgs = { inherit inputs; outputs = self.outputs; };
+            specialArgs = { inherit inputs; inherit (self) outputs; };
             modules = [
               (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
               ./machines/iso1chng/configuration.nix
@@ -216,19 +216,19 @@
 
           noir = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
-            specialArgs = { inherit inputs; outputs = self.outputs; };
+            specialArgs = { inherit inputs; inherit (self) outputs; };
             modules = [./machines/noir/configuration.nix];
           };
 
           vm = nixpkgs.lib.nixosSystem {
             system = "aarch64-linux";
-            specialArgs = { inherit inputs; outputs = self.outputs; };
+            specialArgs = { inherit inputs; inherit (self) outputs; };
             modules = [./machines/vm/configuration.nix];
           };
 
           zinc = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
-            specialArgs = { inherit inputs; outputs = self.outputs; };
+            specialArgs = { inherit inputs; inherit (self) outputs; };
             modules = [./machines/zinc/configuration.nix];
           };
         };
