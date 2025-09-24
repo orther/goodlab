@@ -1,9 +1,4 @@
-{
-  _config,
-  _inputs,
-  lib,
-  ...
-}:
+{ lib, ... }:
 let
   homebrewInstalled =
     builtins.pathExists "/opt/homebrew/bin/brew"

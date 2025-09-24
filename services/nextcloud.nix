@@ -1,7 +1,6 @@
 {
   config,
   pkgs,
-  _lib,
   ...
 }: {
   imports = [
