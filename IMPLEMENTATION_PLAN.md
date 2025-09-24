@@ -1,3 +1,38 @@
+# Modern Flake Migration Implementation Plan
+
+## Stage 1: Introduce flake-parts skeleton
+**Goal**: Convert `flake.nix` to use `flake-parts.lib.mkFlake` with a single `systems` definition and move `formatter` into `perSystem` while preserving existing `darwinConfigurations` and `nixosConfigurations`.
+**Success Criteria**: `nix flake show` lists the same host configurations; `formatter` is available for all systems; evaluation succeeds without changing machine semantics.
+**Tests**:
+- `nix eval .#darwinConfigurations` and `nix eval .#nixosConfigurations` succeed
+- `nix flake show` includes `formatter` per system
+- `nix eval .#darwinConfigurations.stud._type` returns `derivation` (or similar evaluation sanity)
+**Status**: In Progress
+
+## Stage 2: Modularize host logic
+**Goal**: Group and export reusable module sets (`outputs.modules.{nixos,darwin}`) and align `machines/*` to import shared modules by concern (core/workstations/homelab/vps).
+**Success Criteria**: `nix eval .#nixosModules` and `.darwinModules` expose expected module sets; one machine migrated to use new module layout.
+**Tests**: Evaluate module attributes; build a migrated machine config without errors.
+**Status**: Not Started
+
+## Stage 3: Formatter and lint orchestration
+**Goal**: Add `treefmt-nix` with `alejandra`, `shfmt`, and `prettier`; wire `statix` and `deadnix` into `checks` via flake-parts.
+**Success Criteria**: `nix fmt` formats repo; `nix flake check` runs formatting and static analysis checks.
+**Tests**: Run `nix build .#checks.$SYSTEM.*` locally; verify non-zero exit on lint errors.
+**Status**: Not Started
+
+## Stage 4: Standardize devShells
+**Goal**: Add `numtide/devshell` via flake-parts; define `devShells.default` and role shells (`ops`, `dev`).
+**Success Criteria**: `nix develop` drops into a shell with `nix`, `just`, `sops`, and deployment tools available.
+**Tests**: `nix develop` works on macOS and Linux; tools are on PATH.
+**Status**: Not Started
+
+## Stage 5: CI + FlakeHub integration
+**Goal**: Add GitHub Actions for `flake check` and FlakeHub publish on tags.
+**Success Criteria**: CI green on PRs; tagged releases published to FlakeHub.
+**Tests**: Dry-run CI locally (where possible); verify Action logs on a test tag.
+**Status**: Not Started
+
 # Zscaler/Corporate Certificate Management Implementation Plan
 
 ## Overview

@@ -6,6 +6,9 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     impermanence.url = "github:nix-community/impermanence";
 
+    # Modern flake orchestration
+    flake-parts.url = "github:hercules-ci/flake-parts";
+
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -62,99 +65,101 @@
     };
   };
 
-  outputs = {
+  outputs = inputs @ {
     self,
     nixpkgs,
     nix-darwin,
+    flake-parts,
     ...
-  } @ inputs: let
-    inherit (self) outputs;
+  }:
+    flake-parts.lib.mkFlake { inherit inputs; } {
+      systems = [
+        "aarch64-darwin"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "x86_64-linux"
+      ];
 
-    systems = [
-      "aarch64-darwin"
-      "aarch64-linux"
-      "x86_64-darwin"
-      "x86_64-linux"
-    ];
-
-    forAllSystems = nixpkgs.lib.genAttrs systems;
-  in {
-    # Enables `nix fmt` at root of repo to format all nix files
-    formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.alejandra);
-
-    darwinConfigurations = {
-      mair = nix-darwin.lib.darwinSystem {
-        system = "x86_64-darwin"; # Specify system for mair
-        specialArgs = {inherit inputs outputs;};
-        modules = [
-          ./machines/mair/configuration.nix
-          {
-            nixpkgs.config.allowUnfree = true;
-          }
-        ];
+      perSystem = { pkgs, system, ... }: {
+        # Enables `nix fmt` at root of repo to format all nix files
+        formatter = pkgs.alejandra;
       };
-      stud = nix-darwin.lib.darwinSystem {
-        system = "aarch64-darwin"; # Specify system for stud
-        specialArgs = {inherit inputs outputs;};
-        modules = [
-          ./machines/stud/configuration.nix
-          {
-            nixpkgs.config.allowUnfree = true;
-          }
-        ];
-      };
-      nblap = nix-darwin.lib.darwinSystem {
-        system = "aarch64-darwin"; # Apple Silicon MacBook (work)
-        specialArgs = {inherit inputs outputs;};
-        modules = [
-          ./machines/nblap/configuration.nix
-          {
-            nixpkgs.config.allowUnfree = true;
-          }
-        ];
+
+      flake = {
+        darwinConfigurations = {
+          mair = nix-darwin.lib.darwinSystem {
+            system = "x86_64-darwin"; # Specify system for mair
+            specialArgs = { inherit inputs; outputs = self.outputs; };
+            modules = [
+              ./machines/mair/configuration.nix
+              {
+                nixpkgs.config.allowUnfree = true;
+              }
+            ];
+          };
+          stud = nix-darwin.lib.darwinSystem {
+            system = "aarch64-darwin"; # Specify system for stud
+            specialArgs = { inherit inputs; outputs = self.outputs; };
+            modules = [
+              ./machines/stud/configuration.nix
+              {
+                nixpkgs.config.allowUnfree = true;
+              }
+            ];
+          };
+          nblap = nix-darwin.lib.darwinSystem {
+            system = "aarch64-darwin"; # Apple Silicon MacBook (work)
+            specialArgs = { inherit inputs; outputs = self.outputs; };
+            modules = [
+              ./machines/nblap/configuration.nix
+              {
+                nixpkgs.config.allowUnfree = true;
+              }
+            ];
+          };
+        };
+
+        nixosConfigurations = {
+          iso1chng = nixpkgs.lib.nixosSystem {
+            system = "x86_64-linux";
+            specialArgs = { inherit inputs; outputs = self.outputs; };
+            modules = [
+              (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
+              ./machines/iso1chng/configuration.nix
+            ];
+          };
+
+          iso-aarch64 = nixpkgs.lib.nixosSystem {
+            system = "aarch64-linux";
+            specialArgs = { inherit inputs; outputs = self.outputs; };
+            modules = [
+              (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
+              ./machines/iso1chng/configuration.nix
+              {
+                # Override hostname for ARM64 variant
+                networking.hostName = nixpkgs.lib.mkForce "iso-aarch64";
+              }
+            ];
+          };
+
+          noir = nixpkgs.lib.nixosSystem {
+            system = "x86_64-linux";
+            specialArgs = { inherit inputs; outputs = self.outputs; };
+            modules = [./machines/noir/configuration.nix];
+          };
+
+          vm = nixpkgs.lib.nixosSystem {
+            system = "aarch64-linux";
+            specialArgs = { inherit inputs; outputs = self.outputs; };
+            modules = [./machines/vm/configuration.nix];
+          };
+
+          zinc = nixpkgs.lib.nixosSystem {
+            system = "x86_64-linux";
+            specialArgs = { inherit inputs; outputs = self.outputs; };
+            modules = [./machines/zinc/configuration.nix];
+          };
+        };
       };
     };
-
-    nixosConfigurations = {
-      iso1chng = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        specialArgs = {inherit inputs outputs;};
-        modules = [
-          (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
-          ./machines/iso1chng/configuration.nix
-        ];
-      };
-
-      iso-aarch64 = nixpkgs.lib.nixosSystem {
-        system = "aarch64-linux";
-        specialArgs = {inherit inputs outputs;};
-        modules = [
-          (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
-          ./machines/iso1chng/configuration.nix
-          {
-            # Override hostname for ARM64 variant
-            networking.hostName = nixpkgs.lib.mkForce "iso-aarch64";
-          }
-        ];
-      };
-
-      noir = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        specialArgs = {inherit inputs outputs;};
-        modules = [./machines/noir/configuration.nix];
-      };
-
-      vm = nixpkgs.lib.nixosSystem {
-        system = "aarch64-linux";
-        specialArgs = {inherit inputs outputs;};
-        modules = [./machines/vm/configuration.nix];
-      };
-
-      zinc = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        specialArgs = {inherit inputs outputs;};
-        modules = [./machines/zinc/configuration.nix];
-      };
-    };
-  };
 }
