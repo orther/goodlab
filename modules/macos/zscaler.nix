@@ -2,6 +2,8 @@
 
 let
   cfg = config.local.zscaler;
+  securityTool = "/usr/bin/security";
+  launchctlTool = "/bin/launchctl";
 
   # Certificate extraction script that exports certificates from macOS keychain
   extractCertificates = pkgs.writeShellScript "extract-certificates" ''
@@ -16,11 +18,11 @@ let
     sudo mkdir -p "$CERT_DIR"
 
     # Export certificates from system keychains
-    ${pkgs.darwin.security}/bin/security export -t certs -f pemseq -k /Library/Keychains/System.keychain -o "$TEMP_DIR/certs-system.pem" || true
-    ${pkgs.darwin.security}/bin/security export -t certs -f pemseq -k /System/Library/Keychains/SystemRootCertificates.keychain -o "$TEMP_DIR/certs-root.pem" || true
+    ${securityTool} export -t certs -f pemseq -k /Library/Keychains/System.keychain -o "$TEMP_DIR/certs-system.pem" || true
+    ${securityTool} export -t certs -f pemseq -k /System/Library/Keychains/SystemRootCertificates.keychain -o "$TEMP_DIR/certs-root.pem" || true
 
     # Export from login keychain (where Zscaler certificates are typically installed)
-    ${pkgs.darwin.security}/bin/security export -t certs -f pemseq -k ~/Library/Keychains/login.keychain-db -o "$TEMP_DIR/certs-login.pem" || true
+    ${securityTool} export -t certs -f pemseq -k ~/Library/Keychains/login.keychain-db -o "$TEMP_DIR/certs-login.pem" || true
 
     # Combine all certificate files
     cat "$TEMP_DIR"/*.pem > "$TEMP_DIR/ca-bundle.pem" 2>/dev/null || true
@@ -54,7 +56,7 @@ let
       echo "$(date): Certificate refresh completed successfully"
 
       # Restart relevant services that might cache certificates
-      ${pkgs.darwin.launchctl}/bin/launchctl kickstart -k system/org.nixos.nix-daemon 2>/dev/null || true
+      ${launchctlTool} kickstart -k system/org.nixos.nix-daemon 2>/dev/null || true
 
       # Send notification (optional)
       ${pkgs.terminal-notifier}/bin/terminal-notifier -title "Corporate Certificates" -message "Certificates refreshed successfully" -sound default 2>/dev/null || true
@@ -87,7 +89,7 @@ let
     fi
 
     # Check for corporate certificate authorities in keychain
-    if ${pkgs.darwin.security}/bin/security find-certificate -c "ZscalerRootCertificate" /Library/Keychains/System.keychain >/dev/null 2>&1; then
+    if ${securityTool} find-certificate -c "ZscalerRootCertificate" /Library/Keychains/System.keychain >/dev/null 2>&1; then
       echo "corporate"
       exit 0
     fi
