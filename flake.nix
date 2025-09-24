@@ -86,6 +86,38 @@
       };
 
       flake = {
+        # Export reusable module sets for downstream reuse and internal imports
+        darwinModules = {
+          base = import ./modules/macos/base.nix;
+          work = import ./modules/macos/work.nix;
+          zscaler = import ./modules/macos/zscaler.nix;
+        };
+
+        nixosModules = {
+          base = import ./modules/nixos/base.nix;
+          desktop = import ./modules/nixos/desktop.nix;
+          iso = import ./modules/nixos/iso.nix;
+          "remote-unlock" = import ./modules/nixos/remote-unlock.nix;
+          amdgpu = import ./modules/nixos/amdgpu.nix;
+          "auto-update" = import ./modules/nixos/auto-update.nix;
+        };
+
+        homeManagerModules = {
+          base = import ./modules/home-manager/base.nix;
+          fonts = import ./modules/home-manager/fonts.nix;
+          alacritty = import ./modules/home-manager/alacritty.nix;
+          doom = import ./modules/home-manager/doom.nix;
+          "1password" = import ./modules/home-manager/1password.nix;
+          desktop = import ./modules/home-manager/desktop.nix;
+        };
+
+        # Optional grouping under a single namespace for convenience
+        modules = {
+          darwin = self.darwinModules;
+          nixos = self.nixosModules;
+          homeManager = self.homeManagerModules;
+        };
+
         darwinConfigurations = {
           mair = nix-darwin.lib.darwinSystem {
             system = "x86_64-darwin"; # Specify system for mair

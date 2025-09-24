@@ -13,7 +13,7 @@
 **Goal**: Group and export reusable module sets (`outputs.modules.{nixos,darwin}`) and align `machines/*` to import shared modules by concern (core/workstations/homelab/vps).
 **Success Criteria**: `nix eval .#nixosModules` and `.darwinModules` expose expected module sets; one machine migrated to use new module layout.
 **Tests**: Evaluate module attributes; build a migrated machine config without errors.
-**Status**: Not Started
+**Status**: In Progress
 
 ## Stage 3: Formatter and lint orchestration
 **Goal**: Add `treefmt-nix` with `alejandra`, `shfmt`, and `prettier`; wire `statix` and `deadnix` into `checks` via flake-parts.

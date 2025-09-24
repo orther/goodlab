@@ -11,7 +11,7 @@
 
     ./hardware-configuration.nix
 
-    ./../../modules/macos/base.nix
+    inputs.self.darwinModules.base
   ];
 
   home-manager = {
