@@ -1,4 +1,4 @@
-{ lib, pkgs, osConfig, ... }:
+{ pkgs, osConfig, ... }:
 let
   base = with pkgs; [
         asciiquarium

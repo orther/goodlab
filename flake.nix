@@ -88,7 +88,7 @@
       # Bring in treefmt-nix flake module
       imports = [ inputs.treefmt-nix.flakeModule ];
 
-      perSystem = { config, pkgs, system, lib, ... }: {
+      perSystem = { config, pkgs, ... }: {
         # treefmt configuration (nix fmt)
         treefmt = {
           projectRootFile = "flake.nix";
