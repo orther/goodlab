@@ -27,6 +27,9 @@ jobs:
       - name: Flake checks
         run: nix flake check
 
+      - name: Dev services app evaluates
+        run: nix run .#devservices -- --help
+
   # Optional: FlakeHub publish on tags (commented scaffold)
   # publish:
   #   if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') && secrets.FLAKEHUB_TOKEN != '' }}

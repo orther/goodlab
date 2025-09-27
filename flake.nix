@@ -154,7 +154,8 @@
           # Lightweight NixOS eval smoke test (no build), to catch regressions early
           nixosEval-noir = let
             sys = inputs.nixpkgs.lib.nixosSystem {
-              system = pkgs.stdenv.hostPlatform.system;
+              # Evaluate as Linux regardless of host platform
+              system = "x86_64-linux";
               specialArgs = {
                 inherit inputs;
                 inherit (self) outputs;
@@ -166,6 +167,21 @@
               stateVersion = sys.config.system.stateVersion or null;
             };
           in pkgs.writeText "nixos-eval-noir.json" summary;
+
+          nixosEval-zinc = let
+            sys = inputs.nixpkgs.lib.nixosSystem {
+              system = "x86_64-linux";
+              specialArgs = {
+                inherit inputs;
+                inherit (self) outputs;
+              };
+              modules = [ ./machines/zinc/configuration.nix ];
+            };
+            summary = builtins.toJSON {
+              system = sys.config.system.system;
+              stateVersion = sys.config.system.stateVersion or null;
+            };
+          in pkgs.writeText "nixos-eval-zinc.json" summary;
         };
 
         # Developer services bundle via services-flake + process-compose
@@ -184,6 +200,12 @@
             # Redis on localhost:6379
             redis.r1.enable = true;
           };
+        };
+
+        # Provide a simple app alias so `nix run .#devservices` works
+        apps.devservices = {
+          type = "app";
+          program = "${config.process-compose.devservices.package}/bin/process-compose";
         };
 
         devshells = {
