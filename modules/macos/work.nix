@@ -1,4 +1,8 @@
-{ config, lib, ... }: {
+{
+  config,
+  lib,
+  ...
+}: {
   options.local.corporateNetwork = lib.mkOption {
     type = lib.types.bool;
     default = false;

@@ -1,24 +1,27 @@
 # Modernizing the Flake
 
 ## Targets
+
 - Align the repository with current flake-parts ecosystem patterns.
 - Standardize cross-platform workflows (macOS, Linux, WSL) for personal machines, homelab hardware, and VPS nodes.
 - Tighten CI, formatting, linting, and deployment tooling around the flake registry story (FlakeHub).
 
 ## Tooling Snapshot
-| Area | Recommended Tooling | Notes |
-| --- | --- | --- |
-| Flake structure | `hercules-ci/flake-parts` | Replace manual outputs plumbing with `mkFlake`/modules. |
-| Local services | `juspay/services-flake` | Reproducible Postgres/Redis/etc. for macOS/Linux dev machines. |
-| Dev env | `numtide/devshell`, `srvos/nix-fast-build` | Provide uniform shells, cached builds. |
-| Formatting | `treefmt-nix` with `alejandra`, `nixfmt`, `stylua`, etc. | Single entry `nix fmt`. |
-| Static analysis | `statix`, `deadnix`, `nixpkgs-fmt --check` if needed | Run via flake checks + CI. |
-| CI orchestration | `hercules-ci/flake-parts` modules, `DeterminateSystems/flakehub-publish` | Declarative workflows; keep FlakeHub metadata in sync. |
-| Remote deploy | `serokell/deploy-rs` or `zhaofengli/colmena` | Automated host rollouts beyond the current `just deploy`. |
-| Secrets | `Mic92/sops-nix`, `ryantm/agenix` (optional) | Continue SOPS; consider agenix for SSH host secrets. |
-| Testing | `nix flake check`, `nix build` targets, `nixos-test` | Define in `flake.parts/checks`. |
+
+| Area             | Recommended Tooling                                                      | Notes                                                          |
+| ---------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| Flake structure  | `hercules-ci/flake-parts`                                                | Replace manual outputs plumbing with `mkFlake`/modules.        |
+| Local services   | `juspay/services-flake`                                                  | Reproducible Postgres/Redis/etc. for macOS/Linux dev machines. |
+| Dev env          | `numtide/devshell`, `srvos/nix-fast-build`                               | Provide uniform shells, cached builds.                         |
+| Formatting       | `treefmt-nix` with `alejandra`, `nixfmt`, `stylua`, etc.                 | Single entry `nix fmt`.                                        |
+| Static analysis  | `statix`, `deadnix`, `nixpkgs-fmt --check` if needed                     | Run via flake checks + CI.                                     |
+| CI orchestration | `hercules-ci/flake-parts` modules, `DeterminateSystems/flakehub-publish` | Declarative workflows; keep FlakeHub metadata in sync.         |
+| Remote deploy    | `serokell/deploy-rs` or `zhaofengli/colmena`                             | Automated host rollouts beyond the current `just deploy`.      |
+| Secrets          | `Mic92/sops-nix`, `ryantm/agenix` (optional)                             | Continue SOPS; consider agenix for SSH host secrets.           |
+| Testing          | `nix flake check`, `nix build` targets, `nixos-test`                     | Define in `flake.parts/checks`.                                |
 
 ## Roadmap
+
 1. **Introduce flake-parts skeleton**
    - Add `inputs.flake-parts.url = "github:hercules-ci/flake-parts";`.
    - Replace the hand-written `outputs` with `flake-parts.lib.mkFlake` in `flake.nix`.
@@ -64,11 +67,12 @@
    - Evaluate splitting long-lived infrastructure secrets into a separate private flake imported via `inputs.goodlab-secrets` to keep public repo clean.
 
 10. **Documentation and onboarding**
-   - Update `README.md` to reference new devShells, services target, and deploy flow.
-   - Keep `AGENTS.md` aligned with the automation story; include quickstart commands for each platform.
+
+- Update `README.md` to reference new devShells, services target, and deploy flow.
+- Keep `AGENTS.md` aligned with the automation story; include quickstart commands for each platform.
 
 ## Execution Tips
+
 - Convert one platform at a time (macOS → homelab → VPS) to keep PRs reviewable.
 - Gate merges on `nix flake check` and `treefmt` passed locally; treat failures as blockers.
 - Use feature branches per subsystem (`feat/flake-parts-core`, `feat/services-flake`) and keep commit messages scoped.
-

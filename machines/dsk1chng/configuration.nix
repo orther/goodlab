@@ -9,9 +9,9 @@
 
     ./hardware-configuration.nix
 
-    ./../../modules/nixos/base.nix
-    ./../../modules/nixos/desktop.nix
-    ./../../modules/nixos/amdgpu.nix
+    inputs.self.nixosModules.base
+    inputs.self.nixosModules.desktop
+    inputs.self.nixosModules.amdgpu
 
     ./../../services/tailscale.nix
   ];

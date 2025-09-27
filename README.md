@@ -43,6 +43,13 @@ MacBook Air, and work WSL setup.
   [Custom ready-made tarball and ISO](https://github.com/orther/goodlab/releases)
   for installing NixOS-on-WSL and NixOS, respectively
 
+## Modern flake usage
+
+- `nix fmt` keeps the treefmt-managed formatters happy across the repo.
+- `nix flake check` runs statix, deadnix, and the formatting check in CI parity.
+- `nix develop` drops into the default dev shell; use `nix develop .#ops` for deployment helpers.
+- `just deploy <machine> [ip]` drives the existing rebuild automation for macOS and NixOS hosts.
+
 ## Getting started
 
 ### macOS
@@ -51,7 +58,7 @@ On macOS, this script will install `nix` using the
 [Determinate Systems Nix installer](https://zero-to-nix.com/start/install) and
 prompt you to install my configuration.
 
-> [!IMPORTANT] 
+> [!IMPORTANT]
 > You'll need to run this script as sudo or have sudo permissions.
 
 Quick start (Apple Silicon, e.g., 2024 16" MacBook Pro):
@@ -94,10 +101,10 @@ nix run nix-darwin -- switch --flake github:orther/goodlab#mair
 
 ### NixOS (Linux)
 
-> [!IMPORTANT] 
+> [!IMPORTANT]
 > You'll need to run this script as sudo or have sudo permissions.
 
-> [!WARNING] 
+> [!WARNING]
 > This script is primarily meant for my own use. Using it to install
 > NixOS on your own hardware will fail. At minimum, you'll need to do the
 > following before attemping installation:
@@ -114,7 +121,7 @@ your system for NixOS by partitioning drives and mounting them.
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/orther/goodlab/main/install.sh)"
 ```
 
-> [!TIP] 
+> [!TIP]
 > When installing NixOS onto a headless local server, place your own
 > custom NixOS ISO file onto a USB drive with Ventoy.
 > [Ventoy can automatically load the NixOS ISO file](https://chengeric.com/homelab/#remotely-entering-nixos-installer),
@@ -164,7 +171,7 @@ just deploy MACHINE
 
 To remotely deploy `MACHINE`, which has an IP address of `10.0.10.2`
 
-```bash
+````bash
 just deploy MACHINE 10.0.10.2
 
 ### Create a release tag
@@ -173,8 +180,9 @@ Create and push a version tag (triggers FlakeHub + GitHub Release):
 
 ```bash
 just release v0.1.0
-```
-```
+````
+
+````
 
 ### Edit secrets
 
@@ -183,7 +191,7 @@ modify `secrets/secrets.yaml`:
 
 ```bash
 just sopsedit
-```
+````
 
 ### Syncing sops keys for a new machine
 

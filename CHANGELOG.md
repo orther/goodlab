@@ -3,6 +3,7 @@
 All notable changes to this project will be documented here.
 
 ## [0.1.0] - 2025-09-23
+
 - Initial public release under `orther/goodlab`.
 - Renamed repo references from `goonlab` → `goodlab`.
 - Added Apple Silicon (aarch64) macOS quick start (`#stud`).

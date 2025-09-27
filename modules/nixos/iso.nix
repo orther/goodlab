@@ -1,5 +1,4 @@
-{ pkgs, ... }:
-{
+{pkgs, ...}: {
   # Allow unfree + permit insecure Ventoy specifically for ISO builds
   nixpkgs.config = {
     allowUnfree = true;

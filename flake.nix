@@ -68,6 +68,10 @@
     treefmt-nix = {
       url = "github:numtide/treefmt-nix";
     };
+
+    devshell = {
+      url = "github:numtide/devshell";
+    };
   };
 
   outputs = inputs @ {
@@ -77,7 +81,7 @@
     flake-parts,
     ...
   }:
-    flake-parts.lib.mkFlake { inherit inputs; } {
+    flake-parts.lib.mkFlake {inherit inputs;} {
       systems = [
         "aarch64-darwin"
         "aarch64-linux"
@@ -85,10 +89,17 @@
         "x86_64-linux"
       ];
 
-      # Bring in treefmt-nix flake module
-      imports = [ inputs.treefmt-nix.flakeModule ];
+      # Bring in treefmt-nix and devshell flake modules
+      imports = [
+        inputs.treefmt-nix.flakeModule
+        inputs.devshell.flakeModule
+      ];
 
-      perSystem = { config, pkgs, ... }: {
+      perSystem = {
+        config,
+        pkgs,
+        ...
+      }: {
         # treefmt configuration (nix fmt)
         treefmt = {
           projectRootFile = "flake.nix";
@@ -104,16 +115,18 @@
 
         # Static analysis checks
         checks = {
-          # Use the treefmt wrapper directly to perform a failing check on unformatted files
-          formatting = pkgs.runCommand "treefmt-check" { nativeBuildInputs = [ config.treefmt.build.wrapper ]; } ''
+          formatting = pkgs.runCommand "treefmt-check" {nativeBuildInputs = [config.treefmt.build.wrapper];} ''
             export HOME=$(mktemp -d)
-            cd ${./.}
+            tmpdir=$(mktemp -d)
+            cp -R ${./.} "$tmpdir/src"
+            chmod -R u+w "$tmpdir/src"
+            cd "$tmpdir/src"
             treefmt --fail-on-change
             mkdir -p "$out"
             touch "$out"/success
           '';
 
-          statix = pkgs.runCommand "statix-check" { nativeBuildInputs = [ pkgs.statix ]; } ''
+          statix = pkgs.runCommand "statix-check" {nativeBuildInputs = [pkgs.statix];} ''
             export HOME=$(mktemp -d)
             cd ${./.}
             statix check .
@@ -121,13 +134,50 @@
             touch "$out"/success
           '';
 
-          deadnix = pkgs.runCommand "deadnix-check" { nativeBuildInputs = [ pkgs.deadnix ]; } ''
+          deadnix = pkgs.runCommand "deadnix-check" {nativeBuildInputs = [pkgs.deadnix];} ''
             export HOME=$(mktemp -d)
             cd ${./.}
             deadnix --fail
             mkdir -p "$out"
             touch "$out"/success
           '';
+        };
+
+        devshells = {
+          default = {
+            packages = with pkgs; [
+              git
+              just
+              sops
+              alejandra
+              shfmt
+              nodejs
+              statix
+              deadnix
+              nil
+            ];
+            commands = [
+              {
+                name = "fmt";
+                command = "nix fmt";
+                category = "dev";
+                help = "Format repository";
+              }
+              {
+                name = "check";
+                command = "nix flake check";
+                category = "dev";
+                help = "Run repo checks";
+              }
+            ];
+          };
+
+          ops = {
+            packages = with pkgs; [
+              nixos-rebuild
+              cachix
+            ];
+          };
         };
       };
 
@@ -163,7 +213,10 @@
         darwinConfigurations = {
           mair = nix-darwin.lib.darwinSystem {
             system = "x86_64-darwin"; # Specify system for mair
-            specialArgs = { inherit inputs; inherit (self) outputs; };
+            specialArgs = {
+              inherit inputs;
+              inherit (self) outputs;
+            };
             modules = [
               ./machines/mair/configuration.nix
               {
@@ -173,7 +226,10 @@
           };
           stud = nix-darwin.lib.darwinSystem {
             system = "aarch64-darwin"; # Specify system for stud
-            specialArgs = { inherit inputs; inherit (self) outputs; };
+            specialArgs = {
+              inherit inputs;
+              inherit (self) outputs;
+            };
             modules = [
               ./machines/stud/configuration.nix
               {
@@ -183,7 +239,10 @@
           };
           nblap = nix-darwin.lib.darwinSystem {
             system = "aarch64-darwin"; # Apple Silicon MacBook (work)
-            specialArgs = { inherit inputs; inherit (self) outputs; };
+            specialArgs = {
+              inherit inputs;
+              inherit (self) outputs;
+            };
             modules = [
               ./machines/nblap/configuration.nix
               {
@@ -196,7 +255,10 @@
         nixosConfigurations = {
           iso1chng = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
-            specialArgs = { inherit inputs; inherit (self) outputs; };
+            specialArgs = {
+              inherit inputs;
+              inherit (self) outputs;
+            };
             modules = [
               (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
               ./machines/iso1chng/configuration.nix
@@ -205,7 +267,10 @@
 
           iso-aarch64 = nixpkgs.lib.nixosSystem {
             system = "aarch64-linux";
-            specialArgs = { inherit inputs; inherit (self) outputs; };
+            specialArgs = {
+              inherit inputs;
+              inherit (self) outputs;
+            };
             modules = [
               (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
               ./machines/iso1chng/configuration.nix
@@ -218,19 +283,28 @@
 
           noir = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
-            specialArgs = { inherit inputs; inherit (self) outputs; };
+            specialArgs = {
+              inherit inputs;
+              inherit (self) outputs;
+            };
             modules = [./machines/noir/configuration.nix];
           };
 
           vm = nixpkgs.lib.nixosSystem {
             system = "aarch64-linux";
-            specialArgs = { inherit inputs; inherit (self) outputs; };
+            specialArgs = {
+              inherit inputs;
+              inherit (self) outputs;
+            };
             modules = [./machines/vm/configuration.nix];
           };
 
           zinc = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
-            specialArgs = { inherit inputs; inherit (self) outputs; };
+            specialArgs = {
+              inherit inputs;
+              inherit (self) outputs;
+            };
             modules = [./machines/zinc/configuration.nix];
           };
         };

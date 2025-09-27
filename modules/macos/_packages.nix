@@ -1,5 +1,4 @@
-{ lib, ... }:
-let
+{lib, ...}: let
   homebrewInstalled =
     builtins.pathExists "/opt/homebrew/bin/brew"
     || builtins.pathExists "/usr/local/bin/brew";

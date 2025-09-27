@@ -11,9 +11,9 @@
 
     ./hardware-configuration.nix
 
-    ./../../modules/nixos/base.nix
-    ./../../modules/nixos/remote-unlock.nix
-    ./../../modules/nixos/auto-update.nix
+    inputs.self.nixosModules.base
+    inputs.self.nixosModules."remote-unlock"
+    inputs.self.nixosModules."auto-update"
 
     ./../../services/nas.nix
     ./../../services/tailscale.nix
@@ -37,7 +37,7 @@
           userName = "Brandon Orther";
           userEmail = "brandon@orther.dev";
         };
-        
+
         programs.ssh = {
           enable = true;
           enableDefaultConfig = false;

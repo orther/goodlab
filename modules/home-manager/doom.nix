@@ -1,8 +1,15 @@
-{ inputs, pkgs, lib, ... }:
 {
+  inputs,
+  pkgs,
+  lib,
+  ...
+}: {
   programs.emacs = {
     enable = true;
-    package = if pkgs.stdenv.isDarwin then pkgs.emacsMacport else pkgs.emacs;
+    package =
+      if pkgs.stdenv.isDarwin
+      then pkgs.emacsMacport
+      else pkgs.emacs;
   };
 
   home = {
@@ -13,11 +20,11 @@
     };
 
     # Ensure `doom` CLI is on PATH for activation scripts
-    sessionPath = lib.mkIf pkgs.stdenv.isDarwin (lib.mkAfter [ "$HOME/.config/emacs/bin" ]);
+    sessionPath = lib.mkIf pkgs.stdenv.isDarwin (lib.mkAfter ["$HOME/.config/emacs/bin"]);
   };
 
   # Sync Doom packages after HM writes files (best-effort)
-  home.activation.doomSync = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
+  home.activation.doomSync = lib.hm.dag.entryAfter ["writeBoundary"] ''
     if [ -x "$HOME/.config/emacs/bin/doom" ]; then
       export XDG_CACHE_HOME="''${XDG_CACHE_HOME:-$HOME/.cache}"
       export XDG_DATA_HOME="''${XDG_DATA_HOME:-$HOME/.local/share}"

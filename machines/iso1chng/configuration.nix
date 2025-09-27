@@ -1,6 +1,6 @@
-{
+{inputs, ...}: {
   imports = [
-    ./../../modules/nixos/iso.nix
+    inputs.self.nixosModules.iso
   ];
 
   networking.hostName = "iso1chng";
