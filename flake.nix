@@ -191,21 +191,11 @@
         process-compose."devservices" = {
           imports = [ inputs.services-flake.processComposeModules.default ];
           services = {
-            # Postgres 16 on localhost:5432 with throwaway storage
-            postgresql.pg = {
-              enable = true;
-              package = pkgs.postgresql_16;
-              dataDir = "${toString ./.}/.pc-data/pg";
-            };
+            # Postgres on localhost:5432 (services-flake default settings)
+            postgres.pg.enable = true;
             # Redis on localhost:6379
             redis.r1.enable = true;
           };
-        };
-
-        # Provide a simple app alias so `nix run .#devservices` works
-        apps.devservices = {
-          type = "app";
-          program = "${config.process-compose.devservices.package}/bin/process-compose";
         };
 
         devshells = {
