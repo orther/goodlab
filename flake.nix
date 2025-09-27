@@ -195,7 +195,7 @@
         #   nix run .#devservices         (start)
         #   nix run .#devservices -- stop (stop)
         process-compose."devservices" = {
-          imports = [ inputs.services-flake.processComposeModules.default ];
+          imports = [inputs.services-flake.processComposeModules.default];
           services = {
             # Postgres on localhost:5432 (services-flake default settings)
             postgres.pg.enable = true;
