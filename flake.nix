@@ -163,7 +163,7 @@
               modules = [ ./machines/noir/configuration.nix ];
             };
             summary = builtins.toJSON {
-              system = sys.config.system.system;
+              platform = sys.pkgs.stdenv.hostPlatform.system;
               stateVersion = sys.config.system.stateVersion or null;
             };
           in pkgs.writeText "nixos-eval-noir.json" summary;
@@ -178,10 +178,16 @@
               modules = [ ./machines/zinc/configuration.nix ];
             };
             summary = builtins.toJSON {
-              system = sys.config.system.system;
+              platform = sys.pkgs.stdenv.hostPlatform.system;
               stateVersion = sys.config.system.stateVersion or null;
             };
           in pkgs.writeText "nixos-eval-zinc.json" summary;
+        };
+
+        # Expose a convenient app alias for process-compose devservices
+        apps.devservices = {
+          type = "app";
+          program = "${config.process-compose.devservices.package}/bin/process-compose";
         };
 
         # Developer services bundle via services-flake + process-compose
