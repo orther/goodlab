@@ -49,6 +49,9 @@ MacBook Air, and work WSL setup.
 - `nix flake check` runs statix, deadnix, and the formatting check in CI parity.
 - `nix develop` drops into the default dev shell; use `nix develop .#ops` for deployment helpers.
 - `just deploy <machine> [ip]` drives the existing rebuild automation for macOS and NixOS hosts.
+- Local dev services (via services-flake + process-compose):
+  - Start: `nix run .#devservices`
+  - Stop:  `nix run .#devservices -- stop`
 
 ## Getting started
 

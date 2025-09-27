@@ -72,6 +72,15 @@
     devshell = {
       url = "github:numtide/devshell";
     };
+
+    # Local developer services orchestration
+    process-compose-flake = {
+      url = "github:platonic-systems/process-compose-flake";
+    };
+    services-flake = {
+      url = "github:juspay/services-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = inputs @ {
@@ -89,10 +98,11 @@
         "x86_64-linux"
       ];
 
-      # Bring in treefmt-nix and devshell flake modules
+      # Bring in treefmt-nix, devshell, and process-compose modules
       imports = [
         inputs.treefmt-nix.flakeModule
         inputs.devshell.flakeModule
+        inputs.process-compose-flake.flakeModule
       ];
 
       perSystem = {
@@ -141,6 +151,50 @@
             mkdir -p "$out"
             touch "$out"/success
           '';
+
+          # Lightweight NixOS eval smoke test (no build), to catch regressions early
+          nixosEval-noir = let
+            sys = inputs.nixpkgs.lib.nixosSystem {
+              system = pkgs.stdenv.hostPlatform.system;
+              specialArgs = {
+                inherit inputs;
+                inherit (self) outputs;
+              };
+              modules = [ ./machines/noir/configuration.nix ];
+            };
+            summary = builtins.toJSON {
+              system = sys.config.system.system;
+              stateVersion = sys.config.system.stateVersion or null;
+            };
+          in pkgs.writeText "nixos-eval-noir.json" summary;
+        };
+
+        # Developer service bundles via services-flake + process-compose
+        # Usage:
+        #   nix run .#devservices         (start)
+        #   nix run .#devservices -- stop (stop)
+        process-compose."devservices".imports = [
+          inputs.services-flake.processComposeModules.default
+        ];
+
+        # Minimal, safe defaults for local hacking
+        services = {
+          # Postgres 16 on localhost:5432 with throwaway storage
+          postgresql."pg" = {
+            enable = true;
+            package = pkgs.postgresql_16;
+            # Create a transient data dir under project dir
+            dataDir = "${toString ./.}/.pc-data/pg";
+          };
+
+          # Redis on localhost:6379
+          redis."redis".enable = true;
+        };
+
+        # Expose a convenient app to run the bundle
+        apps.devservices = {
+          type = "app";
+          program = "${config.process-compose.devservices.package}/bin/process-compose";
         };
 
         devshells = {
