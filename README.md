@@ -51,7 +51,7 @@ MacBook Air, and work WSL setup.
 - `just deploy <machine> [ip]` drives the existing rebuild automation for macOS and NixOS hosts.
 - Local dev services (via services-flake + process-compose):
   - Start: `nix run .#devservices`
-  - Stop:  `nix run .#devservices -- stop`
+  - Stop: `nix run .#devservices -- stop`
 
 ## Getting started
 
