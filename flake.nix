@@ -160,13 +160,14 @@
                 inherit inputs;
                 inherit (self) outputs;
               };
-              modules = [ ./machines/noir/configuration.nix ];
+              modules = [./machines/noir/configuration.nix];
             };
             summary = builtins.toJSON {
               platform = sys.pkgs.stdenv.hostPlatform.system;
               stateVersion = sys.config.system.stateVersion or null;
             };
-          in pkgs.writeText "nixos-eval-noir.json" summary;
+          in
+            pkgs.writeText "nixos-eval-noir.json" summary;
 
           nixosEval-zinc = let
             sys = inputs.nixpkgs.lib.nixosSystem {
@@ -175,13 +176,14 @@
                 inherit inputs;
                 inherit (self) outputs;
               };
-              modules = [ ./machines/zinc/configuration.nix ];
+              modules = [./machines/zinc/configuration.nix];
             };
             summary = builtins.toJSON {
               platform = sys.pkgs.stdenv.hostPlatform.system;
               stateVersion = sys.config.system.stateVersion or null;
             };
-          in pkgs.writeText "nixos-eval-zinc.json" summary;
+          in
+            pkgs.writeText "nixos-eval-zinc.json" summary;
         };
 
         # Expose a convenient app alias for process-compose devservices
