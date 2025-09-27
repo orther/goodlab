@@ -6,14 +6,16 @@
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
-    extraConfig = lib.mkMerge [
-      (lib.mkIf pkgs.stdenv.isLinux ''
-        IdentityAgent "~/.1password/agent.sock"
-      '')
-      (lib.mkIf pkgs.stdenv.isDarwin ''
-        IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
-      '')
-    ];
+    # Define a default match block and set IdentityAgent there,
+    # avoiding raw extraConfig so HM's assertion is satisfied.
+    matchBlocks = {
+      "*" = {
+        extraOptions = lib.mkMerge [
+          (lib.mkIf pkgs.stdenv.isLinux { IdentityAgent = "~/.1password/agent.sock"; })
+          (lib.mkIf pkgs.stdenv.isDarwin { IdentityAgent = "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"; })
+        ];
+      };
+    };
   };
 
   programs.git = {
