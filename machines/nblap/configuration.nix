@@ -20,11 +20,11 @@
     users = {
       "brandon.orther" = {
         imports = [
-          ./../../modules/home-manager/base.nix
-          ./../../modules/home-manager/fonts.nix
-          ./../../modules/home-manager/alacritty.nix
-          ./../../modules/home-manager/1password.nix
-          ./../../modules/home-manager/doom.nix
+          inputs.self.lib.hmModules.base
+          inputs.self.lib.hmModules.fonts
+          inputs.self.lib.hmModules.alacritty
+          inputs.self.lib.hmModules."1password"
+          inputs.self.lib.hmModules.doom
         ];
         # Override defaults from HM base for this host
         home.username = lib.mkForce "brandon.orther";

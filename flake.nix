@@ -79,7 +79,6 @@
     };
     services-flake = {
       url = "github:juspay/services-flake";
-      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
@@ -98,7 +97,7 @@
         "x86_64-linux"
       ];
 
-      # Bring in treefmt-nix, devshell, and process-compose modules
+      # Bring in treefmt, devshell, and process-compose modules
       imports = [
         inputs.treefmt-nix.flakeModule
         inputs.devshell.flakeModule
@@ -169,32 +168,22 @@
           in pkgs.writeText "nixos-eval-noir.json" summary;
         };
 
-        # Developer service bundles via services-flake + process-compose
+        # Developer services bundle via services-flake + process-compose
         # Usage:
         #   nix run .#devservices         (start)
         #   nix run .#devservices -- stop (stop)
-        process-compose."devservices".imports = [
-          inputs.services-flake.processComposeModules.default
-        ];
-
-        # Minimal, safe defaults for local hacking
-        services = {
-          # Postgres 16 on localhost:5432 with throwaway storage
-          postgresql."pg" = {
-            enable = true;
-            package = pkgs.postgresql_16;
-            # Create a transient data dir under project dir
-            dataDir = "${toString ./.}/.pc-data/pg";
+        process-compose."devservices" = {
+          imports = [ inputs.services-flake.processComposeModules.default ];
+          services = {
+            # Postgres 16 on localhost:5432 with throwaway storage
+            postgresql.pg = {
+              enable = true;
+              package = pkgs.postgresql_16;
+              dataDir = "${toString ./.}/.pc-data/pg";
+            };
+            # Redis on localhost:6379
+            redis.r1.enable = true;
           };
-
-          # Redis on localhost:6379
-          redis."redis".enable = true;
-        };
-
-        # Expose a convenient app to run the bundle
-        apps.devservices = {
-          type = "app";
-          program = "${config.process-compose.devservices.package}/bin/process-compose";
         };
 
         devshells = {

@@ -29,7 +29,7 @@
     users = {
       orther = {
         imports = [
-          ./../../modules/home-manager/base.nix
+          inputs.self.lib.hmModules.base
         ];
 
         programs.git = {
