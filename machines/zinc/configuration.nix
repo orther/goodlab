@@ -10,9 +10,9 @@
 
     ./hardware-configuration.nix
 
-    ./../../modules/nixos/base.nix
-    ./../../modules/nixos/remote-unlock.nix
-    ./../../modules/nixos/auto-update.nix
+    inputs.self.nixosModules.base
+    inputs.self.nixosModules."remote-unlock"
+    inputs.self.nixosModules."auto-update"
 
     ./../../services/tailscale.nix
     #./../../services/netdata.nix
@@ -27,7 +27,7 @@
     users = {
       orther = {
         imports = [
-          ./../../modules/home-manager/base.nix
+          inputs.self.lib.hmModules.base
         ];
       };
     };

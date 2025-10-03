@@ -1,6 +1,9 @@
-{ config, pkgs, lib, ... }:
-
-let
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}: let
   cfg = config.local.zscaler;
   securityTool = "/usr/bin/security";
   launchctlTool = "/bin/launchctl";
@@ -96,7 +99,6 @@ let
 
     echo "personal"
   '';
-
 in {
   options.local.zscaler = {
     enable = lib.mkEnableOption "Zscaler/corporate certificate management";
@@ -127,7 +129,6 @@ in {
   };
 
   config = lib.mkIf cfg.enable {
-
     # Environment variables for system-wide SSL certificate configuration
     environment.variables = {
       # Nix-specific (though Determinate Nix handles this automatically)
@@ -172,7 +173,7 @@ in {
     launchd.daemons.corporate-cert-refresh = {
       serviceConfig = {
         Label = "com.goonlab.corporate-cert-refresh";
-        ProgramArguments = [ "${certificateRefreshScript}" ];
+        ProgramArguments = ["${certificateRefreshScript}"];
         StartInterval = cfg.refreshInterval;
         StandardOutPath = "/var/log/corporate-cert-refresh.log";
         StandardErrorPath = "/var/log/corporate-cert-refresh.log";

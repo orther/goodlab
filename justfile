@@ -66,3 +66,8 @@ release version="":
   fi
   git tag -a "{{version}}" -m "Release {{version}}"
   git push origin "{{version}}"
+fmt:
+  nix fmt
+
+check:
+  nix flake check

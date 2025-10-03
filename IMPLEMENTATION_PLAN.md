@@ -1,3 +1,44 @@
+# Modern Flake Migration Implementation Plan
+
+## Stage 1: Introduce flake-parts skeleton
+
+**Goal**: Convert `flake.nix` to use `flake-parts.lib.mkFlake` with a single `systems` definition and move `formatter` into `perSystem` while preserving existing `darwinConfigurations` and `nixosConfigurations`.
+**Success Criteria**: `nix flake show` lists the same host configurations; `formatter` is available for all systems; evaluation succeeds without changing machine semantics.
+**Tests**:
+
+- `nix eval .#darwinConfigurations` and `nix eval .#nixosConfigurations` succeed
+- `nix flake show` includes `formatter` per system
+- `nix eval .#darwinConfigurations.stud._type` returns `derivation` (or similar evaluation sanity)
+  **Status**: In Progress
+
+## Stage 2: Modularize host logic
+
+**Goal**: Group and export reusable module sets (`outputs.modules.{nixos,darwin}`) and align `machines/*` to import shared modules by concern (core/workstations/homelab/vps).
+**Success Criteria**: `nix eval .#nixosModules` and `.darwinModules` expose expected module sets; one machine migrated to use new module layout.
+**Tests**: Evaluate module attributes; build a migrated machine config without errors.
+**Status**: Complete
+
+## Stage 3: Formatter and lint orchestration
+
+**Goal**: Add `treefmt-nix` with `alejandra`, `shfmt`, and `prettier`; wire `statix` and `deadnix` into `checks` via flake-parts.
+**Success Criteria**: `nix fmt` formats repo; `nix flake check` runs formatting and static analysis checks.
+**Tests**: Run `nix build .#checks.$SYSTEM.*` locally; verify non-zero exit on lint errors.
+**Status**: Complete
+
+## Stage 4: Standardize devShells
+
+**Goal**: Add `numtide/devshell` via flake-parts; define `devShells.default` and role shells (`ops`, `dev`).
+**Success Criteria**: `nix develop` drops into a shell with `nix`, `just`, `sops`, and deployment tools available.
+**Tests**: `nix develop` works on macOS and Linux; tools are on PATH.
+**Status**: Complete
+
+## Stage 5: CI + FlakeHub integration
+
+**Goal**: Add GitHub Actions for `flake check` and FlakeHub publish on tags.
+**Success Criteria**: CI green on PRs; tagged releases published to FlakeHub.
+**Tests**: Dry-run CI locally (where possible); verify Action logs on a test tag.
+**Status**: Complete
+
 # Zscaler/Corporate Certificate Management Implementation Plan
 
 ## Overview
@@ -23,6 +64,7 @@ Corporate networks often use MITM (Man-in-the-Middle) proxies like Zscaler that 
 **Status**: Complete
 
 **Implementation**:
+
 - Created `modules/macos/zscaler.nix` with comprehensive certificate management
 - Automatic certificate extraction from multiple macOS keychains
 - System-wide environment variable configuration
@@ -36,6 +78,7 @@ Corporate networks often use MITM (Man-in-the-Middle) proxies like Zscaler that 
 **Status**: Complete
 
 **Implementation**:
+
 - Added zscaler.nix import to work.nix
 - Configured zscaler module with appropriate settings for corporate environment
 - Enhanced pnpm overlay to prefer corporate certificates over TLS bypass
@@ -48,6 +91,7 @@ Corporate networks often use MITM (Man-in-the-Middle) proxies like Zscaler that 
 **Status**: Ready for testing
 
 **Test Cases**:
+
 - [ ] `nix flake update` works without SSL errors
 - [ ] `pnpm install` works with corporate certificates
 - [ ] `curl` commands use corporate certificates
@@ -61,6 +105,7 @@ Corporate networks often use MITM (Man-in-the-Middle) proxies like Zscaler that 
 **Status**: In Progress
 
 **Tasks**:
+
 - [ ] Create user documentation
 - [ ] Update README with certificate management information
 - [ ] Deploy to work laptops
@@ -69,12 +114,14 @@ Corporate networks often use MITM (Man-in-the-Middle) proxies like Zscaler that 
 ## Key Features
 
 ### Automatic Certificate Extraction
+
 - Extracts certificates from macOS system keychains
 - Handles System.keychain, SystemRootCertificates.keychain, and login.keychain
 - Combines all certificates into unified bundle
 - Updates symlinks for Nix compatibility
 
 ### System-wide Configuration
+
 - Sets comprehensive environment variables:
   - `SSL_CERT_FILE` - Standard SSL certificate file
   - `CURL_CA_BUNDLE` - For curl/wget tools
@@ -83,6 +130,7 @@ Corporate networks often use MITM (Man-in-the-Middle) proxies like Zscaler that 
   - `NIX_SSL_CERT_FILE` - For Nix operations
 
 ### Corporate Network Detection
+
 - Automatic detection via multiple methods:
   - Zscaler process detection
   - Proxy environment variables
@@ -90,12 +138,14 @@ Corporate networks often use MITM (Man-in-the-Middle) proxies like Zscaler that 
   - Certificate authority analysis
 
 ### Periodic Refresh
+
 - LaunchDaemon for automatic certificate updates
 - Configurable refresh interval
 - Automatic service restarts when certificates change
 - Optional desktop notifications
 
 ### Security-First Approach
+
 - Prefers proper certificate validation over TLS bypass
 - Falls back to TLS bypass only when certificates unavailable
 - Maintains compatibility with Determinate Nix's certificate handling
@@ -115,11 +165,13 @@ local.zscaler = {
 ## Integration Points
 
 ### Existing Components
+
 - **Determinate Nix**: Handles Nix-specific certificate management automatically
 - **pnpm overlay**: Enhanced to use corporate certificates before TLS bypass
 - **Corporate network flag**: Used for conditional behavior in other modules
 
 ### New Components
+
 - **zscaler.nix module**: Core certificate management functionality
 - **Certificate extraction scripts**: Automated keychain export
 - **Detection utilities**: Corporate environment identification
@@ -136,17 +188,20 @@ local.zscaler = {
 ## Deployment Instructions
 
 1. **Enable the module** in your work configuration:
+
    ```nix
    imports = [ ./modules/macos/zscaler.nix ];
    local.zscaler.enable = true;
    ```
 
 2. **Apply the configuration**:
+
    ```bash
    darwin-rebuild switch --flake .#your-hostname
    ```
 
 3. **Verify certificate extraction**:
+
    ```bash
    sudo extract-corporate-certificates
    ls -la /etc/ssl/nix-corporate/
@@ -161,16 +216,19 @@ local.zscaler = {
 ## Maintenance
 
 ### Manual Certificate Refresh
+
 ```bash
 refresh-corporate-certificates
 ```
 
 ### Check Corporate Network Status
+
 ```bash
 detect-corporate-network
 ```
 
 ### View Refresh Logs
+
 ```bash
 tail -f /var/log/corporate-cert-refresh.log
 ```

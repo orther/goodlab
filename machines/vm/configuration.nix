@@ -1,4 +1,3 @@
-
 {
   inputs,
   outputs,
@@ -10,9 +9,9 @@
 
     ./hardware-configuration.nix
 
-    ./../../modules/nixos/base.nix
-    ./../../modules/nixos/remote-unlock.nix
-    ./../../modules/nixos/auto-update.nix
+    inputs.self.nixosModules.base
+    inputs.self.nixosModules."remote-unlock"
+    inputs.self.nixosModules."auto-update"
 
     # ./../../services/tailscale.nix
   ];
@@ -24,7 +23,7 @@
     users = {
       orther = {
         imports = [
-          ./../../modules/home-manager/base.nix
+          inputs.self.lib.hmModules.base
         ];
 
         programs.git = {
@@ -36,6 +35,7 @@
 
         programs.ssh = {
           enable = true;
+          enableDefaultConfig = false;
           matchBlocks = {
             "github.com" = {
               hostname = "github.com";

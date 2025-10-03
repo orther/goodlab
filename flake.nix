@@ -6,6 +6,9 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     impermanence.url = "github:nix-community/impermanence";
 
+    # Modern flake orchestration
+    flake-parts.url = "github:hercules-ci/flake-parts";
+
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -60,101 +63,314 @@
       url = "github:nix-community/NixOS-WSL/main";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    # Formatting orchestrator (Stage 3)
+    treefmt-nix = {
+      url = "github:numtide/treefmt-nix";
+    };
+
+    devshell = {
+      url = "github:numtide/devshell";
+    };
+
+    # Local developer services orchestration
+    process-compose-flake = {
+      url = "github:platonic-systems/process-compose-flake";
+    };
+    services-flake = {
+      url = "github:juspay/services-flake";
+    };
   };
 
-  outputs = {
+  outputs = inputs @ {
     self,
     nixpkgs,
     nix-darwin,
+    flake-parts,
     ...
-  } @ inputs: let
-    inherit (self) outputs;
+  }:
+    flake-parts.lib.mkFlake {inherit inputs;} {
+      systems = [
+        "aarch64-darwin"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "x86_64-linux"
+      ];
 
-    systems = [
-      "aarch64-darwin"
-      "aarch64-linux"
-      "x86_64-darwin"
-      "x86_64-linux"
-    ];
+      # Bring in treefmt, devshell, and process-compose modules
+      imports = [
+        inputs.treefmt-nix.flakeModule
+        inputs.devshell.flakeModule
+        inputs.process-compose-flake.flakeModule
+      ];
 
-    forAllSystems = nixpkgs.lib.genAttrs systems;
-  in {
-    # Enables `nix fmt` at root of repo to format all nix files
-    formatter = forAllSystems (system: nixpkgs.legacyPackages.${system}.alejandra);
+      perSystem = {
+        config,
+        pkgs,
+        ...
+      }: {
+        # treefmt configuration (nix fmt)
+        treefmt = {
+          projectRootFile = "flake.nix";
+          programs = {
+            alejandra.enable = true;
+            shfmt.enable = true;
+            prettier.enable = true;
+          };
+        };
 
-    darwinConfigurations = {
-      mair = nix-darwin.lib.darwinSystem {
-        system = "x86_64-darwin"; # Specify system for mair
-        specialArgs = {inherit inputs outputs;};
-        modules = [
-          ./machines/mair/configuration.nix
-          {
-            nixpkgs.config.allowUnfree = true;
-          }
-        ];
+        # Enables `nix fmt` at root of repo to format all supported files
+        formatter = config.treefmt.build.wrapper;
+
+        # Static analysis checks
+        checks = {
+          formatting = pkgs.runCommand "treefmt-check" {nativeBuildInputs = [config.treefmt.build.wrapper];} ''
+            export HOME=$(mktemp -d)
+            tmpdir=$(mktemp -d)
+            cp -R ${./.} "$tmpdir/src"
+            chmod -R u+w "$tmpdir/src"
+            cd "$tmpdir/src"
+            treefmt --fail-on-change
+            mkdir -p "$out"
+            touch "$out"/success
+          '';
+
+          statix = pkgs.runCommand "statix-check" {nativeBuildInputs = [pkgs.statix];} ''
+            export HOME=$(mktemp -d)
+            cd ${./.}
+            statix check .
+            mkdir -p "$out"
+            touch "$out"/success
+          '';
+
+          deadnix = pkgs.runCommand "deadnix-check" {nativeBuildInputs = [pkgs.deadnix];} ''
+            export HOME=$(mktemp -d)
+            cd ${./.}
+            deadnix --fail
+            mkdir -p "$out"
+            touch "$out"/success
+          '';
+
+          # Lightweight NixOS eval smoke test (no build), to catch regressions early
+          nixosEval-noir = let
+            sys = inputs.nixpkgs.lib.nixosSystem {
+              # Evaluate as Linux regardless of host platform
+              system = "x86_64-linux";
+              specialArgs = {
+                inherit inputs;
+                inherit (self) outputs;
+              };
+              modules = [./machines/noir/configuration.nix];
+            };
+            summary = builtins.toJSON {
+              platform = sys.pkgs.stdenv.hostPlatform.system;
+              stateVersion = sys.config.system.stateVersion or null;
+            };
+          in
+            pkgs.writeText "nixos-eval-noir.json" summary;
+
+          nixosEval-zinc = let
+            sys = inputs.nixpkgs.lib.nixosSystem {
+              system = "x86_64-linux";
+              specialArgs = {
+                inherit inputs;
+                inherit (self) outputs;
+              };
+              modules = [./machines/zinc/configuration.nix];
+            };
+            summary = builtins.toJSON {
+              platform = sys.pkgs.stdenv.hostPlatform.system;
+              stateVersion = sys.config.system.stateVersion or null;
+            };
+          in
+            pkgs.writeText "nixos-eval-zinc.json" summary;
+        };
+
+        # Expose a convenient app alias for process-compose devservices
+        apps.devservices = {
+          type = "app";
+          program = "${config.process-compose.devservices.package}/bin/process-compose";
+        };
+
+        # Developer services bundle via services-flake + process-compose
+        # Usage:
+        #   nix run .#devservices         (start)
+        #   nix run .#devservices -- stop (stop)
+        process-compose."devservices" = {
+          imports = [inputs.services-flake.processComposeModules.default];
+          services = {
+            # Postgres on localhost:5432 (services-flake default settings)
+            postgres.pg.enable = true;
+            # Redis on localhost:6379
+            redis.r1.enable = true;
+          };
+        };
+
+        devshells = {
+          default = {
+            packages = with pkgs; [
+              git
+              just
+              sops
+              alejandra
+              shfmt
+              nodejs
+              statix
+              deadnix
+              nil
+            ];
+            commands = [
+              {
+                name = "fmt";
+                command = "nix fmt";
+                category = "dev";
+                help = "Format repository";
+              }
+              {
+                name = "check";
+                command = "nix flake check";
+                category = "dev";
+                help = "Run repo checks";
+              }
+            ];
+          };
+
+          ops = {
+            packages = with pkgs; [
+              nixos-rebuild
+              cachix
+            ];
+          };
+        };
       };
-      stud = nix-darwin.lib.darwinSystem {
-        system = "aarch64-darwin"; # Specify system for stud
-        specialArgs = {inherit inputs outputs;};
-        modules = [
-          ./machines/stud/configuration.nix
-          {
-            nixpkgs.config.allowUnfree = true;
-          }
-        ];
-      };
-      nblap = nix-darwin.lib.darwinSystem {
-        system = "aarch64-darwin"; # Apple Silicon MacBook (work)
-        specialArgs = {inherit inputs outputs;};
-        modules = [
-          ./machines/nblap/configuration.nix
-          {
-            nixpkgs.config.allowUnfree = true;
-          }
-        ];
+
+      flake = {
+        # Export reusable module sets for downstream reuse and internal imports
+        darwinModules = {
+          base = import ./modules/macos/base.nix;
+          work = import ./modules/macos/work.nix;
+          zscaler = import ./modules/macos/zscaler.nix;
+        };
+
+        nixosModules = {
+          base = import ./modules/nixos/base.nix;
+          desktop = import ./modules/nixos/desktop.nix;
+          iso = import ./modules/nixos/iso.nix;
+          "remote-unlock" = import ./modules/nixos/remote-unlock.nix;
+          amdgpu = import ./modules/nixos/amdgpu.nix;
+          "auto-update" = import ./modules/nixos/auto-update.nix;
+        };
+
+        # Home Manager module exports (nest under lib to avoid unknown output warnings)
+        lib = {
+          hmModules = {
+            base = import ./modules/home-manager/base.nix;
+            fonts = import ./modules/home-manager/fonts.nix;
+            alacritty = import ./modules/home-manager/alacritty.nix;
+            doom = import ./modules/home-manager/doom.nix;
+            "1password" = import ./modules/home-manager/1password.nix;
+            desktop = import ./modules/home-manager/desktop.nix;
+          };
+        };
+
+        darwinConfigurations = {
+          mair = nix-darwin.lib.darwinSystem {
+            system = "x86_64-darwin"; # Specify system for mair
+            specialArgs = {
+              inherit inputs;
+              inherit (self) outputs;
+            };
+            modules = [
+              ./machines/mair/configuration.nix
+              {
+                nixpkgs.config.allowUnfree = true;
+              }
+            ];
+          };
+          stud = nix-darwin.lib.darwinSystem {
+            system = "aarch64-darwin"; # Specify system for stud
+            specialArgs = {
+              inherit inputs;
+              inherit (self) outputs;
+            };
+            modules = [
+              ./machines/stud/configuration.nix
+              {
+                nixpkgs.config.allowUnfree = true;
+              }
+            ];
+          };
+          nblap = nix-darwin.lib.darwinSystem {
+            system = "aarch64-darwin"; # Apple Silicon MacBook (work)
+            specialArgs = {
+              inherit inputs;
+              inherit (self) outputs;
+            };
+            modules = [
+              ./machines/nblap/configuration.nix
+              {
+                nixpkgs.config.allowUnfree = true;
+              }
+            ];
+          };
+        };
+
+        nixosConfigurations = {
+          iso1chng = nixpkgs.lib.nixosSystem {
+            system = "x86_64-linux";
+            specialArgs = {
+              inherit inputs;
+              inherit (self) outputs;
+            };
+            modules = [
+              (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
+              ./machines/iso1chng/configuration.nix
+            ];
+          };
+
+          iso-aarch64 = nixpkgs.lib.nixosSystem {
+            system = "aarch64-linux";
+            specialArgs = {
+              inherit inputs;
+              inherit (self) outputs;
+            };
+            modules = [
+              (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
+              ./machines/iso1chng/configuration.nix
+              {
+                # Override hostname for ARM64 variant
+                networking.hostName = nixpkgs.lib.mkForce "iso-aarch64";
+              }
+            ];
+          };
+
+          noir = nixpkgs.lib.nixosSystem {
+            system = "x86_64-linux";
+            specialArgs = {
+              inherit inputs;
+              inherit (self) outputs;
+            };
+            modules = [./machines/noir/configuration.nix];
+          };
+
+          vm = nixpkgs.lib.nixosSystem {
+            system = "aarch64-linux";
+            specialArgs = {
+              inherit inputs;
+              inherit (self) outputs;
+            };
+            modules = [./machines/vm/configuration.nix];
+          };
+
+          zinc = nixpkgs.lib.nixosSystem {
+            system = "x86_64-linux";
+            specialArgs = {
+              inherit inputs;
+              inherit (self) outputs;
+            };
+            modules = [./machines/zinc/configuration.nix];
+          };
+        };
       };
     };
-
-    nixosConfigurations = {
-      iso1chng = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        specialArgs = {inherit inputs outputs;};
-        modules = [
-          (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
-          ./machines/iso1chng/configuration.nix
-        ];
-      };
-
-      iso-aarch64 = nixpkgs.lib.nixosSystem {
-        system = "aarch64-linux";
-        specialArgs = {inherit inputs outputs;};
-        modules = [
-          (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
-          ./machines/iso1chng/configuration.nix
-          {
-            # Override hostname for ARM64 variant
-            networking.hostName = nixpkgs.lib.mkForce "iso-aarch64";
-          }
-        ];
-      };
-
-      noir = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        specialArgs = {inherit inputs outputs;};
-        modules = [./machines/noir/configuration.nix];
-      };
-
-      vm = nixpkgs.lib.nixosSystem {
-        system = "aarch64-linux";
-        specialArgs = {inherit inputs outputs;};
-        modules = [./machines/vm/configuration.nix];
-      };
-
-      zinc = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        specialArgs = {inherit inputs outputs;};
-        modules = [./machines/zinc/configuration.nix];
-      };
-    };
-  };
 }

@@ -1,6 +1,19 @@
-{
+{pkgs, ...}: {
+  # Allow unfree + permit insecure Ventoy specifically for ISO builds
+  nixpkgs.config = {
+    allowUnfree = true;
+    permittedInsecurePackages = [
+      "ventoy-1.1.07"
+    ];
+  };
+
   imports = [
     ./_packages.nix
+  ];
+
+  # ISO tooling
+  environment.systemPackages = with pkgs; [
+    ventoy
   ];
 
   users.users.nixos = {
