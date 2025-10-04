@@ -25,6 +25,7 @@
     ./../../services/research-relay/_common-hardening.nix
     ./../../services/research-relay/odoo.nix
     ./../../services/research-relay/pdf-intake.nix
+    ./../../services/research-relay/age-gate.nix
     ./../../services/research-relay/secrets.nix
   ];
 
@@ -77,5 +78,6 @@
   services.researchRelay = {
     odoo.enable = true;
     pdfIntake.enable = true;
+    ageGate.enable = true; # Age verification (18+)
   };
 }

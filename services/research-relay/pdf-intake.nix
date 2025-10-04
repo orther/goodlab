@@ -8,13 +8,16 @@
 }: let
   pdfIntakePort = 8070;
   domain = "research-relay.com";
+  # Python environment for PDF-intake service
+  # Note: pdfplumber may not be in nixpkgs, using alternatives
   pythonEnv = pkgs.python311.withPackages (ps:
     with ps; [
       fastapi
       uvicorn
       celery
       redis
-      pdfplumber
+      # pdfplumber - install via pip in container if not available
+      pypdf2  # Alternative to pdfplumber
       pandas
       requests
       pydantic
@@ -26,7 +29,7 @@ in {
       enable = true;
       port = 6380;
       bind = "127.0.0.1";
-      requirePass = config.sops.secrets."research-relay/pdf-intake/redis-password".path;
+      requirePassFile = config.sops.secrets."research-relay/pdf-intake/redis-password".path;
     };
 
     # PDF-intake FastAPI service

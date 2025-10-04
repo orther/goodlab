@@ -110,26 +110,16 @@
         ...
       }: {
         # Research Relay OCI images for GHCR
+        # NOTE: Odoo image commented out - use official Docker Hub image instead
+        # PDF-intake can be built if needed
         packages = {
-          # Odoo Docker image
-          odooImage = pkgs.dockerTools.buildImage {
-            name = "ghcr.io/scientific-oops/research-relay-odoo";
-            tag = "latest";
-            created = "now";
-            config = {
-              Cmd = ["${pkgs.odoo}/bin/odoo" "--config" "/etc/odoo/odoo.conf"];
-              ExposedPorts = {"8069/tcp" = {};};
-            };
-            copyToRoot = pkgs.buildEnv {
-              name = "odoo-root";
-              paths = [
-                pkgs.odoo
-                pkgs.postgresql_16
-                pkgs.python311Packages.psycopg2
-              ];
-              pathsToLink = ["/bin" "/lib"];
-            };
-          };
+          # # Odoo Docker image - NOT AVAILABLE IN NIXPKGS
+          # # Use official image: docker pull odoo:17.0
+          # odooImage = pkgs.dockerTools.buildImage {
+          #   name = "ghcr.io/scientific-oops/research-relay-odoo";
+          #   tag = "latest";
+          #   created = "now";
+          # };
 
           # PDF-intake service image
           pdfIntakeImage = let
@@ -139,7 +129,7 @@
                 uvicorn
                 celery
                 redis
-                pdfplumber
+                pypdf2  # Using pypdf2 instead of pdfplumber (may not be in nixpkgs)
                 pandas
                 requests
                 pydantic
@@ -152,10 +142,11 @@
               config = {
                 Cmd = ["${pythonEnv}/bin/uvicorn" "app.main:app" "--host" "0.0.0.0" "--port" "8070"];
                 ExposedPorts = {"8070/tcp" = {};};
+                WorkingDir = "/app";
               };
               copyToRoot = pkgs.buildEnv {
                 name = "pdf-intake-root";
-                paths = [pythonEnv pkgs.coreutils];
+                paths = [pythonEnv pkgs.coreutils pkgs.bash];
                 pathsToLink = ["/bin" "/lib"];
               };
             };

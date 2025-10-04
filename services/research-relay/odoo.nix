@@ -1,5 +1,6 @@
 # Odoo eCommerce service for Research Relay
 # Includes PostgreSQL database and nginx reverse proxy with Cloudflare origin certs
+# NOTE: This module uses Docker for Odoo since it's not packaged in nixpkgs
 {
   config,
   pkgs,
@@ -8,8 +9,18 @@
 }: let
   odooPort = 8069;
   domain = "research-relay.com";
+  odooVersion = "17.0";
 in {
   config = lib.mkIf config.services.researchRelay.odoo.enable {
+    # Enable Docker for Odoo container
+    virtualisation.docker = {
+      enable = true;
+      autoPrune = {
+        enable = true;
+        dates = "weekly";
+      };
+    };
+
     # PostgreSQL database for Odoo
     services.postgresql = {
       enable = true;
@@ -22,6 +33,7 @@ in {
         }
       ];
       authentication = ''
+        host odoo odoo 127.0.0.1/32 scram-sha-256
         local odoo odoo peer map=odoo
         local all postgres peer
       '';
@@ -31,68 +43,58 @@ in {
       '';
     };
 
-    # Odoo service (Community edition)
+    # Odoo service via Docker
     systemd.services.odoo = {
-      description = "Odoo Community ERP/eCommerce";
-      after = ["network.target" "postgresql.service"];
-      wants = ["postgresql.service"];
+      description = "Odoo Community ERP/eCommerce (Docker)";
+      after = ["network.target" "postgresql.service" "docker.service"];
+      wants = ["postgresql.service" "docker.service"];
       wantedBy = ["multi-user.target"];
 
       serviceConfig = {
-        Type = "simple";
-        User = "odoo";
-        Group = "odoo";
-        ExecStart = "${pkgs.odoo}/bin/odoo --config /var/lib/odoo/odoo.conf";
+        Type = "oneshot";
+        RemainAfterExit = true;
+        WorkingDirectory = "/var/lib/odoo";
+        ExecStartPre = pkgs.writeShellScript "odoo-pre" ''
+          set -euo pipefail
+          mkdir -p /var/lib/odoo/{addons,data,config}
+
+          # Create Odoo config
+          cat > /var/lib/odoo/config/odoo.conf <<EOF
+          [options]
+          admin_passwd = $(cat ${config.sops.secrets."research-relay/odoo/admin-password".path})
+          db_host = 172.17.0.1
+          db_port = 5432
+          db_user = odoo
+          db_password =
+          addons_path = /mnt/extra-addons
+          data_dir = /var/lib/odoo
+          logfile =
+          http_port = ${toString odooPort}
+          proxy_mode = True
+          EOF
+        '';
+        ExecStart = ''
+          ${pkgs.docker}/bin/docker run --rm --name odoo \
+            -p 127.0.0.1:${toString odooPort}:8069 \
+            -v /var/lib/odoo/addons:/mnt/extra-addons \
+            -v /var/lib/odoo/data:/var/lib/odoo \
+            -v /var/lib/odoo/config:/etc/odoo \
+            odoo:${odooVersion}
+        '';
+        ExecStop = "${pkgs.docker}/bin/docker stop odoo";
         Restart = "on-failure";
         RestartSec = "10s";
-
-        # Hardening
-        PrivateTmp = true;
-        ProtectSystem = "strict";
-        ProtectHome = true;
-        ReadWritePaths = ["/var/lib/odoo" "/var/log/odoo"];
-        NoNewPrivileges = true;
-      };
-
-      preStart = ''
-        # Ensure directories exist
-        mkdir -p /var/lib/odoo/addons
-        mkdir -p /var/log/odoo
-
-        # Generate config if not exists
-        if [ ! -f /var/lib/odoo/odoo.conf ]; then
-          cat > /var/lib/odoo/odoo.conf <<EOF
-        [options]
-        admin_passwd = \$ODOO_ADMIN_PASSWORD
-        db_host = False
-        db_port = False
-        db_user = odoo
-        db_password = False
-        addons_path = /var/lib/odoo/addons,${pkgs.odoo}/lib/python3.11/site-packages/odoo/addons
-        data_dir = /var/lib/odoo/data
-        logfile = /var/log/odoo/odoo.log
-        http_port = ${toString odooPort}
-        proxy_mode = True
-        EOF
-        fi
-
-        # Set permissions
-        chown -R odoo:odoo /var/lib/odoo /var/log/odoo
-      '';
-
-      environment = {
-        ODOO_ADMIN_PASSWORD = config.sops.secrets."research-relay/odoo/admin-password".path;
       };
     };
 
-    # Odoo user and group
-    users.users.odoo = {
-      isSystemUser = true;
-      group = "odoo";
-      home = "/var/lib/odoo";
-      createHome = true;
-    };
-    users.groups.odoo = {};
+    # Ensure data directories exist with proper permissions
+    systemd.tmpfiles.rules = [
+      "d /var/lib/odoo 0750 root root -"
+      "d /var/lib/odoo/addons 0750 root root -"
+      "d /var/lib/odoo/data 0750 root root -"
+      "d /var/lib/odoo/config 0750 root root -"
+      "d /var/backups/research-relay 0700 root root -"
+    ];
 
     # Nginx reverse proxy with Cloudflare origin cert
     services.nginx.virtualHosts."${domain}" = {

@@ -77,6 +77,7 @@ Services are disabled by default. Enable in machine configuration:
 services.researchRelay = {
   odoo.enable = true;
   pdfIntake.enable = true;
+  ageGate.enable = true;  # Age verification (18+)
 };
 ```
 
@@ -98,8 +99,9 @@ services.researchRelay = {
 - Kernel hardening via sysctl
 
 ### Odoo Security
-- US-only checkout enforcement (nginx + Cloudflare WAF)
-- Age gate modal with session cookies
+- **Age verification gate** - nginx + Lua enforced 18+ age check (see [AGE_GATE.md](AGE_GATE.md))
+- **US-only checkout** - nginx + Cloudflare WAF enforcement
+- **Session cookies** - 24-hour age verification (HttpOnly, Secure, SameSite)
 - Proxy mode for Cloudflare X-Forwarded-* headers
 - Separate admin credentials
 
