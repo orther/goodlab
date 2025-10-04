@@ -109,6 +109,58 @@
         pkgs,
         ...
       }: {
+        # Research Relay OCI images for GHCR
+        packages = {
+          # Odoo Docker image
+          odooImage = pkgs.dockerTools.buildImage {
+            name = "ghcr.io/scientific-oops/research-relay-odoo";
+            tag = "latest";
+            created = "now";
+            config = {
+              Cmd = ["${pkgs.odoo}/bin/odoo" "--config" "/etc/odoo/odoo.conf"];
+              ExposedPorts = {"8069/tcp" = {};};
+            };
+            copyToRoot = pkgs.buildEnv {
+              name = "odoo-root";
+              paths = [
+                pkgs.odoo
+                pkgs.postgresql_16
+                pkgs.python311Packages.psycopg2
+              ];
+              pathsToLink = ["/bin" "/lib"];
+            };
+          };
+
+          # PDF-intake service image
+          pdfIntakeImage = let
+            pythonEnv = pkgs.python311.withPackages (ps:
+              with ps; [
+                fastapi
+                uvicorn
+                celery
+                redis
+                pdfplumber
+                pandas
+                requests
+                pydantic
+              ]);
+          in
+            pkgs.dockerTools.buildImage {
+              name = "ghcr.io/scientific-oops/research-relay-pdf-intake";
+              tag = "latest";
+              created = "now";
+              config = {
+                Cmd = ["${pythonEnv}/bin/uvicorn" "app.main:app" "--host" "0.0.0.0" "--port" "8070"];
+                ExposedPorts = {"8070/tcp" = {};};
+              };
+              copyToRoot = pkgs.buildEnv {
+                name = "pdf-intake-root";
+                paths = [pythonEnv pkgs.coreutils];
+                pathsToLink = ["/bin" "/lib"];
+              };
+            };
+        };
+
         # treefmt configuration (nix fmt)
         treefmt = {
           projectRootFile = "flake.nix";

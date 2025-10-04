@@ -1,0 +1,135 @@
+# Research Relay CI/CD Pipeline
+# Builds OCI images and pushes to GHCR (ghcr.io/scientific-oops)
+#
+# Required GitHub secrets:
+#   - GHCR_TOKEN: GitHub token with packages:write permission
+#   - CACHIX_AUTH_TOKEN: (optional) For Nix binary cache
+#
+# Copy to .github/workflows/research-relay-ci.yml to enable
+
+name: Research Relay CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'services/research-relay/**'
+      - 'machines/noir/**'
+      - 'machines/zinc/**'
+      - 'flake.nix'
+      - 'flake.lock'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'services/research-relay/**'
+      - 'machines/noir/**'
+      - 'machines/zinc/**'
+      - 'flake.nix'
+      - 'flake.lock'
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Validate Flake
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v25
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
+
+      - name: Setup Cachix
+        uses: cachix/cachix-action@v14
+        if: ${{ secrets.CACHIX_AUTH_TOKEN != '' }}
+        with:
+          name: goodlab
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      - name: Check flake
+        run: nix flake check --all-systems
+
+      - name: Build noir configuration
+        run: nix build .#nixosConfigurations.noir.config.system.build.toplevel
+
+      - name: Build zinc configuration
+        run: nix build .#nixosConfigurations.zinc.config.system.build.toplevel
+
+  build-images:
+    name: Build OCI Images
+    runs-on: ubuntu-latest
+    needs: validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v25
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            accept-flake-config = true
+
+      - name: Setup Cachix
+        uses: cachix/cachix-action@v14
+        if: ${{ secrets.CACHIX_AUTH_TOKEN != '' }}
+        with:
+          name: goodlab
+          authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
+
+      - name: Build Odoo image
+        run: |
+          nix build .#packages.x86_64-linux.odooImage
+          docker load < result
+          docker tag ghcr.io/scientific-oops/research-relay-odoo:latest \
+            ghcr.io/scientific-oops/research-relay-odoo:${{ github.sha }}
+          docker push ghcr.io/scientific-oops/research-relay-odoo:latest
+          docker push ghcr.io/scientific-oops/research-relay-odoo:${{ github.sha }}
+
+      - name: Build PDF-intake image
+        run: |
+          nix build .#packages.x86_64-linux.pdfIntakeImage
+          docker load < result
+          docker tag ghcr.io/scientific-oops/research-relay-pdf-intake:latest \
+            ghcr.io/scientific-oops/research-relay-pdf-intake:${{ github.sha }}
+          docker push ghcr.io/scientific-oops/research-relay-pdf-intake:latest
+          docker push ghcr.io/scientific-oops/research-relay-pdf-intake:${{ github.sha }}
+
+  # Optional: Deploy to homelab via SSH
+  # deploy:
+  #   name: Deploy to Homelab
+  #   runs-on: ubuntu-latest
+  #   needs: build-images
+  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #
+  #     - name: Deploy to noir
+  #       env:
+  #         SSH_PRIVATE_KEY: ${{ secrets.NOIR_SSH_KEY }}
+  #       run: |
+  #         mkdir -p ~/.ssh
+  #         echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_ed25519
+  #         chmod 600 ~/.ssh/id_ed25519
+  #         ssh -o StrictHostKeyChecking=no noir.local \
+  #           "cd ~/git/goodlab && git pull && sudo nixos-rebuild switch --flake .#noir"
+  #
+  #     - name: Deploy to zinc
+  #       env:
+  #         SSH_PRIVATE_KEY: ${{ secrets.ZINC_SSH_KEY }}
+  #       run: |
+  #         ssh -o StrictHostKeyChecking=no zinc.local \
+  #           "cd ~/git/goodlab && git pull && sudo nixos-rebuild switch --flake .#zinc"

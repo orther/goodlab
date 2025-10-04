@@ -20,6 +20,12 @@
     #./../../services/netdata.nix
     #./../../services/nextcloud.nix
     #./../../services/nixarr.nix
+
+    # Research Relay services (noir = Odoo + PDF-intake)
+    ./../../services/research-relay/_common-hardening.nix
+    ./../../services/research-relay/odoo.nix
+    ./../../services/research-relay/pdf-intake.nix
+    ./../../services/research-relay/secrets.nix
   ];
 
   home-manager = {
@@ -65,5 +71,11 @@
   systemd.services = {
     "NetworkManager-wait-online".enable = lib.mkForce false;
     "systemd-networkd-wait-online".enable = lib.mkForce false;
+  };
+
+  # Enable Research Relay services on noir
+  services.researchRelay = {
+    odoo.enable = true;
+    pdfIntake.enable = true;
   };
 }
