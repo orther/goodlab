@@ -30,12 +30,17 @@ repair:
   sudo nix-store --verify --check-contents --repair
 
 sopsedit:
-  sops secrets/secrets.yaml
+  @echo "Opening secrets/secrets.yaml with sops..."
+  @SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt EDITOR=vim sops secrets/secrets.yaml
 
 sopsrotate:
+  #!/usr/bin/env sh
+  export SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt
   for file in secrets/*; do sops --rotate --in-place "$file"; done
-  
+
 sopsupdate:
+  #!/usr/bin/env sh
+  export SOPS_AGE_KEY_FILE=~/.config/sops/age/keys.txt
   for file in secrets/*; do sops updatekeys "$file"; done
 
 build-iso:
