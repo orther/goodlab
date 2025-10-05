@@ -5,6 +5,7 @@ If GitHub checks are still failing, use this guide to debug.
 ## Run Local Checks
 
 ### 1. Check Nix Syntax (if Nix is available)
+
 ```bash
 # Parse all Nix files
 for file in services/research-relay/*.nix machines/noir/configuration.nix machines/zinc/configuration.nix; do
@@ -14,6 +15,7 @@ done
 ```
 
 ### 2. Check Formatting (if tools available)
+
 ```bash
 # Run alejandra
 alejandra --check services/research-relay/*.nix machines/noir/configuration.nix machines/zinc/configuration.nix
@@ -26,16 +28,19 @@ shfmt -d services/research-relay/*.sh
 ```
 
 ### 3. Check with statix (if available)
+
 ```bash
 statix check services/research-relay/
 ```
 
 ### 4. Check with deadnix (if available)
+
 ```bash
 deadnix --fail services/research-relay/*.nix
 ```
 
 ### 5. Test NixOS Evaluation
+
 ```bash
 # Test noir configuration
 nix eval .#nixosConfigurations.noir.config.system.name
@@ -51,24 +56,30 @@ nix build .#nixosConfigurations.zinc.config.system.build.toplevel --dry-run
 ## Common Issues & Fixes
 
 ### Issue 1: "attribute 'X' missing"
+
 **Symptom**: NixOS eval fails with missing attribute
 **Fix**: Check that all options are defined before being used
+
 ```bash
 # Verify option definitions
 grep -r "options\.services\.researchRelay" services/research-relay/
 ```
 
 ### Issue 2: "infinite recursion encountered"
+
 **Symptom**: Evaluation hangs or reports infinite recursion
 **Fix**: Check for circular dependencies in config
+
 ```bash
 # Look for self-references
 grep -r "config\.services\.researchRelay" services/research-relay/
 ```
 
 ### Issue 3: "package 'X' does not exist"
+
 **Symptom**: Build fails with unknown package
 **Fix**: Check all package references
+
 ```bash
 # List all package references
 grep -rh "pkgs\.[a-zA-Z0-9_]*" services/research-relay/*.nix | \
@@ -76,16 +87,20 @@ grep -rh "pkgs\.[a-zA-Z0-9_]*" services/research-relay/*.nix | \
 ```
 
 ### Issue 4: "unused variable"
+
 **Symptom**: deadnix reports unused let bindings
 **Fix**: Remove or prefix with `_`
+
 ```bash
 # Find let bindings
 grep -A20 "^}: let" services/research-relay/*.nix
 ```
 
 ### Issue 5: Python package not found
+
 **Symptom**: `python311Packages.X` doesn't exist
 **Fix**: Comment out or use alternative
+
 ```bash
 # Check Python package list
 nix eval nixpkgs#python311Packages --apply builtins.attrNames | grep -i pypdf
@@ -118,6 +133,7 @@ done
 ## GitHub Actions Specific
 
 ### Check workflow syntax
+
 ```bash
 # If using act (local GitHub Actions)
 act -l
@@ -127,9 +143,11 @@ yamllint .github/workflows/*.yml
 ```
 
 ### View actual error logs
+
 Go to GitHub Actions tab in the PR and click on the failing check to see detailed logs.
 
 Common log locations:
+
 - Formatting: Look for "treefmt" output
 - Statix: Look for "statix check" output
 - Deadnix: Look for "deadnix" output
@@ -140,6 +158,7 @@ Common log locations:
 If you don't have Nix installed, use these Python scripts:
 
 ### Check Syntax
+
 ```python
 #!/usr/bin/env python3
 import sys
@@ -156,6 +175,7 @@ for filepath in sys.argv[1:]:
 ```
 
 ### Check Module Structure
+
 ```python
 #!/usr/bin/env python3
 import re, sys
@@ -187,7 +207,8 @@ If checks continue to fail after trying these steps:
 Last known working commit: `<insert commit hash>`
 
 Files modified in this PR:
-- services/research-relay/_common-hardening.nix
+
+- services/research-relay/\_common-hardening.nix
 - services/research-relay/age-gate.nix
 - services/research-relay/btcpay.nix
 - services/research-relay/odoo.nix

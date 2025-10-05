@@ -9,33 +9,43 @@ Commits: 3 (Research Relay integration + fixes)
 ## Validation Summary
 
 ### ✅ File Existence
+
 All required files present:
+
 - 6 service modules (.nix)
 - 2 machine configurations (noir, zinc)
 - 6 documentation files (.md)
 - 2 example files (.example)
 
 ### ✅ Syntax Validation
+
 All Nix files have balanced syntax:
+
 - Braces: ✓
 - Brackets: ✓
 - Parentheses: ✓
 
 ### ✅ Forbidden Patterns
+
 No problematic code detected:
+
 - No `pkgs.odoo` references
 - No uncommented `pypdf2` references
 - No uncommented `nginxModules.lua` references
 
 ### ✅ Module Structure
+
 All service modules properly structured:
+
 - `odoo.nix`: ✓ lib.mkIf
 - `btcpay.nix`: ✓ lib.mkIf
 - `pdf-intake.nix`: ✓ lib.mkIf
 - `age-gate.nix`: ✓ lib.mkIf
 
 ### ✅ Documentation
+
 Complete documentation:
+
 - README.md (249 lines)
 - QUICKSTART.md (362 lines)
 - FIXES.md (206 lines)
@@ -78,6 +88,7 @@ If GitHub Actions reports failures despite local validation passing:
 ## Files Modified
 
 ### Services (services/research-relay/)
+
 - `_common-hardening.nix` (97 lines) - Security hardening
 - `age-gate.nix` (338 lines) - Age verification (future)
 - `btcpay.nix` (245 lines) - BTCPay Server
@@ -86,10 +97,12 @@ If GitHub Actions reports failures despite local validation passing:
 - `secrets.nix` (110 lines) - sops-nix secrets
 
 ### Configurations
+
 - `machines/noir/configuration.nix` (83 lines) - Odoo host
 - `machines/zinc/configuration.nix` (52 lines) - BTCPay host
 
 ### Flake
+
 - `flake.nix` - Added PDF-intake OCI image package
 
 ## No Breaking Changes
