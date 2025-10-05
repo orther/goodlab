@@ -78,6 +78,6 @@
   services.researchRelay = {
     odoo.enable = true;
     pdfIntake.enable = true;
-    ageGate.enable = true; # Age verification (18+)
+    # ageGate.enable = true; # Disabled - requires nginx Lua module (see AGE_GATE.md)
   };
 }

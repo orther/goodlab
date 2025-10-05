@@ -6,10 +6,11 @@
   lib,
   ...
 }: let
-  domain = "research-relay.com";
+  # Domain configuration (unused - for future Lua implementation)
+  _domain = "research-relay.com";
 
-  # Lua script for age gate logic
-  ageGateScript = pkgs.writeText "age-gate.lua" ''
+  # Lua script for age gate logic (unused - for future implementation)
+  _ageGateScript = pkgs.writeText "age-gate.lua" ''
     -- Age gate verification handler
     local cookie_name = "age_verified"
     local cookie_max_age = 86400  -- 24 hours
@@ -297,69 +298,41 @@
   '';
 
 in {
-  config = lib.mkIf config.services.researchRelay.odoo.enable {
-    # Install nginx Lua module
-    services.nginx = {
-      additionalModules = [ pkgs.nginxModules.lua ];
-
-      # Add Lua package path
-      appendHttpConfig = ''
-        lua_package_path "${pkgs.luajitPackages.lua}/share/lua/5.1/?.lua;;";
-      '';
-    };
-
-    # Update Odoo virtualHost to include age gate
-    services.nginx.virtualHosts."${domain}" = {
-      # Serve static age gate pages
-      locations."/age-gate.html" = {
-        alias = ageGateHtml;
-        extraConfig = ''
-          default_type text/html;
-        '';
-      };
-
-      locations."/age-restricted" = {
-        alias = ageRestrictedHtml;
-        extraConfig = ''
-          default_type text/html;
-        '';
-      };
-
-      # Age verification endpoint
-      locations."/age-verify" = {
-        extraConfig = ''
-          access_by_lua_file ${ageGateScript};
-        '';
-      };
-
-      # Apply age gate to all other locations
-      locations."/" = {
-        proxyPass = "http://127.0.0.1:8069";
-        extraConfig = ''
-          # Age gate check
-          access_by_lua_file ${ageGateScript};
-
-          proxy_set_header X-Real-IP $remote_addr;
-          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-          proxy_set_header X-Forwarded-Proto $scheme;
-          proxy_set_header Host $host;
-          proxy_redirect off;
-
-          # WebSocket support for live updates
-          proxy_http_version 1.1;
-          proxy_set_header Upgrade $http_upgrade;
-          proxy_set_header Connection "upgrade";
-        '';
-      };
-    };
-  };
-
-  # Module option
+  # Module option (define first)
   options.services.researchRelay.ageGate = {
     enable = lib.mkOption {
       type = lib.types.bool;
-      default = true;
-      description = "Enable age verification gate for the eCommerce website";
+      default = false; # Disabled by default - requires nginx Lua support
+      description = lib.mdDoc "Enable age verification gate for the eCommerce website (requires nginx with Lua module)";
     };
+  };
+
+  # Age gate implementation
+  # NOTE: This module is currently disabled pending nginx Lua module integration
+  # The age gate functionality can be implemented via:
+  # 1. Odoo website module with age verification
+  # 2. Cloudflare Worker script
+  # 3. Custom nginx module with proper Lua support
+  #
+  # Uncomment and configure nginx additionalModules when ready:
+  # services.nginx.additionalModules = [ (pkgs.nginxModules.lua or pkgs.nginx.modules.lua) ];
+
+  config = lib.mkIf (config.services.researchRelay.odoo.enable && config.services.researchRelay.ageGate.enable) {
+    # Age gate static files - served directly by nginx
+    systemd.tmpfiles.rules = [
+      "d /var/www/age-gate 0755 nginx nginx -"
+    ];
+
+    # Copy HTML files to web directory
+    system.activationScripts.age-gate-setup = ''
+      mkdir -p /var/www/age-gate
+      cat ${ageGateHtml} > /var/www/age-gate/age-gate.html
+      cat ${ageRestrictedHtml} > /var/www/age-gate/age-restricted.html
+      chown -R nginx:nginx /var/www/age-gate
+    '';
+
+    # Note: Nginx configuration for age gate is placeholder
+    # Requires proper Lua module integration for production use
+    # See AGE_GATE.md for implementation options
   };
 }

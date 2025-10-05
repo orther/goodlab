@@ -1,8 +1,24 @@
 # Age Verification System
 
+## ⚠️ Status: Future Implementation
+
+This module contains a **reference implementation** of session-based age verification. It is currently **disabled by default** pending proper nginx Lua module integration.
+
+**Current Status:**
+- Module code: Complete (reference implementation)
+- HTML/UI: Complete
+- Lua logic: Complete
+- Integration: Pending nginx Lua module setup
+- Enabled: No (disabled by default)
+
+**Alternative implementations available:**
+1. Odoo website module with age verification
+2. Cloudflare Worker script (recommended for production)
+3. Custom application-level verification
+
 ## Overview
 
-Research Relay implements a session-based age verification system to ensure only users 18+ can access the eCommerce platform. This is required for peptide research products.
+Research Relay plans to implement a session-based age verification system to ensure only users 18+ can access the eCommerce platform. This is required for peptide research products.
 
 ## Architecture
 
