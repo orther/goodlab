@@ -10,6 +10,9 @@
   odooPort = 8069;
   domain = "research-relay.com";
   odooVersion = "17.0";
+
+  # Check if secrets are available (not in CI/dev)
+  secretsExist = builtins.hasAttr "research-relay/cloudflare-origin-cert" config.sops.secrets;
 in {
   config = lib.mkIf config.services.researchRelay.odoo.enable {
     # Enable Docker for Odoo container
@@ -61,7 +64,11 @@ in {
           # Create Odoo config
           cat > /var/lib/odoo/config/odoo.conf <<EOF
           [options]
-          admin_passwd = $(cat ${config.sops.secrets."research-relay/odoo/admin-password".path})
+          admin_passwd = ${
+            if secretsExist
+            then "$(cat ${config.sops.secrets."research-relay/odoo/admin-password".path})"
+            else "admin"
+          }
           db_host = 172.17.0.1
           db_port = 5432
           db_user = odoo
@@ -98,9 +105,9 @@ in {
 
     # Nginx reverse proxy with Cloudflare origin cert
     services.nginx.virtualHosts."${domain}" = {
-      forceSSL = true;
-      sslCertificate = config.sops.secrets."research-relay/cloudflare-origin-cert".path;
-      sslCertificateKey = config.sops.secrets."research-relay/cloudflare-origin-key".path;
+      forceSSL = secretsExist;
+      sslCertificate = lib.mkIf secretsExist config.sops.secrets."research-relay/cloudflare-origin-cert".path;
+      sslCertificateKey = lib.mkIf secretsExist config.sops.secrets."research-relay/cloudflare-origin-key".path;
 
       extraConfig = ''
         # HSTS header
@@ -150,9 +157,9 @@ in {
 
     # www subdomain redirect
     services.nginx.virtualHosts."www.${domain}" = {
-      forceSSL = true;
-      sslCertificate = config.sops.secrets."research-relay/cloudflare-origin-cert".path;
-      sslCertificateKey = config.sops.secrets."research-relay/cloudflare-origin-key".path;
+      forceSSL = secretsExist;
+      sslCertificate = lib.mkIf secretsExist config.sops.secrets."research-relay/cloudflare-origin-cert".path;
+      sslCertificateKey = lib.mkIf secretsExist config.sops.secrets."research-relay/cloudflare-origin-key".path;
       globalRedirect = domain;
     };
 

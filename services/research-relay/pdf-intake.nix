@@ -8,6 +8,10 @@
 }: let
   pdfIntakePort = 8070;
   domain = "research-relay.com";
+
+  # Check if secrets are available (not in CI/dev)
+  secretsExist = builtins.hasAttr "research-relay/pdf-intake/redis-password" config.sops.secrets;
+
   # Python environment for PDF-intake service
   # Note: Some packages may need to be installed via pip in production
   pythonEnv = pkgs.python311.withPackages (ps:
@@ -28,7 +32,10 @@ in {
       enable = true;
       port = 6380;
       bind = "127.0.0.1";
-      requirePassFile = config.sops.secrets."research-relay/pdf-intake/redis-password".path;
+      requirePassFile =
+        if secretsExist
+        then config.sops.secrets."research-relay/pdf-intake/redis-password".path
+        else pkgs.writeText "dummy-redis-pass" "dummy-password-for-ci";
     };
 
     # PDF-intake FastAPI service
@@ -62,12 +69,24 @@ in {
 
       environment = {
         REDIS_URL = "redis://127.0.0.1:6380";
-        REDIS_PASSWORD_FILE = config.sops.secrets."research-relay/pdf-intake/redis-password".path;
+        REDIS_PASSWORD_FILE =
+          if secretsExist
+          then config.sops.secrets."research-relay/pdf-intake/redis-password".path
+          else toString (pkgs.writeText "dummy-redis-pass" "dummy");
         ODOO_URL = "http://localhost:8069";
         ODOO_DB = "odoo";
-        ODOO_USERNAME_FILE = config.sops.secrets."research-relay/pdf-intake/odoo-rpc-user".path;
-        ODOO_PASSWORD_FILE = config.sops.secrets."research-relay/pdf-intake/odoo-rpc-password".path;
-        API_TOKEN_FILE = config.sops.secrets."research-relay/pdf-intake/api-token".path;
+        ODOO_USERNAME_FILE =
+          if secretsExist
+          then config.sops.secrets."research-relay/pdf-intake/odoo-rpc-user".path
+          else toString (pkgs.writeText "dummy-odoo-user" "dummy");
+        ODOO_PASSWORD_FILE =
+          if secretsExist
+          then config.sops.secrets."research-relay/pdf-intake/odoo-rpc-password".path
+          else toString (pkgs.writeText "dummy-odoo-pass" "dummy");
+        API_TOKEN_FILE =
+          if secretsExist
+          then config.sops.secrets."research-relay/pdf-intake/api-token".path
+          else toString (pkgs.writeText "dummy-api-token" "dummy");
         UPLOAD_DIR = "/var/lib/pdf-intake/uploads";
         PARSED_DIR = "/var/lib/pdf-intake/parsed";
       };
@@ -103,11 +122,20 @@ in {
 
       environment = {
         REDIS_URL = "redis://127.0.0.1:6380";
-        REDIS_PASSWORD_FILE = config.sops.secrets."research-relay/pdf-intake/redis-password".path;
+        REDIS_PASSWORD_FILE =
+          if secretsExist
+          then config.sops.secrets."research-relay/pdf-intake/redis-password".path
+          else toString (pkgs.writeText "dummy-redis-pass" "dummy");
         ODOO_URL = "http://localhost:8069";
         ODOO_DB = "odoo";
-        ODOO_USERNAME_FILE = config.sops.secrets."research-relay/pdf-intake/odoo-rpc-user".path;
-        ODOO_PASSWORD_FILE = config.sops.secrets."research-relay/pdf-intake/odoo-rpc-password".path;
+        ODOO_USERNAME_FILE =
+          if secretsExist
+          then config.sops.secrets."research-relay/pdf-intake/odoo-rpc-user".path
+          else toString (pkgs.writeText "dummy-odoo-user" "dummy");
+        ODOO_PASSWORD_FILE =
+          if secretsExist
+          then config.sops.secrets."research-relay/pdf-intake/odoo-rpc-password".path
+          else toString (pkgs.writeText "dummy-odoo-pass" "dummy");
       };
     };
 

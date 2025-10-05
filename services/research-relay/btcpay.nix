@@ -8,6 +8,9 @@
 }: let
   domain = "pay.research-relay.com";
   btcpayPort = 23000;
+
+  # Check if secrets are available (not in CI/dev)
+  secretsExist = builtins.hasAttr "research-relay/cloudflare-origin-cert" config.sops.secrets;
 in {
   config = lib.mkIf config.services.researchRelay.btcpay.enable {
     # Enable Docker for BTCPay stack
@@ -112,17 +115,19 @@ in {
         EOF
         fi
 
-        # Link sops secrets to Docker secrets directory
-        mkdir -p /var/lib/btcpay/secrets
-        ln -sf ${config.sops.secrets."research-relay/btcpay/db-password".path} /var/lib/btcpay/secrets/db_password
+        # Link sops secrets to Docker secrets directory (only if secrets exist)
+        ${lib.optionalString secretsExist ''
+          mkdir -p /var/lib/btcpay/secrets
+          ln -sf ${config.sops.secrets."research-relay/btcpay/db-password".path} /var/lib/btcpay/secrets/db_password
+        ''}
       '';
     };
 
     # Nginx reverse proxy for BTCPay subdomain
     services.nginx.virtualHosts."${domain}" = {
-      forceSSL = true;
-      sslCertificate = config.sops.secrets."research-relay/cloudflare-origin-cert".path;
-      sslCertificateKey = config.sops.secrets."research-relay/cloudflare-origin-key".path;
+      forceSSL = secretsExist;
+      sslCertificate = lib.mkIf secretsExist config.sops.secrets."research-relay/cloudflare-origin-cert".path;
+      sslCertificateKey = lib.mkIf secretsExist config.sops.secrets."research-relay/cloudflare-origin-key".path;
 
       extraConfig = ''
         # HSTS
@@ -176,17 +181,19 @@ in {
           ${pkgs.docker}/bin/docker exec btcpay-postgres-1 pg_dump -U btcpay btcpay | \
             ${pkgs.gzip}/bin/gzip > "$BACKUP_DIR/btcpay-db-$DATE.sql.gz"
 
-          # Encrypt backup with age
-          ${pkgs.age}/bin/age -r $(cat ${config.sops.secrets."research-relay/backup-age-pubkey".path}) \
-            -o "$BACKUP_DIR/btcpay-data-$DATE.tar.gz.age" \
-            "$BACKUP_DIR/btcpay-data-$DATE.tar.gz"
+          # Encrypt backup with age (only if secrets exist)
+          ${lib.optionalString secretsExist ''
+            ${pkgs.age}/bin/age -r $(cat ${config.sops.secrets."research-relay/backup-age-pubkey".path}) \
+              -o "$BACKUP_DIR/btcpay-data-$DATE.tar.gz.age" \
+              "$BACKUP_DIR/btcpay-data-$DATE.tar.gz"
 
-          ${pkgs.age}/bin/age -r $(cat ${config.sops.secrets."research-relay/backup-age-pubkey".path}) \
-            -o "$BACKUP_DIR/btcpay-db-$DATE.sql.gz.age" \
-            "$BACKUP_DIR/btcpay-db-$DATE.sql.gz"
+            ${pkgs.age}/bin/age -r $(cat ${config.sops.secrets."research-relay/backup-age-pubkey".path}) \
+              -o "$BACKUP_DIR/btcpay-db-$DATE.sql.gz.age" \
+              "$BACKUP_DIR/btcpay-db-$DATE.sql.gz"
 
-          # Remove unencrypted backups
-          rm "$BACKUP_DIR/btcpay-data-$DATE.tar.gz" "$BACKUP_DIR/btcpay-db-$DATE.sql.gz"
+            # Remove unencrypted backups
+            rm "$BACKUP_DIR/btcpay-data-$DATE.tar.gz" "$BACKUP_DIR/btcpay-db-$DATE.sql.gz"
+          ''}
         '';
       };
     };
