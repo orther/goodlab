@@ -6,59 +6,6 @@
   lib,
   ...
 }: let
-  # Domain configuration (unused - for future Lua implementation)
-  _domain = "research-relay.com";
-
-  # Lua script for age gate logic (unused - for future implementation)
-  _ageGateScript = pkgs.writeText "age-gate.lua" ''
-    -- Age gate verification handler
-    local cookie_name = "age_verified"
-    local cookie_max_age = 86400  -- 24 hours
-
-    -- Check if user has valid age verification cookie
-    local cookies = ngx.var.http_cookie
-    if cookies then
-      local verified = ngx.var["cookie_" .. cookie_name]
-      if verified == "1" then
-        -- Cookie present and valid, allow through
-        return
-      end
-    end
-
-    -- Check if this is the age gate verification endpoint
-    if ngx.var.uri == "/age-verify" and ngx.req.get_method() == "POST" then
-      ngx.req.read_body()
-      local args = ngx.req.get_post_args()
-
-      if args.confirm == "yes" and args.birth_year then
-        local birth_year = tonumber(args.birth_year)
-        local current_year = tonumber(os.date("%Y"))
-
-        if birth_year and (current_year - birth_year) >= 18 then
-          -- User is 18+, set verification cookie
-          ngx.header["Set-Cookie"] = cookie_name .. "=1; Max-Age=" .. cookie_max_age .. "; Path=/; HttpOnly; Secure; SameSite=Strict"
-          ngx.redirect("/")
-          return
-        else
-          -- Under 18, redirect to exit page
-          ngx.redirect("/age-restricted")
-          return
-        end
-      end
-
-      -- Invalid submission, show gate again
-      ngx.redirect("/")
-      return
-    end
-
-    -- User not verified and not on verification endpoint
-    -- Serve age gate modal for any page request
-    if ngx.var.uri ~= "/age-gate.html" and ngx.var.uri ~= "/age-restricted" then
-      ngx.redirect("/age-gate.html")
-      return
-    end
-  '';
-
   # Age gate HTML page
   ageGateHtml = pkgs.writeText "age-gate.html" ''
     <!DOCTYPE html>

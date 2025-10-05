@@ -1,11 +1,6 @@
 # Common hardening configuration for Research Relay services
 # Applied to both noir (Odoo/PDF-intake) and zinc (BTCPay) hosts
-{
-  config,
-  pkgs,
-  lib,
-  ...
-}: {
+{lib, ...}: {
   # SSH hardening (builds on base.nix settings)
   services.openssh.settings = {
     PermitRootLogin = lib.mkForce "no";
