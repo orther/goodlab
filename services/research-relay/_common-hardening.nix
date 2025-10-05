@@ -87,10 +87,9 @@
     allowReboot = false;
   };
 
-  # Persistent logs for audit trail
+  # Persistent fail2ban state (var/log is already persisted by base.nix)
   environment.persistence."/nix/persist" = {
     directories = [
-      "/var/log"
       "/var/lib/fail2ban"
     ];
   };
