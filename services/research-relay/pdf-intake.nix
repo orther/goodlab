@@ -9,15 +9,14 @@
   pdfIntakePort = 8070;
   domain = "research-relay.com";
   # Python environment for PDF-intake service
-  # Note: pdfplumber may not be in nixpkgs, using alternatives
+  # Note: Some packages may need to be installed via pip in production
   pythonEnv = pkgs.python311.withPackages (ps:
     with ps; [
       fastapi
       uvicorn
       celery
       redis
-      # pdfplumber - install via pip in container if not available
-      pypdf2  # Alternative to pdfplumber
+      # pypdf2  # May not be in nixpkgs - install via pip if needed
       pandas
       requests
       pydantic

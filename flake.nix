@@ -129,7 +129,7 @@
                 uvicorn
                 celery
                 redis
-                pypdf2  # Using pypdf2 instead of pdfplumber (may not be in nixpkgs)
+                # pypdf2  # May not be in nixpkgs - install via pip if needed
                 pandas
                 requests
                 pydantic
