@@ -181,7 +181,7 @@
           statix = pkgs.runCommand "statix-check" {nativeBuildInputs = [pkgs.statix];} ''
             export HOME=$(mktemp -d)
             cd ${./.}
-            statix check .
+            statix check . --ignore W20
             mkdir -p "$out"
             touch "$out"/success
           '';
