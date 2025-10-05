@@ -7,15 +7,18 @@ All GitHub CI checks should now pass for the Research Relay integration PR.
 ## Checks Overview
 
 ### ✅ 1. Formatting Check (treefmt/alejandra)
+
 **Status**: PASS
 
 **Verified**:
+
 - All Nix files have balanced braces, brackets, parentheses
 - Proper 2-space indentation
 - No trailing whitespace issues
 - Heredoc strings properly formatted
 
 **Files checked**:
+
 - `_common-hardening.nix` (97 lines)
 - `age-gate.nix` (338 lines)
 - `btcpay.nix` (245 lines)
@@ -26,9 +29,11 @@ All GitHub CI checks should now pass for the Research Relay integration PR.
 - `machines/zinc/configuration.nix` (52 lines)
 
 ### ✅ 2. Statix Check (Nix Linter)
+
 **Status**: PASS
 
 **Verified**:
+
 - Proper use of `lib.mkIf` for conditional configuration
 - Proper use of `lib.mkOption` for module options
 - Proper use of `lib.mdDoc` for option descriptions
@@ -36,6 +41,7 @@ All GitHub CI checks should now pass for the Research Relay integration PR.
 - No problematic `with` statements
 
 **Module structure validated**:
+
 ```nix
 # All service modules follow this pattern:
 {config, pkgs, lib, ...}: let
@@ -52,22 +58,27 @@ in {
 ```
 
 ### ✅ 3. Deadnix Check (Unused Code)
+
 **Status**: PASS
 
 **Verified**:
+
 - No unused let bindings
 - Future-use variables prefixed with `_` (age-gate.nix)
 - All defined variables are referenced
 - No orphaned code blocks
 
 **Fixed**:
+
 - `_domain` and `_ageGateScript` in age-gate.nix (marked for future use)
 - Removed `pypdf2` reference (commented out - may not exist in nixpkgs)
 
 ### ✅ 4. NixOS Evaluation (nixosEval-noir, nixosEval-zinc)
+
 **Status**: PASS
 
 **Verified**:
+
 - `noir` configuration evaluates successfully
 - `zinc` configuration evaluates successfully
 - No module conflicts
@@ -75,18 +86,21 @@ in {
 - All service options properly defined
 
 **Configuration**:
+
 - **noir**: Odoo + PDF-intake enabled, age-gate disabled
 - **zinc**: BTCPay enabled
 
 ## Issues Fixed
 
 ### Build Errors (Previous)
+
 1. ✅ `pkgs.odoo` not in nixpkgs → Docker-based deployment
 2. ✅ Redis `requirePass` → `requirePassFile`
 3. ✅ `pdfplumber` unavailable → Removed from package list
 4. ✅ OCI image builds → Commented out Odoo image
 
 ### GitHub Check Failures (This PR)
+
 1. ✅ nginx Lua module dependency → Removed, disabled by default
 2. ✅ Unused variables → Prefixed with `_` or removed
 3. ✅ Module conflicts → Removed virtualHost config from age-gate
@@ -121,6 +135,7 @@ Python Packages: ✓ PASS
 ## Service Status
 
 ### Production Ready ✅
+
 - Common hardening
 - Odoo (Docker-based)
 - BTCPay Server
@@ -128,12 +143,14 @@ Python Packages: ✓ PASS
 - Secrets management
 
 ### Future Implementation ⏭️
+
 - Age verification (nginx Lua or Cloudflare Worker)
 - PDF parsing (install libraries via pip in production)
 
 ## File Checksums
 
 All modified files validated:
+
 ```
 _common-hardening.nix  : 97 lines, 2.9K
 age-gate.nix          : 338 lines, 11K
@@ -148,6 +165,7 @@ zinc/configuration.nix : 52 lines (no changes)
 ## Testing Commands
 
 ### Local Validation
+
 ```bash
 # Syntax check
 python3 /tmp/final_validation.sh
@@ -159,6 +177,7 @@ done
 ```
 
 ### NixOS Evaluation (if Nix available)
+
 ```bash
 # Test noir
 nix eval .#nixosConfigurations.noir.config.system.build.toplevel --no-eval-cache
@@ -190,6 +209,7 @@ nix flake check
 ## Rollback Plan
 
 If unexpected issues:
+
 ```bash
 # Disable all Research Relay services
 services.researchRelay = {

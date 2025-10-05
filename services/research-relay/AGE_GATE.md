@@ -5,6 +5,7 @@
 This module contains a **reference implementation** of session-based age verification. It is currently **disabled by default** pending proper nginx Lua module integration.
 
 **Current Status:**
+
 - Module code: Complete (reference implementation)
 - HTML/UI: Complete
 - Lua logic: Complete
@@ -12,6 +13,7 @@ This module contains a **reference implementation** of session-based age verific
 - Enabled: No (disabled by default)
 
 **Alternative implementations available:**
+
 1. Odoo website module with age verification
 2. Cloudflare Worker script (recommended for production)
 3. Custom application-level verification
@@ -145,6 +147,7 @@ local cookie_max_age = 86400  -- 24 hours (in seconds)
 ```
 
 Options:
+
 - 1 hour: `3600`
 - 12 hours: `43200`
 - 24 hours: `86400` (default)
@@ -160,6 +163,7 @@ if birth_year and (current_year - birth_year) >= 18 then
 ```
 
 Options:
+
 - 18+ (default, US requirement)
 - 21+ (some states/products)
 
@@ -168,16 +172,19 @@ Options:
 The age gate HTML includes inline CSS. Key sections:
 
 **Gradient Background**:
+
 ```css
 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 ```
 
 **Button Colors**:
+
 ```css
 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 ```
 
 **Warning Box**:
+
 ```css
 background: #fff5f5;
 border: 2px solid #fc8181;
@@ -237,6 +244,7 @@ luac -p /nix/store/.../age-gate.lua
 ### Limitations
 
 This implementation:
+
 - ✅ Meets basic age gate requirements
 - ✅ Prevents casual underage access
 - ❌ Does NOT verify identity (honor system)
@@ -245,6 +253,7 @@ This implementation:
 ### Enhanced Verification (Future)
 
 For stricter compliance, consider:
+
 - ID verification services (Persona, Onfido)
 - Credit card age verification
 - Government ID upload
@@ -305,6 +314,7 @@ ngx.log(ngx.INFO, "Age verification: birth_year=" .. birth_year .. " result=" ..
 ```
 
 View logs:
+
 ```bash
 journalctl -u nginx | grep "Age verification"
 ```
@@ -312,6 +322,7 @@ journalctl -u nginx | grep "Age verification"
 ### Analytics (Optional)
 
 Can integrate with:
+
 - Google Analytics (track /age-gate.html views)
 - Matomo (privacy-focused analytics)
 - Custom event tracking

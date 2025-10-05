@@ -18,12 +18,14 @@ Self-hosted, crypto-only peptide commerce platform built with NixOS.
 ```
 
 ### Host: noir (Primary Application Server)
+
 - **Odoo Community Edition** - ERP/eCommerce platform
 - **PostgreSQL 16** - Database backend
 - **PDF-Intake Service** - Vendor price sheet processing (FastAPI + Celery + Redis)
 - **nginx** - Reverse proxy with Cloudflare origin certs
 
 ### Host: zinc (Payment Gateway)
+
 - **BTCPay Server** - Bitcoin/Lightning payment processing
 - **PostgreSQL** - BTCPay database
 - **NBXplorer** - Bitcoin blockchain indexer
@@ -34,13 +36,13 @@ Self-hosted, crypto-only peptide commerce platform built with NixOS.
 
 All modules located in `services/research-relay/`:
 
-| Module | Purpose | Host |
-|--------|---------|------|
+| Module                  | Purpose                                                 | Host |
+| ----------------------- | ------------------------------------------------------- | ---- |
 | `_common-hardening.nix` | Security baseline (fail2ban, nftables, nginx hardening) | Both |
-| `odoo.nix` | Odoo + PostgreSQL + backup automation | noir |
-| `btcpay.nix` | BTCPay Server Docker stack | zinc |
-| `pdf-intake.nix` | Vendor PDF parser + Odoo integration | noir |
-| `secrets.nix` | sops-nix secret definitions | Both |
+| `odoo.nix`              | Odoo + PostgreSQL + backup automation                   | noir |
+| `btcpay.nix`            | BTCPay Server Docker stack                              | zinc |
+| `pdf-intake.nix`        | Vendor PDF parser + Odoo integration                    | noir |
+| `secrets.nix`           | sops-nix secret definitions                             | Both |
 
 ## Deployment
 
@@ -73,6 +75,7 @@ sudo nixos-rebuild switch --flake .#zinc
 Services are disabled by default. Enable in machine configuration:
 
 **noir** (`machines/noir/configuration.nix`):
+
 ```nix
 services.researchRelay = {
   odoo.enable = true;
@@ -82,6 +85,7 @@ services.researchRelay = {
 ```
 
 **zinc** (`machines/zinc/configuration.nix`):
+
 ```nix
 services.researchRelay = {
   btcpay.enable = true;
@@ -91,6 +95,7 @@ services.researchRelay = {
 ## Security Features
 
 ### Common Hardening
+
 - SSH key-only authentication (no passwords)
 - fail2ban for brute-force protection
 - nftables firewall (ports 22, 80, 443 only)
@@ -99,13 +104,15 @@ services.researchRelay = {
 - Kernel hardening via sysctl
 
 ### Odoo Security
+
 - **Age verification gate** - nginx + Lua enforced 18+ age check (see [AGE_GATE.md](AGE_GATE.md))
 - **US-only checkout** - nginx + Cloudflare WAF enforcement
 - **Session cookies** - 24-hour age verification (HttpOnly, Secure, SameSite)
-- Proxy mode for Cloudflare X-Forwarded-* headers
+- Proxy mode for Cloudflare X-Forwarded-\* headers
 - Separate admin credentials
 
 ### BTCPay Security
+
 - Isolated host (zinc) with dedicated wallet
 - Encrypted backups with age encryption
 - No shared secrets between hosts
@@ -114,12 +121,14 @@ services.researchRelay = {
 ## Backup Strategy
 
 ### Odoo (noir)
+
 - **Schedule**: Nightly at midnight
 - **Retention**: 30 days
 - **Location**: `/var/backups/research-relay/odoo-YYYY-MM-DD.sql.gz`
 - **Method**: pg_dump → gzip
 
 ### BTCPay (zinc)
+
 - **Schedule**: Nightly at midnight
 - **Retention**: 60 days (financial records)
 - **Location**: `/var/backups/research-relay/btcpay/`
@@ -127,16 +136,19 @@ services.researchRelay = {
 - **Contents**: Wallet seeds, store config, PostgreSQL database
 
 ### Restore Testing
+
 Monthly restore verification required for both services.
 
 ## Integration Points
 
 ### Odoo ↔ BTCPay
+
 - Odoo creates invoice via BTCPay API
 - BTCPay sends webhook to Odoo on payment
 - Webhook secret validation for security
 
 ### Odoo ↔ PDF-Intake
+
 - PDF-Intake calls Odoo XML-RPC API
 - Service account authentication
 - Manual review before price updates
@@ -144,6 +156,7 @@ Monthly restore verification required for both services.
 ## CI/CD
 
 GitHub Actions workflow (`.github/workflows/ci.yml`):
+
 1. `nix flake check` - Validate flake
 2. Build OCI images for both services
 3. Push to GHCR (`ghcr.io/scientific-oops/research-relay-*`)
@@ -152,6 +165,7 @@ GitHub Actions workflow (`.github/workflows/ci.yml`):
 ## DNS Configuration
 
 ### Cloudflare DNS Records
+
 ```
 research-relay.com         A      <noir-ip>         (proxied)
 www.research-relay.com     A      <noir-ip>         (proxied)
@@ -159,6 +173,7 @@ pay.research-relay.com     A      <zinc-ip>         (proxied)
 ```
 
 ### ProtonMail Records
+
 - MX: `mail.protonmail.ch` (priority 10)
 - SPF: `v=spf1 include:_spf.protonmail.ch ~all`
 - DKIM: (from ProtonMail dashboard)
@@ -169,6 +184,7 @@ pay.research-relay.com     A      <zinc-ip>         (proxied)
 **Current**: Systemd service status + journal logs
 
 **Future** (optional via services-flake):
+
 - Prometheus metrics collection
 - Loki log aggregation
 - Grafana dashboards
@@ -199,6 +215,7 @@ nix flake show
 ## Troubleshooting
 
 ### Odoo Won't Start
+
 ```bash
 # Check logs
 journalctl -u odoo -f
@@ -211,6 +228,7 @@ cat /var/lib/odoo/odoo.conf
 ```
 
 ### BTCPay Docker Issues
+
 ```bash
 # Check container status
 docker ps -a
@@ -223,6 +241,7 @@ systemctl restart btcpay
 ```
 
 ### Backup Failures
+
 ```bash
 # Check backup logs
 journalctl -u odoo-backup -f
@@ -233,6 +252,7 @@ ls -lah /var/backups/research-relay/
 ```
 
 ### Secret Access Issues
+
 ```bash
 # Check sops key permissions
 ls -la /nix/secret/initrd/ssh_host_ed25519_key
@@ -244,6 +264,7 @@ systemctl status sops-install-secrets
 ## Support
 
 For issues specific to Research Relay services:
+
 - **Repository**: `scientific-oops/research-relay`
 - **Email**: scientific-ops@research-relay.com (ProtonMail)
 - **Domain**: research-relay.com (Cloudflare managed)

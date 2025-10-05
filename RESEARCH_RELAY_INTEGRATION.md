@@ -7,6 +7,7 @@
 ## What Was Integrated
 
 A complete self-hosted, crypto-only peptide commerce platform using:
+
 - **noir** host: Odoo ERP/eCommerce + PostgreSQL + PDF-intake service
 - **zinc** host: BTCPay Server payment gateway
 
@@ -83,6 +84,7 @@ All services are declaratively configured using NixOS modules and integrated int
 ### Machine Configurations
 
 11. **`machines/noir/configuration.nix`** - Updated with:
+
     ```nix
     services.researchRelay = {
       odoo.enable = true;
@@ -108,6 +110,7 @@ All services are declaratively configured using NixOS modules and integrated int
 ### Prerequisites
 
 1. **Generate secrets** (see `QUICKSTART.md`):
+
    ```bash
    # Age key for backups
    age-keygen -o backup.key
@@ -166,11 +169,13 @@ nix build .#packages.x86_64-linux.pdfIntakeImage
 ## Service Integration Points
 
 ### Odoo ↔ BTCPay
+
 - Odoo creates invoice via BTCPay API
 - BTCPay posts webhook to Odoo on payment
 - Webhook signature validation with shared secret
 
 ### Odoo ↔ PDF-Intake
+
 - PDF-Intake calls Odoo XML-RPC for price updates
 - Service account authentication
 - Manual review workflow before commit
@@ -192,18 +197,21 @@ nix build .#packages.x86_64-linux.pdfIntakeImage
 ## Backup Strategy
 
 ### Odoo (noir)
+
 - **Frequency**: Nightly
 - **Retention**: 30 days
 - **Method**: pg_dump → gzip
 - **Location**: `/var/backups/research-relay/`
 
 ### BTCPay (zinc)
+
 - **Frequency**: Nightly
 - **Retention**: 60 days (financial records)
 - **Method**: tar + age encryption
 - **Includes**: Wallet seeds, store config, PostgreSQL
 
 ### Restore Testing
+
 Monthly restore verification required for compliance.
 
 ## Monitoring
@@ -211,6 +219,7 @@ Monthly restore verification required for compliance.
 Current: systemd status + journald logs
 
 Future (optional):
+
 - Prometheus metrics
 - Loki log aggregation
 - Grafana dashboards
@@ -273,6 +282,7 @@ systemctl list-timers | grep -E 'odoo|btcpay'
 ## Support
 
 For issues or questions:
+
 - **Email**: scientific-ops@research-relay.com
 - **Repository**: scientific-oops/research-relay (to be created)
 - **Domain**: research-relay.com (Cloudflare managed)

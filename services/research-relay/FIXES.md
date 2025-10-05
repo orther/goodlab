@@ -3,10 +3,12 @@
 ## Issues Fixed
 
 ### 1. **Odoo Package Not in Nixpkgs**
+
 **Problem**: `pkgs.odoo` doesn't exist in nixpkgs
 **Solution**: Changed to use official Docker image `odoo:17.0`
 
 **Changes in `odoo.nix`**:
+
 - Removed direct Odoo package references
 - Implemented Docker-based service using `docker run`
 - Added `virtualisation.docker.enable = true`
@@ -14,11 +16,13 @@
 - Service uses official Odoo container from Docker Hub
 
 **Before**:
+
 ```nix
 ExecStart = "${pkgs.odoo}/bin/odoo --config /var/lib/odoo/odoo.conf";
 ```
 
 **After**:
+
 ```nix
 ExecStart = ''
   ${pkgs.docker}/bin/docker run --rm --name odoo \
@@ -31,20 +35,24 @@ ExecStart = ''
 ```
 
 ### 2. **Redis Configuration Error**
+
 **Problem**: `requirePass` option doesn't exist in NixOS Redis module
 **Solution**: Changed to `requirePassFile`
 
 **Changes in `pdf-intake.nix`**:
+
 ```diff
 - requirePass = config.sops.secrets."research-relay/pdf-intake/redis-password".path;
 + requirePassFile = config.sops.secrets."research-relay/pdf-intake/redis-password".path;
 ```
 
 ### 3. **Python Package Availability**
+
 **Problem**: `pdfplumber` may not be available in nixpkgs
 **Solution**: Replaced with `pypdf2` (more commonly available)
 
 **Changes in `pdf-intake.nix`**:
+
 ```diff
   pythonEnv = pkgs.python311.withPackages (ps:
     with ps; [
@@ -61,10 +69,12 @@ ExecStart = ''
 ```
 
 ### 4. **OCI Image Build Issues**
+
 **Problem**: Can't build Odoo image without `pkgs.odoo`
 **Solution**: Commented out Odoo image, use official Docker Hub image
 
 **Changes in `flake.nix`**:
+
 ```diff
   packages = {
 -   odooImage = pkgs.dockerTools.buildImage {
@@ -84,10 +94,12 @@ ExecStart = ''
 ```
 
 ### 5. **GitHub Actions Workflow**
+
 **Problem**: Workflow tried to build non-existent Odoo image
 **Solution**: Updated to skip Odoo image build
 
 **Changes in `.github/workflows/research-relay-ci.yml.example`**:
+
 ```diff
 - - name: Build Odoo image
 -   run: |
@@ -191,6 +203,7 @@ sudo nixos-rebuild switch --flake .#zinc
 ## Rollback Plan
 
 If issues arise, previous version can be restored:
+
 ```bash
 git checkout HEAD~1 -- services/research-relay/
 git checkout HEAD~1 -- flake.nix

@@ -296,7 +296,6 @@
     </body>
     </html>
   '';
-
 in {
   # Module option (define first)
   options.services.researchRelay.ageGate = {

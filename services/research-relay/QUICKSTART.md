@@ -58,9 +58,11 @@ Create firewall rule for US-only checkout:
 
 **Rule Name**: Block non-US checkout
 **Expression**:
+
 ```
 (http.request.uri.path contains "/shop/cart" or http.request.uri.path contains "/shop/checkout") and ip.geoip.country ne "US"
 ```
+
 **Action**: Block
 
 ## Deployment
@@ -204,6 +206,7 @@ ls -lah /var/backups/research-relay/
 ### Restore from Backup
 
 **Odoo**:
+
 ```bash
 # Stop service
 sudo systemctl stop odoo
@@ -217,6 +220,7 @@ sudo systemctl start odoo
 ```
 
 **BTCPay**:
+
 ```bash
 # Stop service
 sudo systemctl stop btcpay
