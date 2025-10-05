@@ -47,9 +47,14 @@
     (hasOdoo && config.services.researchRelay.odoo.enable)
     || (hasBtcpay && config.services.researchRelay.btcpay.enable)
     || (hasPdfIntake && config.services.researchRelay.pdfIntake.enable);
+
+  # Check if secrets file exists (not present in CI/dev environments)
+  secretsFile = ../../secrets/research-relay.yaml;
+  secretsFileExists = builtins.pathExists secretsFile;
 in {
   # Research Relay secrets configuration
-  sops.secrets = lib.mkIf anyServiceEnabled {
+  # Only configure secrets if services are enabled AND secrets file exists
+  sops.secrets = lib.mkIf (anyServiceEnabled && secretsFileExists) {
     # Cloudflare origin certificates (both hosts)
     "research-relay/cloudflare-origin-cert" = {
       sopsFile = ../../secrets/research-relay.yaml;
