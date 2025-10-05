@@ -37,9 +37,19 @@
   config,
   lib,
   ...
-}: {
+}: let
+  hasResearchRelay = builtins.hasAttr "researchRelay" config.services;
+  hasOdoo = hasResearchRelay && builtins.hasAttr "odoo" config.services.researchRelay;
+  hasBtcpay = hasResearchRelay && builtins.hasAttr "btcpay" config.services.researchRelay;
+  hasPdfIntake = hasResearchRelay && builtins.hasAttr "pdfIntake" config.services.researchRelay;
+
+  anyServiceEnabled =
+    (hasOdoo && config.services.researchRelay.odoo.enable)
+    || (hasBtcpay && config.services.researchRelay.btcpay.enable)
+    || (hasPdfIntake && config.services.researchRelay.pdfIntake.enable);
+in {
   # Research Relay secrets configuration
-  sops.secrets = lib.mkIf (config.services.researchRelay.odoo.enable or config.services.researchRelay.btcpay.enable or config.services.researchRelay.pdfIntake.enable) {
+  sops.secrets = lib.mkIf anyServiceEnabled {
     # Cloudflare origin certificates (both hosts)
     "research-relay/cloudflare-origin-cert" = {
       sopsFile = ../../secrets/research-relay.yaml;
@@ -54,55 +64,55 @@
     };
 
     # Odoo secrets (noir only)
-    "research-relay/odoo/admin-password" = lib.mkIf config.services.researchRelay.odoo.enable {
+    "research-relay/odoo/admin-password" = lib.mkIf (hasOdoo && config.services.researchRelay.odoo.enable) {
       sopsFile = ../../secrets/research-relay.yaml;
       owner = "odoo";
       mode = "0400";
     };
 
     # PDF-intake secrets (noir only)
-    "research-relay/pdf-intake/redis-password" = lib.mkIf config.services.researchRelay.pdfIntake.enable {
+    "research-relay/pdf-intake/redis-password" = lib.mkIf (hasPdfIntake && config.services.researchRelay.pdfIntake.enable) {
       sopsFile = ../../secrets/research-relay.yaml;
       owner = "pdf-intake";
       mode = "0400";
     };
 
-    "research-relay/pdf-intake/odoo-rpc-user" = lib.mkIf config.services.researchRelay.pdfIntake.enable {
+    "research-relay/pdf-intake/odoo-rpc-user" = lib.mkIf (hasPdfIntake && config.services.researchRelay.pdfIntake.enable) {
       sopsFile = ../../secrets/research-relay.yaml;
       owner = "pdf-intake";
       mode = "0400";
     };
 
-    "research-relay/pdf-intake/odoo-rpc-password" = lib.mkIf config.services.researchRelay.pdfIntake.enable {
+    "research-relay/pdf-intake/odoo-rpc-password" = lib.mkIf (hasPdfIntake && config.services.researchRelay.pdfIntake.enable) {
       sopsFile = ../../secrets/research-relay.yaml;
       owner = "pdf-intake";
       mode = "0400";
     };
 
-    "research-relay/pdf-intake/api-token" = lib.mkIf config.services.researchRelay.pdfIntake.enable {
+    "research-relay/pdf-intake/api-token" = lib.mkIf (hasPdfIntake && config.services.researchRelay.pdfIntake.enable) {
       sopsFile = ../../secrets/research-relay.yaml;
       owner = "pdf-intake";
       mode = "0400";
     };
 
     # BTCPay secrets (zinc only)
-    "research-relay/btcpay/db-password" = lib.mkIf config.services.researchRelay.btcpay.enable {
+    "research-relay/btcpay/db-password" = lib.mkIf (hasBtcpay && config.services.researchRelay.btcpay.enable) {
       sopsFile = ../../secrets/research-relay.yaml;
       mode = "0400";
     };
 
-    "research-relay/btcpay/api-key" = lib.mkIf config.services.researchRelay.btcpay.enable {
+    "research-relay/btcpay/api-key" = lib.mkIf (hasBtcpay && config.services.researchRelay.btcpay.enable) {
       sopsFile = ../../secrets/research-relay.yaml;
       mode = "0400";
     };
 
-    "research-relay/btcpay/webhook-secret" = lib.mkIf config.services.researchRelay.btcpay.enable {
+    "research-relay/btcpay/webhook-secret" = lib.mkIf (hasBtcpay && config.services.researchRelay.btcpay.enable) {
       sopsFile = ../../secrets/research-relay.yaml;
       mode = "0400";
     };
 
     # Backup encryption key (both hosts)
-    "research-relay/backup-age-pubkey" = lib.mkIf (config.services.researchRelay.odoo.enable or config.services.researchRelay.btcpay.enable) {
+    "research-relay/backup-age-pubkey" = lib.mkIf anyServiceEnabled {
       sopsFile = ../../secrets/research-relay.yaml;
       mode = "0444";
     };
