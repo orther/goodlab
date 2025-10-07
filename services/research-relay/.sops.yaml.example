@@ -1,0 +1,14 @@
+# SOPS configuration for Research Relay secrets
+# Copy to ../../.sops.yaml and add your age keys
+#
+# To get your age public key:
+#   age-keygen -y /nix/secret/initrd/ssh_host_ed25519_key
+
+creation_rules:
+  - path_regex: secrets/research-relay\.yaml$
+    age: >-
+      age1changeme_your_age_public_key_here,
+      age1changeme_backup_key_here
+    # Optionally add key groups for different hosts
+    # age_noir: age1...
+    # age_zinc: age1...

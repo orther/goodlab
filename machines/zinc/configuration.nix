@@ -18,6 +18,11 @@
     #./../../services/netdata.nix
     #./../../services/nextcloud.nix
     #./../../services/nixarr.nix
+
+    # Research Relay services (zinc = BTCPay Server)
+    ./../../services/research-relay/_common-hardening.nix
+    ./../../services/research-relay/btcpay.nix
+    ./../../services/research-relay/secrets.nix
   ];
 
   home-manager = {
@@ -38,5 +43,10 @@
     useDHCP = false;
     interfaces.enp1s0.useDHCP = true;
     useNetworkd = true;
+  };
+
+  # Enable Research Relay BTCPay Server on zinc
+  services.researchRelay = {
+    btcpay.enable = true;
   };
 }

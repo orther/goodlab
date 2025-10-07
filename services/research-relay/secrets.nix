@@ -1,0 +1,125 @@
+# Research Relay secrets configuration template
+# Add these secrets to your secrets/secrets.yaml file
+#
+# Required secrets structure:
+# research-relay:
+#   # Cloudflare origin certificates (shared between noir and zinc)
+#   cloudflare-origin-cert: |
+#     -----BEGIN CERTIFICATE-----
+#     ...
+#     -----END CERTIFICATE-----
+#   cloudflare-origin-key: |
+#     -----BEGIN PRIVATE KEY-----
+#     ...
+#     -----END PRIVATE KEY-----
+#
+#   # Odoo secrets (noir)
+#   odoo:
+#     admin-password: "strong-password-here"
+#
+#   # PDF-intake secrets (noir)
+#   pdf-intake:
+#     redis-password: "redis-password"
+#     odoo-rpc-user: "pdf_intake_service"
+#     odoo-rpc-password: "rpc-password"
+#     api-token: "secret-token-for-api-auth"
+#
+#   # BTCPay secrets (zinc)
+#   btcpay:
+#     db-password: "btcpay-postgres-password"
+#     api-key: "btcpay-api-key-for-odoo"
+#     webhook-secret: "webhook-signature-secret"
+#
+#   # Backup encryption
+#   backup-age-pubkey: "age1..."
+#
+{
+  config,
+  lib,
+  ...
+}: let
+  hasResearchRelay = builtins.hasAttr "researchRelay" config.services;
+  hasOdoo = hasResearchRelay && builtins.hasAttr "odoo" config.services.researchRelay;
+  hasBtcpay = hasResearchRelay && builtins.hasAttr "btcpay" config.services.researchRelay;
+  hasPdfIntake = hasResearchRelay && builtins.hasAttr "pdfIntake" config.services.researchRelay;
+
+  anyServiceEnabled =
+    (hasOdoo && config.services.researchRelay.odoo.enable)
+    || (hasBtcpay && config.services.researchRelay.btcpay.enable)
+    || (hasPdfIntake && config.services.researchRelay.pdfIntake.enable);
+
+  # Check if secrets file exists (not present in CI/dev environments)
+  secretsFile = ../../secrets/research-relay.yaml;
+  secretsFileExists = builtins.pathExists secretsFile;
+in {
+  # Research Relay secrets configuration
+  # Only configure secrets if services are enabled AND secrets file exists
+  sops.secrets = lib.mkIf (anyServiceEnabled && secretsFileExists) {
+    # Cloudflare origin certificates (both hosts)
+    "research-relay/cloudflare-origin-cert" = {
+      sopsFile = ../../secrets/research-relay.yaml;
+      mode = "0440";
+      group = "nginx";
+    };
+
+    "research-relay/cloudflare-origin-key" = {
+      sopsFile = ../../secrets/research-relay.yaml;
+      mode = "0440";
+      group = "nginx";
+    };
+
+    # Odoo secrets (noir only)
+    "research-relay/odoo/admin-password" = lib.mkIf (hasOdoo && config.services.researchRelay.odoo.enable) {
+      sopsFile = ../../secrets/research-relay.yaml;
+      owner = "odoo";
+      mode = "0400";
+    };
+
+    # PDF-intake secrets (noir only)
+    "research-relay/pdf-intake/redis-password" = lib.mkIf (hasPdfIntake && config.services.researchRelay.pdfIntake.enable) {
+      sopsFile = ../../secrets/research-relay.yaml;
+      owner = "pdf-intake";
+      mode = "0400";
+    };
+
+    "research-relay/pdf-intake/odoo-rpc-user" = lib.mkIf (hasPdfIntake && config.services.researchRelay.pdfIntake.enable) {
+      sopsFile = ../../secrets/research-relay.yaml;
+      owner = "pdf-intake";
+      mode = "0400";
+    };
+
+    "research-relay/pdf-intake/odoo-rpc-password" = lib.mkIf (hasPdfIntake && config.services.researchRelay.pdfIntake.enable) {
+      sopsFile = ../../secrets/research-relay.yaml;
+      owner = "pdf-intake";
+      mode = "0400";
+    };
+
+    "research-relay/pdf-intake/api-token" = lib.mkIf (hasPdfIntake && config.services.researchRelay.pdfIntake.enable) {
+      sopsFile = ../../secrets/research-relay.yaml;
+      owner = "pdf-intake";
+      mode = "0400";
+    };
+
+    # BTCPay secrets (zinc only)
+    "research-relay/btcpay/db-password" = lib.mkIf (hasBtcpay && config.services.researchRelay.btcpay.enable) {
+      sopsFile = ../../secrets/research-relay.yaml;
+      mode = "0400";
+    };
+
+    "research-relay/btcpay/api-key" = lib.mkIf (hasBtcpay && config.services.researchRelay.btcpay.enable) {
+      sopsFile = ../../secrets/research-relay.yaml;
+      mode = "0400";
+    };
+
+    "research-relay/btcpay/webhook-secret" = lib.mkIf (hasBtcpay && config.services.researchRelay.btcpay.enable) {
+      sopsFile = ../../secrets/research-relay.yaml;
+      mode = "0400";
+    };
+
+    # Backup encryption key (both hosts)
+    "research-relay/backup-age-pubkey" = lib.mkIf anyServiceEnabled {
+      sopsFile = ../../secrets/research-relay.yaml;
+      mode = "0444";
+    };
+  };
+}
