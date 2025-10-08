@@ -1,11 +1,5 @@
 <p align="center">
-  <img src=".github/images/background.gif" width=500 alt="goodlab" />
-  <br>
-  <img src=".github/images/servers.jpg" alt="goodlab" width=500 style="border-radius: 12px;"/>
-  <br>
-  Homelab hardware: ThinkCenter M710q Tiny, Intel i5-7500T and 8GB RAM
-  <br>
-  <br>
+  <img src=".github/images/goodlab-hacker.png" width=600 alt="goodlab" />
 </p>
 
 [![nixos 24.11](https://img.shields.io/badge/NixOS-24.11-blue.svg?&logo=NixOS&logoColor=white)](https://nixos.org)
