@@ -50,6 +50,7 @@
       nil
       nixos-rebuild # need for macOS
       nodejs
+      nodePackages_latest.eas-cli
       sops
       statix
       stripe-cli

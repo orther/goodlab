@@ -21,8 +21,8 @@
 
       # Initialize asdf
       if command -v asdf >/dev/null 2>&1; then
-        source "$(asdf where asdf)/asdf.sh"
-        source "$(asdf where asdf)/completions/asdf.bash"
+        source "${pkgs.asdf-vm}/share/asdf-vm/asdf.sh"
+        source "${pkgs.asdf-vm}/share/asdf-vm/completions/asdf.bash"
       fi
     '';
     plugins = [

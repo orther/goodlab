@@ -16,27 +16,31 @@
       (lib.mkIf pkgs.stdenv.isDarwin "/Users/${config.home.username}")
     ];
     stateVersion = "23.11";
-    sessionVariables = lib.mkIf pkgs.stdenv.isDarwin {
-      SOPS_AGE_KEY_FILE = "$HOME/.config/sops/age/keys.txt";
-      SSL_CERT_FILE = "/etc/ssl/nix-corporate/ca-bundle.pem";
-      REQUESTS_CA_BUNDLE = "/etc/ssl/nix-corporate/ca-bundle.pem";
-      ERL_SSL_PATH = "/etc/ssl/nix-corporate";
-      ERL_SSL_CERTFILE = "/etc/ssl/nix-corporate/ca-bundle.pem";
-      XDG_CACHE_HOME = "$HOME/.cache";
-      XDG_DATA_HOME = "$HOME/.local/share";
-      XDG_STATE_HOME = "$HOME/.local/state";
-      DOOMLOCALDIR = "$HOME/.local/share/doom";
-      DOOMDATA = "$HOME/.local/share/doom/data";
-      DOOMCACHE = "$HOME/.cache/doom";
-      DOOMSTATE = "$HOME/.local/state/doom";
-    };
+    sessionVariables = lib.mkMerge [
+      {
+        SHELL = "${pkgs.zsh}/bin/zsh";
+        XDG_CACHE_HOME = "$HOME/.cache";
+        XDG_DATA_HOME = "$HOME/.local/share";
+        XDG_STATE_HOME = "$HOME/.local/state";
+        DOOMLOCALDIR = "$HOME/.local/share/doom";
+        DOOMDATA = "$HOME/.local/share/doom/data";
+        DOOMCACHE = "$HOME/.cache/doom";
+        DOOMSTATE = "$HOME/.local/state/doom";
+      }
+      (lib.mkIf pkgs.stdenv.isDarwin {
+        SOPS_AGE_KEY_FILE = "$HOME/.config/sops/age/keys.txt";
+        SSL_CERT_FILE = "/etc/ssl/nix-corporate/ca-bundle.pem";
+        REQUESTS_CA_BUNDLE = "/etc/ssl/nix-corporate/ca-bundle.pem";
+        ERL_SSL_PATH = "/etc/ssl/nix-corporate";
+        ERL_SSL_CERTFILE = "/etc/ssl/nix-corporate/ca-bundle.pem";
+      })
+    ];
   };
 
   programs = {
     git = {
       enable = true;
     };
-    ssh.enableDefaultConfig = false;
     helix = {
       enable = true;
       defaultEditor = true;
