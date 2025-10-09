@@ -24,6 +24,11 @@ in {
       };
     };
 
+    # Allow PostgreSQL access from Docker bridge network
+    networking.firewall.extraCommands = ''
+      iptables -A nixos-fw -p tcp -s 172.17.0.0/16 --dport 5432 -j ACCEPT
+    '';
+
     # PostgreSQL database for Odoo
     services.postgresql = {
       enable = true;
@@ -35,14 +40,27 @@ in {
           ensureDBOwnership = true;
         }
       ];
+      # Listen on all interfaces for Docker containers
+      settings = {
+        listen_addresses = lib.mkForce "*";
+      };
       authentication = ''
+        # Allow Docker containers (on bridge network 172.17.0.0/16)
+        # Allow any database for initial connection checks, then switch to odoo database
+        host all odoo 172.17.0.0/16 md5
+        # Allow localhost with password
         host odoo odoo 127.0.0.1/32 scram-sha-256
+        # Allow local peer authentication
         local odoo odoo peer map=odoo
         local all postgres peer
       '';
       identMap = ''
         odoo odoo odoo
         odoo root postgres
+      '';
+      # Initialize odoo user password
+      initialScript = pkgs.writeText "init-odoo-db.sql" ''
+        ALTER USER odoo WITH PASSWORD 'odoo';
       '';
     };
 
@@ -72,7 +90,7 @@ in {
           db_host = 172.17.0.1
           db_port = 5432
           db_user = odoo
-          db_password =
+          db_password = odoo
           addons_path = /mnt/extra-addons
           data_dir = /var/lib/odoo
           logfile =
@@ -110,6 +128,12 @@ in {
       sslCertificateKey = lib.mkIf secretsExist config.sops.secrets."research-relay/cloudflare-origin-key".path;
 
       extraConfig = ''
+        # Security headers (must repeat global headers due to add_header behavior)
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
         # HSTS header
         add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 

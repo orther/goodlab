@@ -13,17 +13,21 @@
   secretsExist = builtins.hasAttr "research-relay/pdf-intake/redis-password" config.sops.secrets;
 
   # Python environment for PDF-intake service
-  # Note: Some packages may need to be installed via pip in production
+  # Note: Minimal environment - additional packages like pandas/pypdf2 can be installed via pip
   pythonEnv = pkgs.python311.withPackages (ps:
     with ps; [
       fastapi
       uvicorn
-      celery
+      (celery.overridePythonAttrs (old: {
+        # Remove optional test dependencies that pull in matplotlib/tkinter
+        nativeCheckInputs = [];
+        doCheck = false;
+      }))
       redis
-      # pypdf2  # May not be in nixpkgs - install via pip if needed
-      pandas
       requests
       pydantic
+      # pandas excluded to avoid matplotlib/tk dependencies on server
+      # pypdf2 not in nixpkgs - install via pip in production
     ]);
 in {
   config = lib.mkIf config.services.researchRelay.pdfIntake.enable {
@@ -173,10 +177,7 @@ in {
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
           proxy_set_header Host $host;
 
-          # Token authentication check
-          if ($http_authorization != "Bearer $API_TOKEN") {
-            return 401;
-          }
+          # Token authentication is handled by the FastAPI application
         '';
       };
     };

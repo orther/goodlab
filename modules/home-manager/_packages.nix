@@ -39,6 +39,8 @@
       builtins.substring 0 3 osConfig.networking.hostName
       != "svr"
       && builtins.substring 0 2 osConfig.networking.hostName != "vm"
+      && osConfig.networking.hostName != "noir"
+      && osConfig.networking.hostName != "zinc"
     then [
       alejandra
       asdf-vm

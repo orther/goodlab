@@ -45,20 +45,17 @@
     recommendedOptimisation = true;
     recommendedGzipSettings = true;
 
-    # Security headers for all vhosts
-    appendHttpConfig = ''
-      # Security headers
+    # Global nginx configuration (must come before server blocks)
+    commonHttpConfig = ''
+      # Rate limiting zones
+      limit_req_zone $binary_remote_addr zone=general:10m rate=10r/s;
+      limit_req_zone $binary_remote_addr zone=api:10m rate=30r/s;
+
+      # Security headers for all vhosts
       add_header X-Frame-Options "SAMEORIGIN" always;
       add_header X-Content-Type-Options "nosniff" always;
       add_header X-XSS-Protection "1; mode=block" always;
       add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-
-      # Rate limiting
-      limit_req_zone $binary_remote_addr zone=general:10m rate=10r/s;
-      limit_req_zone $binary_remote_addr zone=api:10m rate=30r/s;
-
-      # Hide nginx version
-      server_tokens off;
     '';
   };
 
