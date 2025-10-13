@@ -48,6 +48,7 @@
       flyctl
       just
       nil
+      nixfmt-rfc-style
       nixos-rebuild # need for macOS
       nodejs
       nodePackages_latest.eas-cli

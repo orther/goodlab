@@ -20,6 +20,8 @@
        :checkers
        syntax
        :tools
+       (lsp +peek)
+       tree-sitter
        (magit +forge)
        direnv
        editorconfig
@@ -27,6 +29,7 @@
        macos
        :lang
        emacs-lisp
+       (javascript +lsp +tree-sitter)
        markdown
        nix
        :config

@@ -24,6 +24,8 @@
         source "${pkgs.asdf-vm}/share/asdf-vm/asdf.sh"
         source "${pkgs.asdf-vm}/share/asdf-vm/completions/asdf.bash"
       fi
+
+      export PATH="/opt/homebrew/bin:$PATH"
     '';
     plugins = [
       {
