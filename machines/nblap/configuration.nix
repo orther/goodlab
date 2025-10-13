@@ -29,6 +29,12 @@
         # Override defaults from HM base for this host
         home.username = lib.mkForce "brandon.orther";
         home.homeDirectory = lib.mkForce "/Users/brandon.orther";
+
+        # Corporate network CA certificates for Elixir/Hex and Node.js
+        home.sessionVariables = {
+          HEX_CACERTS_PATH = "/opt/homebrew/etc/ca-certificates/cert.pem";
+          NODE_EXTRA_CA_CERTS = "/opt/homebrew/etc/ca-certificates/cert.pem";
+        };
       };
     };
   };

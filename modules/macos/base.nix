@@ -31,6 +31,10 @@
   system = {
     primaryUser = lib.mkDefault "orther";
     startup.chime = false;
+    keyboard = {
+      enableKeyMapping = true;
+      remapCapsLockToControl = true;
+    };
     defaults = {
       loginwindow.LoginwindowText = "If lost, contact brandon@orther.dev";
       # screencapture.location = "~/OneDrive/30-39 Hobbies/34 Photos/34.01 Screenshots";
@@ -76,11 +80,6 @@
       ];
     };
   };
-
-  system.activationScripts.remapCapsLock.text = ''
-    echo >&2 "Remapping Caps Lock to Control..."
-    sudo -u ${config.system.primaryUser} /usr/bin/hidutil property --set '{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":0x700000039,"HIDKeyboardModifierMappingDst":0x7000000E0}]}' || true
-  '';
 
   system.activationScripts.setupTextReplacements.text = ''
     echo >&2 "Configuring text replacements..."

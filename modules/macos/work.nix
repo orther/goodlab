@@ -65,6 +65,10 @@
     system = {
       primaryUser = lib.mkDefault "brandon.orther";
       startup.chime = false;
+      keyboard = {
+        enableKeyMapping = true;
+        remapCapsLockToControl = true;
+      };
       defaults = {
         loginwindow.LoginwindowText = "If lost, contact brandon.orther@nationsbenefits.com";
         # screencapture.location = "~/OneDrive/30-39 Hobbies/34 Photos/34.01 Screenshots";
