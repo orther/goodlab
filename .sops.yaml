@@ -8,7 +8,7 @@ creation_rules:
   - path_regex: secrets/[^/]+(\.(yaml|json|env|ini|conf))?$
     key_groups:
       - age:
-          - &nblap
+          - *nblap
           - *noir
           - *stud
           - *zinc
