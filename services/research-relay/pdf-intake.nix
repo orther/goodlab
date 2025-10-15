@@ -18,7 +18,7 @@
     with ps; [
       fastapi
       uvicorn
-      (celery.overridePythonAttrs (old: {
+      (celery.overridePythonAttrs (_old: {
         # Remove optional test dependencies that pull in matplotlib/tkinter
         nativeCheckInputs = [];
         doCheck = false;

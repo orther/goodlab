@@ -14,6 +14,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    nixvim = {
+      url = "github:nix-community/nixvim";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     nix-darwin = {
       url = "github:LnL7/nix-darwin/master";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -21,11 +26,6 @@
 
     sops-nix = {
       url = "github:Mic92/sops-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    nix-doom-emacs = {
-      url = "github:nix-community/nix-doom-emacs";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 

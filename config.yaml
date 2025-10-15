@@ -1,0 +1,17 @@
+# Set default provider
+ai_provider: claude # or groq, gemini, openai, ollama
+ai_model: claude-sonnet-4-20250514
+
+# Provider-specific configuration
+ai_models:
+  providers:
+    claude:
+      models:
+        claude-sonnet-4-5-20250929:
+          recommended_for: ["complex", "analysis", "reasoning"]
+        ##claude-sonnet-4-20250514:
+        ##  recommended_for: ["complex", "analysis", "reasoning"]
+    groq:
+      models:
+        llama-3.3-70b-versatile:
+          recommended_for: ["fast", "general", "iteration"]

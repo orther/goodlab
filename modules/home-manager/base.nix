@@ -7,6 +7,7 @@
   imports = [
     ./_packages.nix
     ./_zsh.nix
+    ./nixvim.nix
   ];
 
   home = {
@@ -25,7 +26,7 @@
       DOOMDATA = "$HOME/.local/share/doom/data";
       DOOMCACHE = "$HOME/.cache/doom";
       DOOMSTATE = "$HOME/.local/state/doom";
-      SOPS_AGE_KEY_FILE = lib.mkIf pkgs.stdenv.isDarwin "$HOME/.config/sops/age/keys.txt";
+      SOPS_AGE_KEY_FILE = "$HOME/.config/sops/age/keys.txt";
     };
   };
 
