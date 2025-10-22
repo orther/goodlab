@@ -33,8 +33,14 @@ in {
       ".config/doom".source = ./doom.d;
     };
 
-    # Install tree-sitter grammars
-    packages = [treesitterGrammars];
+    # Install tree-sitter grammars and Doom dependencies
+    packages = [
+      treesitterGrammars
+      pkgs.ripgrep # Required for file/text search
+      pkgs.fd # Fast file finder
+      pkgs.coreutils # For gls (GNU ls) on macOS
+      pkgs.cmake # Required for vterm compilation
+    ];
 
     # Ensure `doom` CLI is on PATH for activation scripts
     sessionPath = lib.mkIf pkgs.stdenv.isDarwin (lib.mkAfter ["$HOME/.config/emacs/bin"]);
@@ -95,7 +101,9 @@ in {
   '';
 
   # Sync Doom packages after HM writes files (best-effort)
-  home.activation.doomSync = lib.hm.dag.entryAfter ["writeBoundary"] ''
+  home.activation.doomSync = lib.hm.dag.entryAfter ["writeBoundary"] (let
+    emacsPackage = if pkgs.stdenv.isDarwin then pkgs.emacsMacport else pkgs.emacs;
+  in ''
     if [ -x "$HOME/.config/emacs/bin/doom" ]; then
       export XDG_CACHE_HOME="''${XDG_CACHE_HOME:-$HOME/.cache}"
       export XDG_DATA_HOME="''${XDG_DATA_HOME:-$HOME/.local/share}"
@@ -104,9 +112,9 @@ in {
       export DOOMDATA="$XDG_DATA_HOME/doom/data"
       export DOOMCACHE="$XDG_CACHE_HOME/doom"
       export DOOMSTATE="$XDG_STATE_HOME/doom"
-      export PATH="${pkgs.emacs}/bin:${pkgs.git}/bin:$PATH"
+      export PATH="${emacsPackage}/bin:${pkgs.git}/bin:${pkgs.ripgrep}/bin:${pkgs.fd}/bin:$PATH"
       # Use -! to force sync without prompting
       "$HOME/.config/emacs/bin/doom" sync -! || true
     fi
-  '';
+  '');
 }
