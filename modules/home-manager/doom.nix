@@ -40,6 +40,18 @@ in {
     sessionPath = lib.mkIf pkgs.stdenv.isDarwin (lib.mkAfter ["$HOME/.config/emacs/bin"]);
   };
 
+  # Symlink Emacs.app to ~/Applications for Spotlight
+  home.activation.linkEmacsApp = lib.hm.dag.entryAfter ["writeBoundary"] (
+    lib.mkIf pkgs.stdenv.isDarwin ''
+      mkdir -p $HOME/Applications
+      app_path="${pkgs.emacsMacport}/Applications/Emacs.app"
+      if [ -d "$app_path" ]; then
+        $DRY_RUN_CMD rm -rf $HOME/Applications/Emacs.app
+        $DRY_RUN_CMD ln -sf "$app_path" $HOME/Applications/Emacs.app
+      fi
+    ''
+  );
+
   # Create symlinks for tree-sitter grammars with proper naming
   home.activation.linkTreeSitterGrammars = lib.hm.dag.entryAfter ["writeBoundary"] ''
     mkdir -p $HOME/.tree-sitter
