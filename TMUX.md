@@ -27,13 +27,13 @@ tmux kill-session -t mysession
 
 The **prefix** key is `Ctrl+a` (denoted as `C-a` below). Press prefix, then the command key.
 
-| Command | Action |
-|---------|--------|
+| Command | Action                      |
+| ------- | --------------------------- |
 | `C-a ?` | Show all keybindings (help) |
-| `C-a r` | Reload tmux configuration |
-| `C-a d` | Detach from session |
-| `C-a $` | Rename current session |
-| `C-a ,` | Rename current window |
+| `C-a r` | Reload tmux configuration   |
+| `C-a d` | Detach from session         |
+| `C-a $` | Rename current session      |
+| `C-a ,` | Rename current window       |
 
 ## Core Workflow Cheatsheet
 
@@ -41,63 +41,63 @@ The **prefix** key is `Ctrl+a` (denoted as `C-a` below). Press prefix, then the 
 
 Windows are like tabs in your terminal. Each window can contain multiple panes.
 
-| Command | Action |
-|---------|--------|
-| `C-a c` | Create new window (in current directory) |
-| `C-a n` | Next window |
-| `C-a p` | Previous window |
-| `C-a 0-9` | Switch to window by number |
-| `C-a w` | List all windows (interactive) |
-| `C-a &` | Kill current window |
-| `C-a <` | Swap window with previous |
-| `C-a >` | Swap window with next |
-| `C-a C-h` | Select previous window |
-| `C-a C-l` | Select next window |
+| Command   | Action                                   |
+| --------- | ---------------------------------------- |
+| `C-a c`   | Create new window (in current directory) |
+| `C-a n`   | Next window                              |
+| `C-a p`   | Previous window                          |
+| `C-a 0-9` | Switch to window by number               |
+| `C-a w`   | List all windows (interactive)           |
+| `C-a &`   | Kill current window                      |
+| `C-a <`   | Swap window with previous                |
+| `C-a >`   | Swap window with next                    |
+| `C-a C-h` | Select previous window                   |
+| `C-a C-l` | Select next window                       |
 
 ### Pane Management
 
 Panes are splits within a window, allowing you to see multiple terminals at once.
 
-| Command | Action |
-|---------|--------|
-| `C-a \|` | Split pane horizontally (side-by-side) |
-| `C-a -` | Split pane vertically (top-bottom) |
-| `C-a x` | Kill current pane |
-| `C-a z` | Toggle pane zoom (fullscreen) |
-| `C-a Space` | Toggle between pane layouts |
-| `C-a {` | Move pane left |
-| `C-a }` | Move pane right |
-| `C-a !` | Convert pane to window |
-| `C-a b` | Break pane into new window |
+| Command     | Action                                 |
+| ----------- | -------------------------------------- |
+| `C-a \|`    | Split pane horizontally (side-by-side) |
+| `C-a -`     | Split pane vertically (top-bottom)     |
+| `C-a x`     | Kill current pane                      |
+| `C-a z`     | Toggle pane zoom (fullscreen)          |
+| `C-a Space` | Toggle between pane layouts            |
+| `C-a {`     | Move pane left                         |
+| `C-a }`     | Move pane right                        |
+| `C-a !`     | Convert pane to window                 |
+| `C-a b`     | Break pane into new window             |
 
 ### Seamless Navigation (Vim Integration)
 
 **Navigate between tmux panes AND Vim splits** using the same keybindings:
 
-| Command | Action |
-|---------|--------|
-| `C-h` | Move to left pane/split |
-| `C-j` | Move to lower pane/split |
-| `C-k` | Move to upper pane/split |
-| `C-l` | Move to right pane/split |
+| Command   | Action                                          |
+| --------- | ----------------------------------------------- |
+| `C-h`     | Move to left pane/split                         |
+| `C-j`     | Move to lower pane/split                        |
+| `C-k`     | Move to upper pane/split                        |
+| `C-l`     | Move to right pane/split                        |
 | `C-a C-l` | Clear screen (since C-l is used for navigation) |
 
 **Inside tmux only** (with prefix):
 
-| Command | Action |
-|---------|--------|
-| `C-a h` | Select left pane |
+| Command | Action            |
+| ------- | ----------------- |
+| `C-a h` | Select left pane  |
 | `C-a j` | Select lower pane |
 | `C-a k` | Select upper pane |
 | `C-a l` | Select right pane |
 
 ### Pane Resizing
 
-| Command | Action |
-|---------|--------|
-| `C-a H` | Resize pane left (repeatable) |
-| `C-a J` | Resize pane down (repeatable) |
-| `C-a K` | Resize pane up (repeatable) |
+| Command | Action                         |
+| ------- | ------------------------------ |
+| `C-a H` | Resize pane left (repeatable)  |
+| `C-a J` | Resize pane down (repeatable)  |
+| `C-a K` | Resize pane up (repeatable)    |
 | `C-a L` | Resize pane right (repeatable) |
 
 Hold down the key after prefix to repeat the resize action.
@@ -106,20 +106,21 @@ Hold down the key after prefix to repeat the resize action.
 
 Copy mode allows you to scroll through terminal history and copy text.
 
-| Command | Action |
-|---------|--------|
-| `C-a [` | Enter copy mode |
-| `q` or `Escape` | Exit copy mode |
-| `v` | Begin selection |
-| `C-v` | Toggle rectangle selection |
-| `y` | Copy selection and exit |
-| `C-a P` | Paste copied text |
-| `/` | Search forward |
-| `?` | Search backward |
-| `n` | Next search result |
-| `N` | Previous search result |
+| Command         | Action                     |
+| --------------- | -------------------------- |
+| `C-a [`         | Enter copy mode            |
+| `q` or `Escape` | Exit copy mode             |
+| `v`             | Begin selection            |
+| `C-v`           | Toggle rectangle selection |
+| `y`             | Copy selection and exit    |
+| `C-a P`         | Paste copied text          |
+| `/`             | Search forward             |
+| `?`             | Search backward            |
+| `n`             | Next search result         |
+| `N`             | Previous search result     |
 
 **In copy mode, use Vim motions:**
+
 - `h`, `j`, `k`, `l` - navigate
 - `w`, `b` - word forward/backward
 - `0`, `$` - start/end of line
@@ -141,12 +142,13 @@ Mouse is fully enabled! You can:
 
 Sessions are automatically saved every 15 minutes and restored when tmux starts.
 
-| Command | Action |
-|---------|--------|
-| `C-a C-s` | Manually save session |
+| Command   | Action                   |
+| --------- | ------------------------ |
+| `C-a C-s` | Manually save session    |
 | `C-a C-r` | Manually restore session |
 
 Sessions persist across:
+
 - System reboots
 - Terminal crashes
 - Accidental tmux exits
@@ -208,6 +210,7 @@ C-a w    # List all windows
 ### Tmux Sensible
 
 Automatically configures sensible defaults:
+
 - Faster escape time (0ms instead of 500ms)
 - Larger scrollback buffer (50,000 lines)
 - Better status bar refresh rate
@@ -222,6 +225,7 @@ C-h, C-j, C-k, C-l    # Navigate anywhere
 ```
 
 Works in:
+
 - Vim
 - Neovim
 - Any terminal application in tmux
@@ -240,6 +244,7 @@ Works in:
 **Save and restore complete tmux environment:**
 
 Saves:
+
 - All sessions, windows, and panes
 - Pane layouts and sizes
 - Working directories
@@ -247,6 +252,7 @@ Saves:
 - Bash/zsh history
 
 What gets restored:
+
 - Vim/Neovim sessions (if you use sessions)
 - SSH connections
 - Development servers (npm, bun, etc.)
@@ -297,21 +303,25 @@ Activity monitor: On
 ### Key Design Decisions
 
 **Prefix: C-a instead of C-b**
+
 - More ergonomic (home row)
 - Muscle memory from GNU screen
 - Less finger stretching
 
 **Window/Pane numbering from 1**
+
 - Number keys are left-to-right on keyboard
 - 0 is far right, awkward for first window
 - More intuitive for most users
 
 **Vi mode everywhere**
+
 - Consistent with Vim/Neovim workflow
 - Familiar keybindings for navigation
 - Efficient text selection and copy
 
 **Mouse enabled by default**
+
 - Lower barrier to entry
 - Doesn't interfere with keyboard workflow
 - Helpful for demonstrations and pairing
@@ -342,6 +352,7 @@ awk 'BEGIN{
 Should display a smooth color gradient.
 
 **Fix:** Add to your shell profile:
+
 ```bash
 export TERM=xterm-256color
 ```
@@ -353,6 +364,7 @@ export TERM=xterm-256color
 **Fix:** Add to your Vim/Neovim config:
 
 For Vim (`~/.vimrc`):
+
 ```vim
 " Vim-tmux navigator
 let g:tmux_navigator_no_mappings = 1
@@ -363,6 +375,7 @@ nnoremap <silent> <C-l> :TmuxNavigateRight<cr>
 ```
 
 For Neovim (with lazy.nvim):
+
 ```lua
 {
   "christoomey/vim-tmux-navigator",
@@ -375,6 +388,7 @@ For Neovim (with lazy.nvim):
 **macOS:** Requires `reattach-to-user-namespace` (included in config)
 
 **Linux:** Requires `xclip` or `xsel`:
+
 ```bash
 # Install xclip
 sudo apt install xclip  # Debian/Ubuntu
@@ -394,6 +408,7 @@ tmux show-environment -g | grep continuum
 Should show `@continuum-restore=on`.
 
 **Manual save/restore:**
+
 ```
 C-a C-s    # Save
 C-a C-r    # Restore
@@ -404,11 +419,13 @@ C-a C-r    # Restore
 **Symptom:** `C-a r` doesn't reload configuration.
 
 **Workaround:**
+
 ```bash
 tmux source-file ~/.config/tmux/tmux.conf
 ```
 
 On NixOS/nix-darwin, the config is managed by home-manager:
+
 ```bash
 home-manager switch
 ```
@@ -514,6 +531,7 @@ extraConfig = ''
 Start tmux and press `C-a ?` to see all keybindings.
 
 Practice these core commands:
+
 1. `C-a c` - Create windows
 2. `C-a |` and `C-a -` - Split panes
 3. `C-h/j/k/l` - Navigate panes
@@ -556,11 +574,13 @@ C-a z    # Zoom toggle
 ### Workflow Optimization
 
 **Rename sessions immediately:**
+
 ```bash
 tmux new -s project-name   # Not tmux, then C-a $
 ```
 
 **Use session per project:**
+
 ```bash
 tmux new -s website
 tmux new -s api
@@ -568,6 +588,7 @@ tmux new -s database-admin
 ```
 
 **Vertical splits for code, horizontal for logs:**
+
 ```bash
 C-a |    # Code left, terminal right
 C-a -    # Terminal split: top for commands, bottom for logs
@@ -576,27 +597,32 @@ C-a -    # Terminal split: top for commands, bottom for logs
 ### Power User Commands
 
 **Show all tmux options:**
+
 ```
 C-a :show-options -g
 ```
 
 **Show all window options:**
+
 ```
 C-a :show-window-options -g
 ```
 
 **Kill all sessions except current:**
+
 ```bash
 tmux kill-session -a
 ```
 
 **Swap two panes:**
+
 ```
 C-a {    # Swap with previous pane
 C-a }    # Swap with next pane
 ```
 
 **Move window between sessions:**
+
 ```bash
 tmux move-window -s source-session:1 -t target-session:9
 ```
