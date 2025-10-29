@@ -3,6 +3,7 @@
 ;; Minimal Doom modules to get started
 (doom! :input
        :completion
+       company
        vertico
        :ui
        doom
