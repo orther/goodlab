@@ -714,3 +714,4 @@ This Neovim configuration provides:
 - ✅ Extensible and maintainable
 
 The configuration prioritizes developer productivity while maintaining the reproducibility and declarative nature of Nix. All changes are version-controlled and can be deployed consistently across machines.
+
