@@ -29,5 +29,9 @@
   ;; Better sorting with LSP
   (setq company-transformers '(company-sort-by-occurrence)))
 
+;; Fix editorconfig void-variable error - define before package loads
+(defvar editorconfig-exclude-regexps nil
+  "List of regexps to exclude files from editorconfig processing.")
+
 ;; Place any additional user settings here.
 

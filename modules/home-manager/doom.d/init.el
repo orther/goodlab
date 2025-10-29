@@ -21,6 +21,7 @@
        :checkers
        syntax
        :tools
+       docker
        (lsp +peek)
        tree-sitter
        (magit +forge)
@@ -29,10 +30,15 @@
        :os
        macos
        :lang
+       elixir
        emacs-lisp
+       erlang
+       graphql
        (javascript +lsp +tree-sitter)
        markdown
        nix
+       sh
+       yaml
        :config
        (default +bindings +smartparens))
 

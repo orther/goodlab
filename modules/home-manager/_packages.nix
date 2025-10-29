@@ -52,6 +52,8 @@
       nixos-rebuild # need for macOS
       nodejs
       nodePackages_latest.eas-cli
+      nodePackages.typescript
+      nodePackages.typescript-language-server
       sops
       statix
       stripe-cli
