@@ -64,45 +64,48 @@ in {
 
     # Create symlinks for each grammar with the naming pattern Emacs expects
     ${pkgs.lib.concatMapStringsSep "\n" (grammar: let
-      name = grammar.pname or (builtins.parseDrvName grammar.name).name;
-      langName =
-        if name == "tree-sitter-typescript-grammar"
-        then "typescript"
-        else if name == "tree-sitter-tsx-grammar"
-        then "tsx"
-        else if name == "tree-sitter-javascript-grammar"
-        then "javascript"
-        else if name == "tree-sitter-json-grammar"
-        then "json"
-        else if name == "tree-sitter-css-grammar"
-        then "css"
-        else if name == "tree-sitter-html-grammar"
-        then "html"
-        else if name == "tree-sitter-bash-grammar"
-        then "bash"
-        else if name == "tree-sitter-markdown-grammar"
-        then "markdown"
-        else if name == "tree-sitter-nix-grammar"
-        then "nix"
-        else "";
-    in ''
-      ln -sf ${grammar}/parser $HOME/.tree-sitter/libtree-sitter-${langName}.dylib
-    '') (with pkgs.tree-sitter-grammars; [
-      tree-sitter-typescript
-      tree-sitter-tsx
-      tree-sitter-javascript
-      tree-sitter-json
-      tree-sitter-css
-      tree-sitter-html
-      tree-sitter-bash
-      tree-sitter-markdown
-      tree-sitter-nix
-    ])}
+        name = grammar.pname or (builtins.parseDrvName grammar.name).name;
+        langName =
+          if name == "tree-sitter-typescript-grammar"
+          then "typescript"
+          else if name == "tree-sitter-tsx-grammar"
+          then "tsx"
+          else if name == "tree-sitter-javascript-grammar"
+          then "javascript"
+          else if name == "tree-sitter-json-grammar"
+          then "json"
+          else if name == "tree-sitter-css-grammar"
+          then "css"
+          else if name == "tree-sitter-html-grammar"
+          then "html"
+          else if name == "tree-sitter-bash-grammar"
+          then "bash"
+          else if name == "tree-sitter-markdown-grammar"
+          then "markdown"
+          else if name == "tree-sitter-nix-grammar"
+          then "nix"
+          else "";
+      in ''
+        ln -sf ${grammar}/parser $HOME/.tree-sitter/libtree-sitter-${langName}.dylib
+      '') (with pkgs.tree-sitter-grammars; [
+        tree-sitter-typescript
+        tree-sitter-tsx
+        tree-sitter-javascript
+        tree-sitter-json
+        tree-sitter-css
+        tree-sitter-html
+        tree-sitter-bash
+        tree-sitter-markdown
+        tree-sitter-nix
+      ])}
   '';
 
   # Sync Doom packages after HM writes files (best-effort)
   home.activation.doomSync = lib.hm.dag.entryAfter ["writeBoundary"] (let
-    emacsPackage = if pkgs.stdenv.isDarwin then pkgs.emacsMacport else pkgs.emacs;
+    emacsPackage =
+      if pkgs.stdenv.isDarwin
+      then pkgs.emacsMacport
+      else pkgs.emacs;
   in ''
     if [ -x "$HOME/.config/emacs/bin/doom" ]; then
       export XDG_CACHE_HOME="''${XDG_CACHE_HOME:-$HOME/.cache}"
