@@ -34,6 +34,11 @@
       flake = false;
     };
 
+    nixvim = {
+      url = "github:nix-community/nixvim";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Keep specialized inputs as GitHub for now (may not be on FlakeHub yet)
     nixarr = {
       url = "github:rasmus-kirk/nixarr";
@@ -311,6 +316,7 @@
             fonts = import ./modules/home-manager/fonts.nix;
             alacritty = import ./modules/home-manager/alacritty.nix;
             doom = import ./modules/home-manager/doom.nix;
+            neovim = import ./modules/home-manager/neovim.nix;
             "1password" = import ./modules/home-manager/1password.nix;
             desktop = import ./modules/home-manager/desktop.nix;
           };
