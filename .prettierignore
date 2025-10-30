@@ -1,0 +1,13 @@
+# Ignore SOPS-encrypted secrets files
+secrets/
+
+# Ignore git directory
+.git/
+
+# Ignore Nix build artifacts
+result
+result-*
+
+# Ignore editor directories
+.vscode/
+.idea/

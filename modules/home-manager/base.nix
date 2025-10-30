@@ -7,6 +7,7 @@
   imports = [
     ./_packages.nix
     ./_zsh.nix
+    ./tmux.nix
   ];
 
   home = {
