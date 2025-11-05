@@ -12,7 +12,7 @@
     clolcat
     cmatrix
     croc
-    du-dust
+    dust
     dua
     duf
     figlet
@@ -28,7 +28,7 @@
     neo-cowsay
     pandoc
     pipes-rs
-    poppler_utils
+    poppler-utils
     qrencode
     tree
     yt-dlp

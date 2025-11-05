@@ -9,6 +9,7 @@ nixvim is now installed on **all computers** (stud, mair, nblap, noir, zinc, vm)
 ## What's Included
 
 ### Core Editor Features
+
 - **Line numbers**: Relative and absolute
 - **Smart indentation**: 2-space tabs, auto-indent
 - **Search**: Smart case-sensitive search with highlighting
@@ -16,16 +17,19 @@ nixvim is now installed on **all computers** (stud, mair, nblap, noir, zinc, vm)
 - **Split windows**: Sensible defaults (below/right)
 
 ### Colorscheme
+
 - **Catppuccin Mocha** theme with integrated plugin support
 
 ### Essential Plugins
 
 #### Navigation & File Management
+
 - **Neo-tree** (`<leader>e`): File explorer
 - **Telescope** (`<leader>ff/fg/fb/fh`): Fuzzy finder for files, grep, buffers, help
 - **Which-key**: Shows available keybindings
 
 #### Development Tools
+
 - **LSP Servers** (auto-configured):
   - `nixd`: Nix language server with alejandra formatting
   - `ts_ls`: TypeScript/JavaScript
@@ -37,14 +41,17 @@ nixvim is now installed on **all computers** (stud, mair, nblap, noir, zinc, vm)
   - `marksman`: Markdown
 
 #### Code Intelligence
+
 - **Treesitter**: Syntax highlighting and code understanding
 - **nvim-cmp**: Autocompletion with LSP integration
 - **Luasnip**: Snippet engine
 
 #### Git Integration
+
 - **Gitsigns**: Git status in sign column
 
 #### Editor Enhancements
+
 - **Comment.nvim**: Toggle comments with `gcc` (line) and `gbc` (block)
 - **nvim-autopairs**: Auto-close brackets, quotes
 - **nvim-surround**: Surround text objects
@@ -54,14 +61,17 @@ nixvim is now installed on **all computers** (stud, mair, nblap, noir, zinc, vm)
 ## Key Bindings
 
 ### Leader Key
+
 - **Space** is the leader key (`<leader>`)
 
 ### File Operations
+
 - `<leader>w` - Save file
 - `<leader>q` - Quit
 - `<leader>bd` - Delete buffer
 
 ### Navigation
+
 - `<leader>e` - Toggle file explorer (Neo-tree)
 - `<leader>ff` - Find files (Telescope)
 - `<leader>fg` - Live grep (Telescope)
@@ -70,6 +80,7 @@ nixvim is now installed on **all computers** (stud, mair, nblap, noir, zinc, vm)
 - `<leader>fr` - Recent files (Telescope)
 
 ### LSP Commands
+
 - `gd` - Go to definition
 - `gD` - Go to declaration
 - `gi` - Go to implementation
@@ -81,22 +92,26 @@ nixvim is now installed on **all computers** (stud, mair, nblap, noir, zinc, vm)
 - `[d` / `]d` - Previous/next diagnostic
 
 ### Window Management
+
 - `<C-h/j/k/l>` - Navigate between splits
 - `<C-Up/Down/Left/Right>` - Resize windows
 
 ### Editing
+
 - `gcc` - Toggle line comment
 - `gbc` - Toggle block comment
 - `J/K` (visual mode) - Move lines up/down
-- `</>`  (visual mode) - Indent/outdent (keeps selection)
+- `</>` (visual mode) - Indent/outdent (keeps selection)
 
 ### Scrolling
+
 - `<C-d>/<C-u>` - Scroll down/up (keeps cursor centered)
 - `<Esc>` - Clear search highlighting
 
 ## Customization
 
 The nixvim configuration is located at:
+
 ```
 modules/home-manager/nixvim.nix
 ```
@@ -104,6 +119,7 @@ modules/home-manager/nixvim.nix
 To customize:
 
 1. **Edit the module**:
+
    ```nix
    # Add a new plugin
    plugins.new-plugin.enable = true;
@@ -120,6 +136,7 @@ To customize:
    ```
 
 2. **Apply changes**:
+
    ```bash
    # On macOS (stud, mair, nblap)
    just deploy <hostname>
@@ -142,6 +159,7 @@ Nixvim is configured in `modules/home-manager/base.nix`, which means it's automa
 ## First Time Usage
 
 After deploying, simply run:
+
 ```bash
 nvim
 ```
@@ -149,6 +167,7 @@ nvim
 The configuration will be automatically loaded with all plugins and LSP servers.
 
 ### Checking LSP Status
+
 - Open a file (e.g., `nvim flake.nix`)
 - Type `:LspInfo` to see active language servers
 - Type `:checkhealth` to verify plugin health
@@ -156,16 +175,19 @@ The configuration will be automatically loaded with all plugins and LSP servers.
 ## Troubleshooting
 
 ### LSP not working
+
 1. Ensure the language server is enabled in `nixvim.nix`
 2. Check `:LspInfo` for errors
 3. Run `:checkhealth` to verify dependencies
 
 ### Plugin not loading
+
 1. Check `nix flake check` for configuration errors
 2. Verify the plugin is enabled in `nixvim.nix`
 3. Redeploy with `just deploy <hostname>`
 
 ### Keybinding conflicts
+
 - Use `<leader>?` (Which-key) to see all available bindings
 - Check `keymaps` section in `nixvim.nix` for conflicts
 
