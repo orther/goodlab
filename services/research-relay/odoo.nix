@@ -9,7 +9,7 @@
 }: let
   odooPort = 8069;
   domain = "research-relay.com";
-  odooVersion = "17.0";
+  odooVersion = "19.0";
 
   # Check if secrets are available (not in CI/dev)
   secretsExist = builtins.hasAttr "research-relay/cloudflare-origin-cert" config.sops.secrets;
@@ -113,11 +113,12 @@ in {
     };
 
     # Ensure data directories exist with proper permissions
+    # Odoo 19 container runs as UID 100, GID 101 (changed from v17 which used 101:101)
     systemd.tmpfiles.rules = [
-      "d /var/lib/odoo 0750 root root -"
-      "d /var/lib/odoo/addons 0750 root root -"
-      "d /var/lib/odoo/data 0750 root root -"
-      "d /var/lib/odoo/config 0750 root root -"
+      "d /var/lib/odoo 0750 100 101 -"
+      "d /var/lib/odoo/addons 0750 100 101 -"
+      "d /var/lib/odoo/data 0770 100 101 -"
+      "d /var/lib/odoo/config 0750 100 101 -"
       "d /var/backups/research-relay 0700 root root -"
     ];
 
@@ -187,11 +188,20 @@ in {
       globalRedirect = domain;
     };
 
-    # Local access subdomain for homelab (uses ACME wildcard cert)
-    # Requires: _acme.nix and _nginx.nix to be imported in machine configuration
+    # ACME certificate for odoo.orther.dev using Cloudflare DNS-01 challenge
+    # This allows Let's Encrypt validation via DNS instead of HTTP, perfect for internal services
+    security.acme.certs."odoo.orther.dev" = {
+      domain = "odoo.orther.dev";
+      dnsProvider = "cloudflare";
+      credentialsFile = config.sops.secrets."cloudflare/acme-dns-token".path;
+      group = "nginx";
+    };
+
+    # Internal homelab access via odoo.orther.dev
+    # Uses Cloudflare DNS-01 challenge for ACME cert (works for Tailscale-only services)
     services.nginx.virtualHosts."odoo.orther.dev" = {
       forceSSL = true;
-      useACMEHost = "orther.dev";
+      useACMEHost = "odoo.orther.dev";
 
       extraConfig = ''
         # Security headers
