@@ -187,6 +187,41 @@ in {
       globalRedirect = domain;
     };
 
+    # Local access subdomain for homelab (uses ACME wildcard cert)
+    # Requires: _acme.nix and _nginx.nix to be imported in machine configuration
+    services.nginx.virtualHosts."odoo.orther.dev" = {
+      forceSSL = true;
+      useACMEHost = "orther.dev";
+
+      extraConfig = ''
+        # Security headers
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+        # Rate limiting
+        limit_req zone=general burst=20 nodelay;
+      '';
+
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:${toString odooPort}";
+        extraConfig = ''
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
+          proxy_set_header Host $host;
+          proxy_redirect off;
+
+          # WebSocket support for live updates
+          proxy_http_version 1.1;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection "upgrade";
+        '';
+      };
+    };
+
     # Nightly database backup
     systemd.services.odoo-backup = {
       description = "Nightly Odoo PostgreSQL backup";
