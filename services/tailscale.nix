@@ -8,6 +8,7 @@
     useRoutingFeatures = "server";
     extraUpFlags = [
       "--advertise-routes=10.0.0.0/8"
+      "--accept-dns=true"
     ];
   };
 

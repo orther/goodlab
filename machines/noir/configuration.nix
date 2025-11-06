@@ -17,6 +17,8 @@
 
     ./../../services/nas.nix
     ./../../services/tailscale.nix
+    ./../../services/_acme.nix
+    ./../../services/_nginx.nix
     #./../../services/netdata.nix
     #./../../services/nextcloud.nix
     #./../../services/nixarr.nix
@@ -66,6 +68,14 @@
     interfaces.enp2s0.useDHCP = true;
     useNetworkd = true;
     networkmanager.enable = lib.mkForce false; # Override base.nix NetworkManager setting
+
+    # Local DNS resolution for Odoo subdomain
+    # Tailscale MagicDNS will handle this for Tailscale clients
+    # For local network clients without Tailscale, add noir's local IP to their /etc/hosts:
+    #   10.0.10.X odoo.orther.dev
+    hosts = {
+      "127.0.0.1" = ["odoo.orther.dev"];
+    };
   };
 
   # Disable problematic wait services during NetworkManager -> systemd-networkd transition

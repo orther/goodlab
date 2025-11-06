@@ -9,7 +9,7 @@
 }: let
   odooPort = 8069;
   domain = "research-relay.com";
-  odooVersion = "17.0";
+  odooVersion = "19.0";
 
   # Check if secrets are available (not in CI/dev)
   secretsExist = builtins.hasAttr "research-relay/cloudflare-origin-cert" config.sops.secrets;
@@ -113,11 +113,12 @@ in {
     };
 
     # Ensure data directories exist with proper permissions
+    # Odoo 19 container runs as UID 100, GID 101 (changed from v17 which used 101:101)
     systemd.tmpfiles.rules = [
-      "d /var/lib/odoo 0750 root root -"
-      "d /var/lib/odoo/addons 0750 root root -"
-      "d /var/lib/odoo/data 0750 root root -"
-      "d /var/lib/odoo/config 0750 root root -"
+      "d /var/lib/odoo 0750 100 101 -"
+      "d /var/lib/odoo/addons 0750 100 101 -"
+      "d /var/lib/odoo/data 0770 100 101 -"
+      "d /var/lib/odoo/config 0750 100 101 -"
       "d /var/backups/research-relay 0700 root root -"
     ];
 
@@ -185,6 +186,50 @@ in {
       sslCertificate = lib.mkIf secretsExist config.sops.secrets."research-relay/cloudflare-origin-cert".path;
       sslCertificateKey = lib.mkIf secretsExist config.sops.secrets."research-relay/cloudflare-origin-key".path;
       globalRedirect = domain;
+    };
+
+    # ACME certificate for odoo.orther.dev using Cloudflare DNS-01 challenge
+    # This allows Let's Encrypt validation via DNS instead of HTTP, perfect for internal services
+    security.acme.certs."odoo.orther.dev" = {
+      domain = "odoo.orther.dev";
+      dnsProvider = "cloudflare";
+      credentialsFile = config.sops.secrets."cloudflare/acme-dns-token".path;
+      group = "nginx";
+    };
+
+    # Internal homelab access via odoo.orther.dev
+    # Uses Cloudflare DNS-01 challenge for ACME cert (works for Tailscale-only services)
+    services.nginx.virtualHosts."odoo.orther.dev" = {
+      forceSSL = true;
+      useACMEHost = "odoo.orther.dev";
+
+      extraConfig = ''
+        # Security headers
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+        # Rate limiting
+        limit_req zone=general burst=20 nodelay;
+      '';
+
+      locations."/" = {
+        proxyPass = "http://127.0.0.1:${toString odooPort}";
+        extraConfig = ''
+          proxy_set_header X-Real-IP $remote_addr;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header X-Forwarded-Proto $scheme;
+          proxy_set_header Host $host;
+          proxy_redirect off;
+
+          # WebSocket support for live updates
+          proxy_http_version 1.1;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection "upgrade";
+        '';
+      };
     };
 
     # Nightly database backup
