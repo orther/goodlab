@@ -126,6 +126,9 @@ in {
             - ${inventreeDomain}
             - localhost
             - 127.0.0.1
+          site_url: https://${inventreeDomain}
+          csrf_trusted_origins:
+            - https://${inventreeDomain}
 
           # Admin user
           inventree_admin_user: ${
