@@ -1,12 +1,16 @@
-{inputs, ...}: {
+{
+  inputs,
+  pkgs,
+  ...
+}: {
   imports = [
     inputs.nixvim.homeManagerModules.nixvim
   ];
   programs.nixvim = {
     enable = true;
 
-    # Use system clipboard
-    clipboard.providers.wl-copy.enable = true;
+    # Use system clipboard (wl-copy only on Linux/Wayland)
+    clipboard.providers.wl-copy.enable = pkgs.stdenv.isLinux;
 
     # Global settings
     globals = {

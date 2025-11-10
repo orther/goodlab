@@ -22,7 +22,7 @@ in {
     enable = true;
     package =
       if pkgs.stdenv.isDarwin
-      then pkgs.emacsMacport
+      then pkgs.emacs-macport
       else pkgs.emacs;
   };
 
@@ -50,7 +50,7 @@ in {
   home.activation.linkEmacsApp = lib.hm.dag.entryAfter ["writeBoundary"] (
     lib.mkIf pkgs.stdenv.isDarwin ''
       mkdir -p $HOME/Applications
-      app_path="${pkgs.emacsMacport}/Applications/Emacs.app"
+      app_path="${pkgs.emacs-macport}/Applications/Emacs.app"
       if [ -d "$app_path" ]; then
         $DRY_RUN_CMD rm -rf $HOME/Applications/Emacs.app
         $DRY_RUN_CMD ln -sf "$app_path" $HOME/Applications/Emacs.app
@@ -104,7 +104,7 @@ in {
   home.activation.doomSync = lib.hm.dag.entryAfter ["writeBoundary"] (let
     emacsPackage =
       if pkgs.stdenv.isDarwin
-      then pkgs.emacsMacport
+      then pkgs.emacs-macport
       else pkgs.emacs;
   in ''
     if [ -x "$HOME/.config/emacs/bin/doom" ]; then

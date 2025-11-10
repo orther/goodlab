@@ -43,7 +43,7 @@
       alejandra
       asdf-vm
       bun
-      claude-code
+      claude-code # Filtered out on corporate networks (see combinedFiltered)
       doppler
       flyctl
       just
@@ -56,7 +56,7 @@
       sops
       statix
       stripe-cli
-      wrangler
+      wrangler # Filtered out on corporate networks (see combinedFiltered)
       zola
     ]
     else []
@@ -64,7 +64,7 @@
   combined = base ++ dev;
   combinedFiltered =
     if (osConfig.local.corporateNetwork or false)
-    then builtins.filter (p: p != pkgs.wrangler) combined
+    then builtins.filter (p: p != pkgs.wrangler && p != pkgs.claude-code) combined
     else combined;
 in {
   home.packages = combinedFiltered;
