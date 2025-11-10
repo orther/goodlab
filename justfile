@@ -12,6 +12,7 @@ deploy machine ip="":
       if [ -z "{{ip}}" ]; then
         sudo nixos-rebuild switch --fast --flake ".#{{machine}}"
       else
+        # Build on remote host (required for cross-arch deployment from macOS to Linux)
         nixos-rebuild switch --fast --flake ".#{{machine}}" --use-remote-sudo --target-host "orther@{{ip}}" --build-host "orther@{{ip}}"
       fi
       ;;
