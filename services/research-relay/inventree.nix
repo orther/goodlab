@@ -219,19 +219,13 @@ in {
       "d /var/backups/inventree 0700 root root -"
     ];
 
-    # ACME certificate for inventree.orther.dev using Cloudflare DNS-01 challenge
-    # This allows Let's Encrypt validation via DNS instead of HTTP, perfect for internal services
-    security.acme.certs."${inventreeDomain}" = {
-      domain = inventreeDomain;
-      dnsProvider = "cloudflare";
-      credentialsFile = config.sops.secrets."cloudflare/acme-dns-token".path;
-      group = "nginx";
-    };
+    # Use wildcard certificate from _acme.nix (*.orther.dev)
+    # The wildcard cert covers inventree.orther.dev and is managed centrally
 
     # Nginx reverse proxy for internal homelab access
     services.nginx.virtualHosts."${inventreeDomain}" = {
       forceSSL = true;
-      useACMEHost = inventreeDomain;
+      useACMEHost = "orther.dev"; # Use wildcard cert
 
       extraConfig = ''
         # Security headers

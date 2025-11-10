@@ -1,7 +1,13 @@
 {config, ...}: {
   sops.secrets = {
-    "cloudflare-api-email" = {};
-    "cloudflare-api-key" = {};
+    "cloudflare-api-email" = {
+      mode = "0400";
+      owner = "acme";
+    };
+    "cloudflare-api-key" = {
+      mode = "0400";
+      owner = "acme";
+    };
   };
 
   # inspo: https://carjorvaz.com/posts/setting-up-wildcard-lets-encrypt-certificates-on-nixos/
