@@ -89,10 +89,11 @@ in {
 
     # Cloudflare API token for ACME DNS-01 challenges
     # Used by both Odoo and InvenTree for internal DNS domains
-    "cloudflare/acme-dns-token" = lib.mkIf (globalSecretsExist && (
-      (hasOdoo && config.services.researchRelay.odoo.enable)
-      || (hasInvenTree && config.services.researchRelay.inventree.enable)
-    )) {
+    "cloudflare/acme-dns-token" = lib.mkIf (globalSecretsExist
+      && (
+        (hasOdoo && config.services.researchRelay.odoo.enable)
+        || (hasInvenTree && config.services.researchRelay.inventree.enable)
+      )) {
       sopsFile = globalSecretsFile;
       mode = "0400";
       owner = "acme";

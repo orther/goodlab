@@ -87,7 +87,7 @@
 
   # Enable Research Relay services on noir
   services.researchRelay = {
-    odoo.enable = true;
+    odoo.enable = false; # Disabled - will likely be removed
     inventree.enable = true;
     pdfIntake.enable = false; # Temporarily disabled - blocked by nixpkgs tkinter/tcl-9.0.1 packaging bug
     # ageGate.enable = true; # Disabled - requires nginx Lua module (see AGE_GATE.md)
