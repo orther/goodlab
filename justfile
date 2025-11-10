@@ -77,3 +77,73 @@ fmt:
 
 check:
   nix flake check
+
+# Deployment diagnostics and cleanup (remote NixOS machines only)
+
+# Check if a deployment is running on a remote machine
+deploy-status ip:
+  @echo "=== Checking for running deployments on {{ip}} ==="
+  @ssh orther@{{ip}} "ps aux | grep nixos-rebuild | grep -v grep || echo 'No deployments running'"
+  @echo ""
+  @echo "=== Checking systemd units ==="
+  @ssh orther@{{ip}} "systemctl list-units --all | grep nixos-rebuild || echo 'No nixos-rebuild units'"
+
+# Kill stuck deployment processes on a remote machine
+deploy-clean ip:
+  #!/usr/bin/env sh
+  echo "=== Cleaning stuck deployment processes on {{ip}} ==="
+
+  # Stop any nixos-rebuild systemd units
+  echo "Stopping nixos-rebuild systemd units..."
+  ssh orther@{{ip}} "sudo systemctl stop 'nixos-rebuild-*' 2>/dev/null || true" || true
+
+  # Kill stuck processes
+  echo "Killing stuck nixos-rebuild processes..."
+  ssh orther@{{ip}} "sudo pkill -9 -f 'nixos-rebuild|systemd-run.*switch-to-configuration' || true" || true
+
+  # Verify cleanup
+  echo ""
+  echo "=== Verification ==="
+  ssh orther@{{ip}} "ps aux | grep nixos-rebuild | grep -v grep || echo '✓ No processes running'"
+
+  echo ""
+  echo "✓ Cleanup complete. You can now retry deployment."
+
+# Check status of key services on a remote machine
+service-status ip service="":
+  #!/usr/bin/env sh
+  set -euo pipefail
+  if [ -z "{{service}}" ]; then
+    echo "=== Checking all failed services on {{ip}} ==="
+    ssh orther@{{ip}} "systemctl --failed --no-pager"
+  else
+    echo "=== Status of {{service}} on {{ip}} ==="
+    ssh orther@{{ip}} "systemctl status {{service}} --no-pager -l | head -30"
+  fi
+
+# View recent logs for a service on a remote machine
+service-logs ip service lines="50":
+  @echo "=== Recent logs for {{service}} on {{ip}} ==="
+  @ssh orther@{{ip}} "journalctl -u {{service}} -n {{lines}} --no-pager"
+
+# Full diagnostic report for a remote machine
+diagnose ip:
+  #!/usr/bin/env sh
+  set -euo pipefail
+  echo "=== Diagnostic Report for {{ip}} ==="
+  echo ""
+
+  echo ">>> Running Deployments"
+  just deploy-status {{ip}} || true
+  echo ""
+
+  echo ">>> Failed Services"
+  ssh orther@{{ip}} "systemctl --failed --no-pager" || true
+  echo ""
+
+  echo ">>> Disk Usage"
+  ssh orther@{{ip}} "df -h / /nix /nix/persist 2>/dev/null || df -h /"
+  echo ""
+
+  echo ">>> Recent System Logs (errors only)"
+  ssh orther@{{ip}} "journalctl -p err -n 20 --no-pager" || true
