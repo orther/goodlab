@@ -8,9 +8,6 @@
 }: let
   inventreeDomain = "inventree.orther.dev";
   inventreePort = 8000;
-
-  # Check if secrets are available (not in CI/dev)
-  secretsExist = builtins.hasAttr "research-relay/inventree/admin-password" config.sops.secrets;
 in {
   config = lib.mkIf config.services.researchRelay.inventree.enable {
     # PostgreSQL database for InvenTree
@@ -108,7 +105,7 @@ in {
       };
 
       # Declarative admin user (uses SOPS secrets)
-      users = lib.mkIf secretsExist {
+      users = {
         orther = {
           email = "brandon@orther.dev";
           is_superuser = true;
