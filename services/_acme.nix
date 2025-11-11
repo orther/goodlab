@@ -1,10 +1,16 @@
 {config, ...}: {
   sops.secrets = {
+    # Legacy secrets for other services (if still needed)
     "cloudflare-api-email" = {
       mode = "0400";
       owner = "acme";
     };
     "cloudflare-api-key" = {
+      mode = "0400";
+      owner = "acme";
+    };
+    # ACME-specific secret with proper format (CF_DNS_API_TOKEN=...)
+    "cloudflare/acme-dns-token" = {
       mode = "0400";
       owner = "acme";
     };
@@ -21,9 +27,7 @@
       dnsProvider = "cloudflare";
       dnsPropagationCheck = true;
       # inspo: https://go-acme.github.io/lego/dns/cloudflare/
-      credentialFiles = {
-        "CLOUDFLARE_DNS_API_TOKEN_FILE" = config.sops.secrets."cloudflare-api-key".path;
-      };
+      environmentFile = config.sops.secrets."cloudflare/acme-dns-token".path;
       # fix DNS challenge query failing due to using local DNS server
       extraLegoFlags = ["--dns.resolvers" "1.1.1.1"];
     };
