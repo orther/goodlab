@@ -82,13 +82,15 @@
   };
 
   programs.git = {
-    userName = "Brandon Orther";
-    userEmail = "brandon@orther.dev";
     signing = {
       key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDvJx1pyQwQVPPdXlqhJEtUlKyVr4HbZvgbjZ96t75Re";
       signByDefault = true;
     };
-    extraConfig = {
+    settings = {
+      user = {
+        name = "Brandon Orther";
+        email = "brandon@orther.dev";
+      };
       push = {autoSetupRemote = true;};
       gpg = {format = "ssh";};
       gpg."ssh".program = lib.mkMerge [

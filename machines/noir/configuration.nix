@@ -43,8 +43,12 @@
 
         programs.git = {
           enable = true;
-          userName = "Brandon Orther";
-          userEmail = "brandon@orther.dev";
+          settings = {
+            user = {
+              name = "Brandon Orther";
+              email = "brandon@orther.dev";
+            };
+          };
         };
 
         programs.ssh = {
