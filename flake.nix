@@ -41,7 +41,7 @@
     };
 
     nixos-inventree = {
-      url = "github:orther/nixos-inventree";
+      url = "github:orther/nixos-inventree/fix/add-psycopg2-binary";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
