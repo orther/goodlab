@@ -24,10 +24,9 @@
     #./../../services/nextcloud.nix
     #./../../services/nixarr.nix
 
-    # Research Relay services (noir = Odoo + PDF-intake + InvenTree)
+    # Research Relay services (noir = InvenTree + PDF-intake)
     ./../../services/research-relay/_common-hardening.nix
-    ./../../services/research-relay/odoo.nix
-    ./../../services/research-relay/inventree-v2.nix
+    ./../../services/research-relay/inventree.nix
     ./../../services/research-relay/pdf-intake.nix
     ./../../services/research-relay/age-gate.nix
     ./../../services/research-relay/secrets.nix
@@ -45,8 +44,12 @@
 
         programs.git = {
           enable = true;
-          userName = "Brandon Orther";
-          userEmail = "brandon@orther.dev";
+          settings = {
+            user = {
+              name = "Brandon Orther";
+              email = "brandon@orther.dev";
+            };
+          };
         };
 
         programs.ssh = {
@@ -74,9 +77,9 @@
     # Local DNS resolution for internal service subdomains
     # Tailscale MagicDNS will handle this for Tailscale clients
     # For local network clients without Tailscale, add noir's local IP to their /etc/hosts:
-    #   10.0.10.X odoo.orther.dev inventree.orther.dev
+    #   10.0.10.X inventree.orther.dev
     hosts = {
-      "127.0.0.1" = ["odoo.orther.dev" "inventree.orther.dev"];
+      "127.0.0.1" = ["inventree.orther.dev"];
     };
   };
 
@@ -88,7 +91,6 @@
 
   # Enable Research Relay services on noir
   services.researchRelay = {
-    odoo.enable = false; # Disabled - will likely be removed
     inventree.enable = true;
     pdfIntake.enable = false; # Temporarily disabled - blocked by nixpkgs tkinter/tcl-9.0.1 packaging bug
     # ageGate.enable = true; # Disabled - requires nginx Lua module (see AGE_GATE.md)

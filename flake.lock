@@ -325,16 +325,15 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1762882619,
+        "lastModified": 1762903980,
         "narHash": "sha256-2gBv8qF7UhFRftn/Y9pJmWRCh3b9BfYXRq6wtAzqLnk=",
         "owner": "orther",
         "repo": "nixos-inventree",
-        "rev": "284be0097808eb58237c0d564533648b115b0533",
+        "rev": "db0337797f1dc63c9e1826e3b9e56c39f437339b",
         "type": "github"
       },
       "original": {
         "owner": "orther",
-        "ref": "fix/add-psycopg2-binary",
         "repo": "nixos-inventree",
         "type": "github"
       }

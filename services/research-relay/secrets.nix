@@ -53,14 +53,12 @@
   ...
 }: let
   hasResearchRelay = builtins.hasAttr "researchRelay" config.services;
-  hasOdoo = hasResearchRelay && builtins.hasAttr "odoo" config.services.researchRelay;
   hasInvenTree = hasResearchRelay && builtins.hasAttr "inventree" config.services.researchRelay;
   hasBtcpay = hasResearchRelay && builtins.hasAttr "btcpay" config.services.researchRelay;
   hasPdfIntake = hasResearchRelay && builtins.hasAttr "pdfIntake" config.services.researchRelay;
 
   anyServiceEnabled =
-    (hasOdoo && config.services.researchRelay.odoo.enable)
-    || (hasInvenTree && config.services.researchRelay.inventree.enable)
+    (hasInvenTree && config.services.researchRelay.inventree.enable)
     || (hasBtcpay && config.services.researchRelay.btcpay.enable)
     || (hasPdfIntake && config.services.researchRelay.pdfIntake.enable);
 
@@ -88,22 +86,11 @@ in {
     };
 
     # Cloudflare API token for ACME DNS-01 challenges
-    # Used by both Odoo and InvenTree for internal DNS domains
-    "cloudflare/acme-dns-token" = lib.mkIf (globalSecretsExist
-      && (
-        (hasOdoo && config.services.researchRelay.odoo.enable)
-        || (hasInvenTree && config.services.researchRelay.inventree.enable)
-      )) {
+    # Used by InvenTree for internal DNS domains
+    "cloudflare/acme-dns-token" = lib.mkIf (globalSecretsExist && hasInvenTree && config.services.researchRelay.inventree.enable) {
       sopsFile = globalSecretsFile;
       mode = "0400";
       owner = "acme";
-    };
-
-    # Odoo secrets (noir only)
-    "research-relay/odoo/admin-password" = lib.mkIf (researchRelaySecretsExist && hasOdoo && config.services.researchRelay.odoo.enable) {
-      sopsFile = researchRelaySecretsFile;
-      owner = "odoo";
-      mode = "0400";
     };
 
     # InvenTree secrets (noir only) - stored in global secrets.yaml

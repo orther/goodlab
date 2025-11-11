@@ -1,35 +1,15 @@
-# InvenTree inventory management service for homelab
-# Includes PostgreSQL database, Redis cache, and nginx reverse proxy with ACME certs
-# NOTE: This module uses Docker for InvenTree since it's not packaged in nixpkgs
+# InvenTree inventory management service using nixos-inventree module
+# Native NixOS service (no Docker) with proper systemd integration
 {
   config,
   pkgs,
   lib,
   ...
 }: let
-  inventreePort = 8000;
   inventreeDomain = "inventree.orther.dev";
-  inventreeTag = "stable"; # stable, latest, or specific version tag
-
-  # Check if secrets are available (not in CI/dev)
-  secretsExist = builtins.hasAttr "research-relay/inventree/admin-password" config.sops.secrets;
+  inventreePort = 8000;
 in {
   config = lib.mkIf config.services.researchRelay.inventree.enable {
-    # Enable Docker for InvenTree containers
-    virtualisation.docker = {
-      enable = true;
-      autoPrune = {
-        enable = true;
-        dates = "weekly";
-      };
-    };
-
-    # Allow PostgreSQL and Redis access from Docker bridge network
-    networking.firewall.extraCommands = ''
-      iptables -A nixos-fw -p tcp -s 172.17.0.0/16 --dport 5432 -j ACCEPT
-      iptables -A nixos-fw -p tcp -s 172.17.0.0/16 --dport 6379 -j ACCEPT
-    '';
-
     # PostgreSQL database for InvenTree
     services.postgresql = {
       enable = true;
@@ -41,14 +21,12 @@ in {
           ensureDBOwnership = true;
         }
       ];
-      # Listen on all interfaces for Docker containers
+      # InvenTree connects via localhost, no need for network access
       settings = {
-        listen_addresses = lib.mkForce "*";
+        listen_addresses = lib.mkDefault "localhost";
       };
       authentication = ''
-        # Allow Docker containers (on bridge network 172.17.0.0/16)
-        host all inventree 172.17.0.0/16 md5
-        # Allow localhost with password
+        # Allow inventree user from localhost
         host inventree inventree 127.0.0.1/32 scram-sha-256
         # Allow local peer authentication
         local inventree inventree peer map=inventree
@@ -68,7 +46,7 @@ in {
     services.redis.servers.inventree = {
       enable = true;
       port = 6379;
-      bind = "0.0.0.0"; # Allow Docker bridge network access
+      bind = "127.0.0.1"; # Localhost only
       requirePass = "inventree";
       settings = {
         maxmemory = "256mb";
@@ -76,153 +54,70 @@ in {
       };
     };
 
-    # InvenTree server via Docker
-    systemd.services.inventree-server = {
-      description = "InvenTree Inventory Management Server (Docker)";
-      after = ["network.target" "postgresql.service" "redis-inventree.service" "docker.service"];
-      wants = ["postgresql.service" "redis-inventree.service" "docker.service"];
-      wantedBy = ["multi-user.target"];
+    # InvenTree service configuration
+    services.inventree = {
+      enable = true;
 
-      serviceConfig = {
-        Type = "oneshot";
-        RemainAfterExit = true;
-        WorkingDirectory = "/var/lib/inventree";
-        ExecStartPre = pkgs.writeShellScript "inventree-pre" ''
-          set -euo pipefail
-          mkdir -p /var/lib/inventree/data
+      # Network configuration - bind to localhost for nginx reverse proxy
+      bindIp = "127.0.0.1";
+      bindPort = inventreePort;
 
-          # Create InvenTree config.yaml
-          cat > /var/lib/inventree/data/config.yaml <<EOF
-          # InvenTree Configuration File
-          debug: false
-          log_level: WARNING
+      # Public URL - critical for CSRF, redirects, email links
+      siteUrl = "https://${inventreeDomain}";
 
-          # Database configuration
-          database:
-            ENGINE: django.db.backends.postgresql
-            NAME: inventree
-            USER: inventree
-            PASSWORD: inventree
-            HOST: 172.17.0.1
-            PORT: 5432
+      # Django ALLOWED_HOSTS security
+      allowedHosts = [inventreeDomain];
 
-          # Cache configuration
-          cache:
-            host: 172.17.0.1
-            port: 6379
-            password: inventree
+      # Allow time for database migrations on startup
+      serverStartTimeout = "10min";
 
-          # Media and static files
-          media_root: /home/inventree/data/media
-          static_root: /home/inventree/data/static
+      # InvenTree configuration (passed to config.yaml)
+      config = {
+        # PostgreSQL database
+        database = {
+          ENGINE = "django.db.backends.postgresql";
+          NAME = "inventree";
+          USER = "inventree";
+          PASSWORD = "inventree";
+          HOST = "127.0.0.1";
+          PORT = 5432;
+        };
 
-          # Plugin support
-          plugins_enabled: true
-          plugin_dir: /home/inventree/data/plugins
+        # Redis cache
+        cache = {
+          host = "127.0.0.1";
+          port = 6379;
+          password = "inventree";
+        };
 
-          # Security
-          secret_key_file: /home/inventree/data/secret_key.txt
-          allowed_hosts:
-            - ${inventreeDomain}
-            - localhost
-            - 127.0.0.1
-          site_url: https://${inventreeDomain}
-          csrf_trusted_origins:
-            - https://${inventreeDomain}
+        # Storage paths (managed by systemd)
+        static_root = "/var/lib/inventree/static";
+        media_root = "/var/lib/inventree/media";
+        backup_dir = "/var/backups/inventree";
 
-          # Admin user
-          inventree_admin_user: ${
-            if secretsExist
-            then "$(cat ${config.sops.secrets."research-relay/inventree/admin-user".path})"
-            else "admin"
-          }
-          inventree_admin_password: ${
-            if secretsExist
-            then "$(cat ${config.sops.secrets."research-relay/inventree/admin-password".path})"
-            else "admin"
-          }
-          inventree_admin_email: ${
-            if secretsExist
-            then "$(cat ${config.sops.secrets."research-relay/inventree/admin-email".path})"
-            else "admin@example.com"
-          }
+        # Application settings
+        debug = false;
+        log_level = "WARNING";
+        plugins_enabled = true;
 
-          # Auto-updates
-          inventree_auto_update: true
-          EOF
+        # Security
+        secret_key_file = "/var/lib/inventree/secret_key.txt";
+      };
 
-          # Wait for PostgreSQL to be ready
-          while ! ${pkgs.postgresql_16}/bin/pg_isready -h 127.0.0.1 -p 5432 -U inventree; do
-            echo "Waiting for PostgreSQL..."
-            sleep 2
-          done
-
-          # Wait for Redis to be ready
-          while ! ${pkgs.redis}/bin/redis-cli -h 127.0.0.1 -p 6379 -a inventree ping > /dev/null 2>&1; do
-            echo "Waiting for Redis..."
-            sleep 2
-          done
-
-          # Run database migrations on first start
-          if [ ! -f /var/lib/inventree/.initialized ]; then
-            ${pkgs.docker}/bin/docker run --rm \
-              -v /var/lib/inventree/data:/home/inventree/data \
-              -e INVENTREE_CONFIG_FILE=/home/inventree/data/config.yaml \
-              inventree/inventree:${inventreeTag} \
-              invoke update --skip-backup
-            touch /var/lib/inventree/.initialized
-          fi
-        '';
-        ExecStart = ''
-          ${pkgs.docker}/bin/docker run --rm --name inventree-server \
-            -p 127.0.0.1:${toString inventreePort}:8000 \
-            -v /var/lib/inventree/data:/home/inventree/data \
-            -e INVENTREE_CONFIG_FILE=/home/inventree/data/config.yaml \
-            -e INVENTREE_GUNICORN_TIMEOUT=90 \
-            inventree/inventree:${inventreeTag}
-        '';
-        ExecStop = "${pkgs.docker}/bin/docker stop inventree-server";
-        Restart = "on-failure";
-        RestartSec = "10s";
+      # Declarative admin user (uses SOPS secrets)
+      users = {
+        orther = {
+          email = "brandon@orther.dev";
+          is_superuser = true;
+          password_file = config.sops.secrets."research-relay/inventree/admin-password".path;
+        };
       };
     };
-
-    # InvenTree background worker via Docker
-    systemd.services.inventree-worker = {
-      description = "InvenTree Background Worker (Docker)";
-      after = ["inventree-server.service"];
-      wants = ["inventree-server.service"];
-      wantedBy = ["multi-user.target"];
-
-      serviceConfig = {
-        Type = "oneshot";
-        RemainAfterExit = true;
-        WorkingDirectory = "/var/lib/inventree";
-        ExecStart = ''
-          ${pkgs.docker}/bin/docker run --rm --name inventree-worker \
-            -v /var/lib/inventree/data:/home/inventree/data \
-            -e INVENTREE_CONFIG_FILE=/home/inventree/data/config.yaml \
-            inventree/inventree:${inventreeTag} \
-            invoke worker
-        '';
-        ExecStop = "${pkgs.docker}/bin/docker stop inventree-worker";
-        Restart = "on-failure";
-        RestartSec = "10s";
-      };
-    };
-
-    # Ensure data directories exist with proper permissions
-    # InvenTree container runs as UID 1000, GID 1000
-    systemd.tmpfiles.rules = [
-      "d /var/lib/inventree 0755 1000 1000 -"
-      "d /var/lib/inventree/data 0755 1000 1000 -"
-      "d /var/backups/inventree 0700 root root -"
-    ];
 
     # Use wildcard certificate from _acme.nix (*.orther.dev)
     # The wildcard cert covers inventree.orther.dev and is managed centrally
 
-    # Nginx reverse proxy for internal homelab access
+    # Nginx reverse proxy for Tailscale access
     services.nginx.virtualHosts."${inventreeDomain}" = {
       forceSSL = true;
       useACMEHost = "orther.dev"; # Use wildcard cert
@@ -250,10 +145,10 @@ in {
       locations."/" = {
         proxyPass = "http://127.0.0.1:${toString inventreePort}";
         extraConfig = ''
+          # Note: Host header not set here - Cloudflare already provides it
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
           proxy_set_header X-Forwarded-Proto $scheme;
-          # Don't set Host header - Cloudflare already provides it
           proxy_redirect off;
 
           # WebSocket support for live updates
@@ -263,9 +158,9 @@ in {
         '';
       };
 
-      # Static files served by nginx
+      # Static files served by nginx for better performance
       locations."/static/" = {
-        alias = "/var/lib/inventree/data/static/";
+        alias = "/var/lib/inventree/static/";
         extraConfig = ''
           expires 30d;
           add_header Cache-Control "public, immutable";
@@ -281,11 +176,11 @@ in {
 
       # Media files served by nginx
       locations."/media/" = {
-        alias = "/var/lib/inventree/data/media/";
+        alias = "/var/lib/inventree/media/";
         extraConfig = ''
           expires 7d;
           add_header Cache-Control "public";
-          # Re-add security headers (nginx drops parent headers when using add_header in location)
+          # Re-add security headers
           add_header X-Frame-Options "SAMEORIGIN" always;
           add_header X-Content-Type-Options "nosniff" always;
           add_header X-XSS-Protection "1; mode=block" always;
@@ -340,23 +235,27 @@ in {
       };
     };
 
-    # Persistence configuration
+    # Persistence configuration for impermanence
     environment.persistence."/nix/persist" = {
       directories = [
         "/var/lib/inventree"
         "/var/lib/postgresql"
         "/var/lib/redis-inventree"
-        "/var/log/inventree"
         {
           directory = "/var/backups/inventree";
           mode = "0700";
         }
       ];
     };
+
+    # Ensure backup directory exists
+    systemd.tmpfiles.rules = [
+      "d /var/backups/inventree 0700 root root -"
+    ];
   };
 
-  # Module options
+  # Keep the researchRelay.inventree.enable option for compatibility
   options.services.researchRelay.inventree = {
-    enable = lib.mkEnableOption "InvenTree inventory management service";
+    enable = lib.mkEnableOption "InvenTree inventory management service (nixos-inventree module)";
   };
 }
