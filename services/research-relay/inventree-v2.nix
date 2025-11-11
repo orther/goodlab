@@ -109,8 +109,8 @@ in {
 
       # Declarative admin user (uses SOPS secrets)
       users = lib.mkIf secretsExist {
-        admin = {
-          email = "admin@orther.dev"; # Email from SOPS, hardcoded here for simplicity
+        orther = {
+          email = "brandon@orther.dev";
           is_superuser = true;
           password_file = config.sops.secrets."research-relay/inventree/admin-password".path;
         };
