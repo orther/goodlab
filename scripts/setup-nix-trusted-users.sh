@@ -17,24 +17,24 @@ echo "Configuring Nix trusted-users..."
 
 # Check if using Determinate Nix
 if [ -f "/etc/nix/nix.conf" ] && grep -q "DETERMINATE NIX CONFIG" /etc/nix/nix.conf; then
-    echo "Detected Determinate Nix installation"
+  echo "Detected Determinate Nix installation"
 
-    # Create or update nix.custom.conf
-    if [ -f "$CUSTOM_CONF" ]; then
-        # Check if trusted-users already exists
-        if grep -q "^trusted-users" "$CUSTOM_CONF"; then
-            echo "trusted-users already configured in $CUSTOM_CONF"
-            grep "^trusted-users" "$CUSTOM_CONF"
-        else
-            echo "Adding trusted-users to $CUSTOM_CONF"
-            echo "" >> "$CUSTOM_CONF"
-            echo "# Allow members of admin group to use custom substituters" >> "$CUSTOM_CONF"
-            echo "trusted-users = root @admin" >> "$CUSTOM_CONF"
-            echo "✅ Added trusted-users to $CUSTOM_CONF"
-        fi
+  # Create or update nix.custom.conf
+  if [ -f "$CUSTOM_CONF" ]; then
+    # Check if trusted-users already exists
+    if grep -q "^trusted-users" "$CUSTOM_CONF"; then
+      echo "trusted-users already configured in $CUSTOM_CONF"
+      grep "^trusted-users" "$CUSTOM_CONF"
     else
-        echo "Creating $CUSTOM_CONF with trusted-users"
-        cat > "$CUSTOM_CONF" <<EOF
+      echo "Adding trusted-users to $CUSTOM_CONF"
+      echo "" >>"$CUSTOM_CONF"
+      echo "# Allow members of admin group to use custom substituters" >>"$CUSTOM_CONF"
+      echo "trusted-users = root @admin" >>"$CUSTOM_CONF"
+      echo "✅ Added trusted-users to $CUSTOM_CONF"
+    fi
+  else
+    echo "Creating $CUSTOM_CONF with trusted-users"
+    cat >"$CUSTOM_CONF" <<EOF
 # Nix custom configuration (supplements Determinate Nix managed config)
 # See /etc/nix/nix.conf for main configuration
 
@@ -42,23 +42,23 @@ if [ -f "/etc/nix/nix.conf" ] && grep -q "DETERMINATE NIX CONFIG" /etc/nix/nix.c
 # This resolves warnings like "ignoring untrusted substituter"
 trusted-users = root @admin
 EOF
-        echo "✅ Created $CUSTOM_CONF with trusted-users"
-    fi
+    echo "✅ Created $CUSTOM_CONF with trusted-users"
+  fi
 
-    echo ""
-    echo "Current nix.custom.conf contents:"
-    cat "$CUSTOM_CONF"
-    echo ""
-    echo "⚠️  Restart your shell or daemon for changes to take effect"
+  echo ""
+  echo "Current nix.custom.conf contents:"
+  cat "$CUSTOM_CONF"
+  echo ""
+  echo "⚠️  Restart your shell or daemon for changes to take effect"
 
 elif [ "$(uname)" = "Darwin" ]; then
-    echo "This appears to be macOS without Determinate Nix"
-    echo "Consider managing trusted-users via nix-darwin configuration"
-    echo "See modules/macos/base.nix"
-    exit 1
+  echo "This appears to be macOS without Determinate Nix"
+  echo "Consider managing trusted-users via nix-darwin configuration"
+  echo "See modules/macos/base.nix"
+  exit 1
 else
-    echo "This script is for macOS with Determinate Nix"
-    echo "On NixOS, configure nix.settings.trusted-users in your configuration"
-    echo "See modules/nixos/base.nix"
-    exit 1
+  echo "This script is for macOS with Determinate Nix"
+  echo "On NixOS, configure nix.settings.trusted-users in your configuration"
+  echo "See modules/nixos/base.nix"
+  exit 1
 fi
