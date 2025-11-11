@@ -89,6 +89,7 @@
       signByDefault = true;
     };
     extraConfig = {
+      push = {autoSetupRemote = true;};
       gpg = {format = "ssh";};
       gpg."ssh".program = lib.mkMerge [
         (lib.mkIf pkgs.stdenv.isLinux "${pkgs._1password-gui}/bin/op-ssh-sign")
