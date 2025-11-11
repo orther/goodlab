@@ -10,6 +10,9 @@
 
   nix = {
     enable = false; # Disable nix-darwin's Nix management (using Determinate Nix)
+    # NOTE: Settings below are NOT applied when enable = false
+    # For Determinate Nix, use scripts/setup-nix-trusted-users.sh to configure trusted-users
+    # See docs/NIX_TRUSTED_USERS.md for details
     settings = {
       experimental-features = "nix-command flakes";
       trusted-users = [
