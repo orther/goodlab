@@ -106,19 +106,19 @@ in {
       mode = "0400";
     };
 
-    # InvenTree secrets (noir only)
-    "research-relay/inventree/admin-user" = lib.mkIf (researchRelaySecretsExist && hasInvenTree && config.services.researchRelay.inventree.enable) {
-      sopsFile = researchRelaySecretsFile;
+    # InvenTree secrets (noir only) - stored in global secrets.yaml
+    "research-relay/inventree/admin-user" = lib.mkIf (globalSecretsExist && hasInvenTree && config.services.researchRelay.inventree.enable) {
+      sopsFile = globalSecretsFile;
       mode = "0444";
     };
 
-    "research-relay/inventree/admin-password" = lib.mkIf (researchRelaySecretsExist && hasInvenTree && config.services.researchRelay.inventree.enable) {
-      sopsFile = researchRelaySecretsFile;
+    "research-relay/inventree/admin-password" = lib.mkIf (globalSecretsExist && hasInvenTree && config.services.researchRelay.inventree.enable) {
+      sopsFile = globalSecretsFile;
       mode = "0400";
     };
 
-    "research-relay/inventree/admin-email" = lib.mkIf (researchRelaySecretsExist && hasInvenTree && config.services.researchRelay.inventree.enable) {
-      sopsFile = researchRelaySecretsFile;
+    "research-relay/inventree/admin-email" = lib.mkIf (globalSecretsExist && hasInvenTree && config.services.researchRelay.inventree.enable) {
+      sopsFile = globalSecretsFile;
       mode = "0444";
     };
 
