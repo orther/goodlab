@@ -49,7 +49,18 @@ EOF
   echo "Current nix.custom.conf contents:"
   cat "$CUSTOM_CONF"
   echo ""
-  echo "⚠️  Restart your shell or daemon for changes to take effect"
+
+  # Offer to restart the Nix daemon
+  echo "Changes require restarting the Nix daemon or your shell to take effect."
+  read -p "Would you like to restart the Nix daemon now? (y/n) " -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    echo "Restarting Nix daemon..."
+    sudo launchctl kickstart -k system/org.nixos.nix-daemon
+    echo "✅ Nix daemon restarted"
+  else
+    echo "⚠️  Remember to restart your shell or the Nix daemon for changes to take effect"
+  fi
 
 elif [ "$(uname)" = "Darwin" ]; then
   echo "This appears to be macOS without Determinate Nix"

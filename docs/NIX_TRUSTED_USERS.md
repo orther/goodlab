@@ -73,10 +73,16 @@ Apply with `darwin-rebuild switch`.
 
 ## Verification
 
-After configuration, test with a simple build:
+After configuration, verify trusted-users is set:
 
 ```bash
-# Should see no "untrusted substituter" warnings
+# Platform-agnostic: Check current trusted-users setting
+nix show-config | grep trusted-users
+
+# Test with a build (should see no "untrusted substituter" warnings)
+# Adjust the flake path based on your system:
+# - NixOS: .#nixosConfigurations.noir.config.system.build.toplevel
+# - macOS: .#darwinConfigurations.stud.system
 nix build .#nixosConfigurations.noir.config.system.build.toplevel --dry-run
 ```
 
