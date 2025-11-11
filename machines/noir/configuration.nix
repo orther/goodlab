@@ -7,6 +7,7 @@
   imports = [
     inputs.impermanence.nixosModules.impermanence
     inputs.home-manager.nixosModules.home-manager
+    inputs.nixos-inventree.nixosModules.default
     #inputs.nixarr.nixosModules.default
 
     ./hardware-configuration.nix
@@ -26,7 +27,7 @@
     # Research Relay services (noir = Odoo + PDF-intake + InvenTree)
     ./../../services/research-relay/_common-hardening.nix
     ./../../services/research-relay/odoo.nix
-    ./../../services/research-relay/inventree.nix
+    ./../../services/research-relay/inventree-v2.nix
     ./../../services/research-relay/pdf-intake.nix
     ./../../services/research-relay/age-gate.nix
     ./../../services/research-relay/secrets.nix
