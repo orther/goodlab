@@ -106,8 +106,9 @@ in {
         # Email configuration (Migadu SMTP)
         # Note: Basic config here, sensitive values via environment variables below
         # Using port 587 with STARTTLS instead of 465 with SSL due to Django SMTP issues
+        # Using custom backend that doesn't persist connections (fixes Django-Q worker issues)
         email = {
-          backend = "django.core.mail.backends.smtp.EmailBackend";
+          backend = "inventree_email_backend.EmailBackend";
           host = "smtp.migadu.com";
           port = 587;
           tls = true; # Port 587 uses STARTTLS
@@ -134,6 +135,9 @@ in {
 
     # Django EMAIL_TIMEOUT to prevent connection reuse issues
     systemd.services.inventree-server.environment.EMAIL_TIMEOUT = "30";
+
+    # Add custom email backend to Python path
+    systemd.services.inventree-server.environment.PYTHONPATH = "/var/lib/inventree";
 
     # SOPS template to create environment file with email credentials
     sops.templates."inventree-email-env" = {
@@ -280,9 +284,10 @@ in {
       ];
     };
 
-    # Ensure backup directory exists
+    # Ensure backup directory exists and copy custom email backend
     systemd.tmpfiles.rules = [
       "d /var/backups/inventree 0700 root root -"
+      "C /var/lib/inventree/inventree_email_backend.py 0644 inventree inventree - ${./inventree_email_backend.py}"
     ];
   };
 
