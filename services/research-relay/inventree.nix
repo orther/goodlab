@@ -136,8 +136,9 @@ in {
     # Django EMAIL_TIMEOUT to prevent connection reuse issues
     systemd.services.inventree-server.environment.EMAIL_TIMEOUT = "30";
 
-    # Add custom email backend to Python path
+    # Add custom email backend to Python path (both server and cluster need it)
     systemd.services.inventree-server.environment.PYTHONPATH = "/var/lib/inventree";
+    systemd.services.inventree-cluster.environment.PYTHONPATH = "/var/lib/inventree";
 
     # SOPS template to create environment file with email credentials
     sops.templates."inventree-email-env" = {
