@@ -125,11 +125,21 @@ in {
     };
 
     # Systemd service overrides for InvenTree email configuration
-    # InvenTree supports *_FILE environment variables for secure credential injection
-    systemd.services.inventree-server.environment = {
-      INVENTREE_EMAIL_USERNAME_FILE = config.sops.secrets."research-relay/inventree/smtp-user".path;
-      INVENTREE_EMAIL_PASSWORD_FILE = config.sops.secrets."research-relay/inventree/smtp-password".path;
-      INVENTREE_EMAIL_SENDER_FILE = config.sops.secrets."research-relay/inventree/smtp-user".path;
+    # Note: InvenTree does NOT support *_FILE for email vars, only for ADMIN_PASSWORD and SECRET_KEY
+    # We need to read the files and set the values directly as environment variables
+    systemd.services.inventree-server.serviceConfig.EnvironmentFile = [
+      config.sops.templates."inventree-email-env".path
+    ];
+
+    # SOPS template to create environment file with email credentials
+    sops.templates."inventree-email-env" = {
+      content = ''
+        INVENTREE_EMAIL_USERNAME=${config.sops.placeholder."research-relay/inventree/smtp-user"}
+        INVENTREE_EMAIL_PASSWORD=${config.sops.placeholder."research-relay/inventree/smtp-password"}
+        INVENTREE_EMAIL_SENDER=${config.sops.placeholder."research-relay/inventree/smtp-user"}
+      '';
+      owner = "inventree";
+      mode = "0400";
     };
 
     # Use wildcard certificate from _acme.nix (*.orther.dev)
