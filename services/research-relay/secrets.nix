@@ -29,9 +29,11 @@
 #   inventree:
 #     admin-user: "admin"
 #     admin-password: "strong-password-here"
-#     admin-email: "admin@orther.dev"
-#     smtp-user: "inventree@scientific-ops.com"
+#     admin-email: "admin@domain.com"
+#     smtp-user: "inventree@domain.com"
 #     smtp-password: "migadu-mailbox-password"
+#     db-password: "strong-database-password-here"
+#     redis-password: "strong-redis-password-here"
 #
 #   # PDF-intake secrets (noir)
 #   pdf-intake:
@@ -117,6 +119,18 @@ in {
     };
 
     "research-relay/inventree/smtp-password" = lib.mkIf (globalSecretsExist && hasInvenTree && config.services.researchRelay.inventree.enable) {
+      sopsFile = globalSecretsFile;
+      owner = "inventree";
+      mode = "0400";
+    };
+
+    "research-relay/inventree/db-password" = lib.mkIf (globalSecretsExist && hasInvenTree && config.services.researchRelay.inventree.enable) {
+      sopsFile = globalSecretsFile;
+      owner = "postgres";
+      mode = "0400";
+    };
+
+    "research-relay/inventree/redis-password" = lib.mkIf (globalSecretsExist && hasInvenTree && config.services.researchRelay.inventree.enable) {
       sopsFile = globalSecretsFile;
       owner = "inventree";
       mode = "0400";

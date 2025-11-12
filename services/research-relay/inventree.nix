@@ -26,20 +26,28 @@ in {
         listen_addresses = lib.mkDefault "localhost";
       };
       authentication = ''
-        # Allow inventree user from localhost
+        # Allow inventree user from localhost with password
         host inventree inventree 127.0.0.1/32 scram-sha-256
-        # Allow local peer authentication
-        local inventree inventree peer map=inventree
+        # Allow postgres superuser
         local all postgres peer
       '';
-      identMap = ''
-        inventree inventree inventree
-        inventree root postgres
-      '';
-      # Initialize inventree user password
-      initialScript = pkgs.writeText "init-inventree-db.sql" ''
-        ALTER USER inventree WITH PASSWORD 'inventree';
-      '';
+    };
+
+    # Set PostgreSQL password for inventree user from SOPS secret
+    systemd.services.postgresql-inventree-password = {
+      description = "Set InvenTree PostgreSQL password";
+      after = ["postgresql.service" "sops-install-secrets.service"];
+      requires = ["postgresql.service"];
+      wantedBy = ["inventree-server.service"];
+      before = ["inventree-server.service"];
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
+        User = "postgres";
+        ExecStart = pkgs.writeShellScript "set-inventree-password" ''
+          ${pkgs.postgresql_16}/bin/psql -c "ALTER USER inventree WITH PASSWORD '$(cat ${config.sops.secrets."research-relay/inventree/db-password".path})';"
+        '';
+      };
     };
 
     # Redis cache for InvenTree
@@ -47,7 +55,8 @@ in {
       enable = true;
       port = 6379;
       bind = "127.0.0.1"; # Localhost only
-      requirePass = "inventree";
+      # Use password from SOPS secrets instead of hardcoded value
+      requirePassFile = config.sops.secrets."research-relay/inventree/redis-password".path;
       settings = {
         maxmemory = "256mb";
         maxmemory-policy = "allkeys-lru";
@@ -73,21 +82,23 @@ in {
 
       # InvenTree configuration (passed to config.yaml)
       config = {
-        # PostgreSQL database
+        # PostgreSQL database (password via environment variable)
+        # Password provided via INVENTREE_DB_PASSWORD environment variable
         database = {
           ENGINE = "django.db.backends.postgresql";
           NAME = "inventree";
           USER = "inventree";
-          PASSWORD = "inventree";
+          # Password from INVENTREE_DB_PASSWORD env var (see sops.templates below)
           HOST = "127.0.0.1";
           PORT = 5432;
         };
 
         # Redis cache
+        # Password is provided via INVENTREE_CACHE_PASSWORD environment variable (see sops.templates above)
         cache = {
           host = "127.0.0.1";
           port = 6379;
-          password = "inventree";
+          # No password in config - InvenTree reads from INVENTREE_CACHE_PASSWORD env var
         };
 
         # Storage paths (managed by systemd)
@@ -125,15 +136,17 @@ in {
       };
     };
 
-    # Systemd service overrides for InvenTree email configuration
-    # Note: InvenTree does NOT support *_FILE for email vars, only for ADMIN_PASSWORD and SECRET_KEY
+    # Systemd service overrides for InvenTree environment configuration
+    # Note: InvenTree does NOT support *_FILE for most vars, only for ADMIN_PASSWORD and SECRET_KEY
     # We need to read the files and set the values directly as environment variables
-    # Both server and cluster need access to email credentials
+    # Both server and cluster need access to database, email, and Redis credentials
     systemd.services.inventree-server.serviceConfig.EnvironmentFile = [
       config.sops.templates."inventree-email-env".path
+      config.sops.templates."inventree-db-redis-env".path
     ];
     systemd.services.inventree-cluster.serviceConfig.EnvironmentFile = [
       config.sops.templates."inventree-email-env".path
+      config.sops.templates."inventree-db-redis-env".path
     ];
 
     # SOPS template to create environment file with email credentials
@@ -142,6 +155,17 @@ in {
         INVENTREE_EMAIL_USERNAME=${config.sops.placeholder."research-relay/inventree/smtp-user"}
         INVENTREE_EMAIL_PASSWORD=${config.sops.placeholder."research-relay/inventree/smtp-password"}
         INVENTREE_EMAIL_SENDER=${config.sops.placeholder."research-relay/inventree/smtp-user"}
+      '';
+      owner = "inventree";
+      mode = "0400";
+    };
+
+    # SOPS template for database and Redis passwords
+    # InvenTree reads from environment variables
+    sops.templates."inventree-db-redis-env" = {
+      content = ''
+        INVENTREE_DB_PASSWORD=${config.sops.placeholder."research-relay/inventree/db-password"}
+        INVENTREE_CACHE_PASSWORD=${config.sops.placeholder."research-relay/inventree/redis-password"}
       '';
       owner = "inventree";
       mode = "0400";
