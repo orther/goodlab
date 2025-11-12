@@ -132,6 +132,9 @@ in {
       config.sops.templates."inventree-email-env".path
     ];
 
+    # Django EMAIL_TIMEOUT to prevent connection reuse issues
+    systemd.services.inventree-server.environment.EMAIL_TIMEOUT = "30";
+
     # SOPS template to create environment file with email credentials
     sops.templates."inventree-email-env" = {
       content = ''
