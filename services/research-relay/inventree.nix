@@ -102,6 +102,18 @@ in {
 
         # Security
         secret_key_file = "/var/lib/inventree/secret_key.txt";
+
+        # Email configuration (Migadu SMTP)
+        email = {
+          backend = "django.core.mail.backends.smtp.EmailBackend";
+          host = "smtp.migadu.com";
+          port = 465;
+          username_file = config.sops.secrets."research-relay/inventree/smtp-user".path;
+          password_file = config.sops.secrets."research-relay/inventree/smtp-password".path;
+          tls = false; # Port 465 uses implicit SSL, not STARTTLS
+          ssl = true;
+          sender_file = config.sops.secrets."research-relay/inventree/smtp-user".path; # From address same as username
+        };
       };
 
       # Declarative admin user (uses SOPS secrets)

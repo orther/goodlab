@@ -30,6 +30,8 @@
 #     admin-user: "admin"
 #     admin-password: "strong-password-here"
 #     admin-email: "admin@orther.dev"
+#     smtp-user: "inventree@scientific-ops.com"
+#     smtp-password: "migadu-mailbox-password"
 #
 #   # PDF-intake secrets (noir)
 #   pdf-intake:
@@ -107,6 +109,16 @@ in {
     "research-relay/inventree/admin-email" = lib.mkIf (globalSecretsExist && hasInvenTree && config.services.researchRelay.inventree.enable) {
       sopsFile = globalSecretsFile;
       mode = "0444";
+    };
+
+    "research-relay/inventree/smtp-user" = lib.mkIf (globalSecretsExist && hasInvenTree && config.services.researchRelay.inventree.enable) {
+      sopsFile = globalSecretsFile;
+      mode = "0444";
+    };
+
+    "research-relay/inventree/smtp-password" = lib.mkIf (globalSecretsExist && hasInvenTree && config.services.researchRelay.inventree.enable) {
+      sopsFile = globalSecretsFile;
+      mode = "0400";
     };
 
     # PDF-intake secrets (noir only)
