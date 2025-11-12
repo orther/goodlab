@@ -104,15 +104,13 @@ in {
         secret_key_file = "/var/lib/inventree/secret_key.txt";
 
         # Email configuration (Migadu SMTP)
+        # Note: Basic config here, sensitive values via environment variables below
         email = {
           backend = "django.core.mail.backends.smtp.EmailBackend";
           host = "smtp.migadu.com";
           port = 465;
-          username_file = config.sops.secrets."research-relay/inventree/smtp-user".path;
-          password_file = config.sops.secrets."research-relay/inventree/smtp-password".path;
           tls = false; # Port 465 uses implicit SSL, not STARTTLS
           ssl = true;
-          sender_file = config.sops.secrets."research-relay/inventree/smtp-user".path; # From address same as username
         };
       };
 
@@ -124,6 +122,14 @@ in {
           password_file = config.sops.secrets."research-relay/inventree/admin-password".path;
         };
       };
+    };
+
+    # Systemd service overrides for InvenTree email configuration
+    # InvenTree supports *_FILE environment variables for secure credential injection
+    systemd.services.inventree-server.environment = {
+      INVENTREE_EMAIL_USERNAME_FILE = config.sops.secrets."research-relay/inventree/smtp-user".path;
+      INVENTREE_EMAIL_PASSWORD_FILE = config.sops.secrets."research-relay/inventree/smtp-password".path;
+      INVENTREE_EMAIL_SENDER_FILE = config.sops.secrets."research-relay/inventree/smtp-user".path;
     };
 
     # Use wildcard certificate from _acme.nix (*.orther.dev)
