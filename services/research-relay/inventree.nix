@@ -105,12 +105,13 @@ in {
 
         # Email configuration (Migadu SMTP)
         # Note: Basic config here, sensitive values via environment variables below
+        # Using port 587 with STARTTLS instead of 465 with SSL due to Django SMTP issues
         email = {
           backend = "django.core.mail.backends.smtp.EmailBackend";
           host = "smtp.migadu.com";
-          port = 465;
-          tls = false; # Port 465 uses implicit SSL, not STARTTLS
-          ssl = true;
+          port = 587;
+          tls = true; # Port 587 uses STARTTLS
+          ssl = false;
         };
       };
 
