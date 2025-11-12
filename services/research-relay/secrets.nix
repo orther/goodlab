@@ -118,6 +118,7 @@ in {
 
     "research-relay/inventree/smtp-password" = lib.mkIf (globalSecretsExist && hasInvenTree && config.services.researchRelay.inventree.enable) {
       sopsFile = globalSecretsFile;
+      owner = "inventree";
       mode = "0400";
     };
 
