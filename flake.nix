@@ -40,6 +40,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    nixos-inventree = {
+      url = "github:orther/nixos-inventree";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     nix-homebrew = {
       url = "github:zhaofengli-wip/nix-homebrew";
     };

@@ -263,7 +263,7 @@ in {
   # Uncomment and configure nginx additionalModules when ready:
   # services.nginx.additionalModules = [ (pkgs.nginxModules.lua or pkgs.nginx.modules.lua) ];
 
-  config = lib.mkIf (config.services.researchRelay.odoo.enable && config.services.researchRelay.ageGate.enable) {
+  config = lib.mkIf config.services.researchRelay.ageGate.enable {
     # Age gate static files - served directly by nginx
     systemd.tmpfiles.rules = [
       "d /var/www/age-gate 0755 nginx nginx -"

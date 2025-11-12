@@ -25,6 +25,16 @@
 #   odoo:
 #     admin-password: "strong-password-here"
 #
+#   # InvenTree secrets (noir)
+#   inventree:
+#     admin-user: "admin"
+#     admin-password: "strong-password-here"
+#     admin-email: "admin@domain.com"
+#     smtp-user: "inventree@domain.com"
+#     smtp-password: "migadu-mailbox-password"
+#     db-password: "strong-database-password-here"
+#     redis-password: "strong-redis-password-here"
+#
 #   # PDF-intake secrets (noir)
 #   pdf-intake:
 #     redis-password: "redis-password"
@@ -47,12 +57,12 @@
   ...
 }: let
   hasResearchRelay = builtins.hasAttr "researchRelay" config.services;
-  hasOdoo = hasResearchRelay && builtins.hasAttr "odoo" config.services.researchRelay;
+  hasInvenTree = hasResearchRelay && builtins.hasAttr "inventree" config.services.researchRelay;
   hasBtcpay = hasResearchRelay && builtins.hasAttr "btcpay" config.services.researchRelay;
   hasPdfIntake = hasResearchRelay && builtins.hasAttr "pdfIntake" config.services.researchRelay;
 
   anyServiceEnabled =
-    (hasOdoo && config.services.researchRelay.odoo.enable)
+    (hasInvenTree && config.services.researchRelay.inventree.enable)
     || (hasBtcpay && config.services.researchRelay.btcpay.enable)
     || (hasPdfIntake && config.services.researchRelay.pdfIntake.enable);
 
@@ -80,16 +90,49 @@ in {
     };
 
     # Cloudflare API token for ACME DNS-01 challenges
-    "cloudflare/acme-dns-token" = lib.mkIf (globalSecretsExist && hasOdoo && config.services.researchRelay.odoo.enable) {
+    # Used by InvenTree for internal DNS domains
+    "cloudflare/acme-dns-token" = lib.mkIf (globalSecretsExist && hasInvenTree && config.services.researchRelay.inventree.enable) {
       sopsFile = globalSecretsFile;
       mode = "0400";
       owner = "acme";
     };
 
-    # Odoo secrets (noir only)
-    "research-relay/odoo/admin-password" = lib.mkIf (researchRelaySecretsExist && hasOdoo && config.services.researchRelay.odoo.enable) {
-      sopsFile = researchRelaySecretsFile;
-      owner = "odoo";
+    # InvenTree secrets (noir only) - stored in global secrets.yaml
+    "research-relay/inventree/admin-user" = lib.mkIf (globalSecretsExist && hasInvenTree && config.services.researchRelay.inventree.enable) {
+      sopsFile = globalSecretsFile;
+      mode = "0444";
+    };
+
+    "research-relay/inventree/admin-password" = lib.mkIf (globalSecretsExist && hasInvenTree && config.services.researchRelay.inventree.enable) {
+      sopsFile = globalSecretsFile;
+      mode = "0400";
+    };
+
+    "research-relay/inventree/admin-email" = lib.mkIf (globalSecretsExist && hasInvenTree && config.services.researchRelay.inventree.enable) {
+      sopsFile = globalSecretsFile;
+      mode = "0444";
+    };
+
+    "research-relay/inventree/smtp-user" = lib.mkIf (globalSecretsExist && hasInvenTree && config.services.researchRelay.inventree.enable) {
+      sopsFile = globalSecretsFile;
+      mode = "0444";
+    };
+
+    "research-relay/inventree/smtp-password" = lib.mkIf (globalSecretsExist && hasInvenTree && config.services.researchRelay.inventree.enable) {
+      sopsFile = globalSecretsFile;
+      owner = "inventree";
+      mode = "0400";
+    };
+
+    "research-relay/inventree/db-password" = lib.mkIf (globalSecretsExist && hasInvenTree && config.services.researchRelay.inventree.enable) {
+      sopsFile = globalSecretsFile;
+      owner = "postgres";
+      mode = "0400";
+    };
+
+    "research-relay/inventree/redis-password" = lib.mkIf (globalSecretsExist && hasInvenTree && config.services.researchRelay.inventree.enable) {
+      sopsFile = globalSecretsFile;
+      owner = "inventree";
       mode = "0400";
     };
 
