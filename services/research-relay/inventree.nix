@@ -129,7 +129,11 @@ in {
     # Systemd service overrides for InvenTree email configuration
     # Note: InvenTree does NOT support *_FILE for email vars, only for ADMIN_PASSWORD and SECRET_KEY
     # We need to read the files and set the values directly as environment variables
+    # Both server and cluster need access to email credentials
     systemd.services.inventree-server.serviceConfig.EnvironmentFile = [
+      config.sops.templates."inventree-email-env".path
+    ];
+    systemd.services.inventree-cluster.serviceConfig.EnvironmentFile = [
       config.sops.templates."inventree-email-env".path
     ];
 
