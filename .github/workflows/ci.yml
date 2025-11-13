@@ -19,7 +19,7 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@v12
 
       - name: Enable magic Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v6
+        uses: DeterminateSystems/magic-nix-cache-action@v13
 
       - name: Formatting
         run: nix fmt -- --fail-on-change
