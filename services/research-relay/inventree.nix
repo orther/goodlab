@@ -259,7 +259,7 @@ in {
       serviceConfig = {
         Type = "oneshot";
         User = "postgres";
-        ExecStart = ''
+        ExecStart = pkgs.writeShellScript "backup-inventree" ''
           ${pkgs.postgresql_16}/bin/pg_dump inventree | \
           ${pkgs.gzip}/bin/gzip > /var/backups/inventree/inventree-$(${pkgs.coreutils}/bin/date +\%Y-\%m-\%d).sql.gz
         '';
@@ -312,7 +312,7 @@ in {
 
     # Ensure backup directory exists
     systemd.tmpfiles.rules = [
-      "d /var/backups/inventree 0700 root root -"
+      "d /var/backups/inventree 0700 postgres postgres -"
     ];
   };
 
