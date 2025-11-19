@@ -75,7 +75,12 @@ in {
       siteUrl = "https://${inventreeDomain}";
 
       # Django ALLOWED_HOSTS security
-      allowedHosts = [inventreeDomain];
+      # Allow both the custom domain and Tailscale hostname
+      allowedHosts = [
+        inventreeDomain
+        "noir.rat-ratio.ts.net"
+        "100.84.38.36"
+      ];
 
       # Allow time for database migrations on startup
       serverStartTimeout = "10min";
