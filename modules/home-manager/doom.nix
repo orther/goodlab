@@ -40,6 +40,8 @@ in {
       pkgs.fd # Fast file finder
       pkgs.coreutils # For gls (GNU ls) on macOS
       pkgs.cmake # Required for vterm compilation
+      pkgs.nodejs # Required for marked (markdown preview)
+      pkgs.nodePackages.npm # For installing marked globally
     ];
 
     # Ensure `doom` CLI is on PATH for activation scripts
@@ -98,6 +100,15 @@ in {
         tree-sitter-markdown
         tree-sitter-nix
       ])}
+  '';
+
+  # Install marked globally for markdown preview
+  home.activation.installMarked = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    if ! command -v marked >/dev/null 2>&1; then
+      echo "Installing marked for Emacs markdown preview..."
+      export PATH="${pkgs.nodejs}/bin:${pkgs.nodePackages.npm}/bin:$PATH"
+      $DRY_RUN_CMD npm install -g marked || true
+    fi
   '';
 
   # Sync Doom packages after HM writes files (best-effort)

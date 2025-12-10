@@ -33,5 +33,12 @@
 (defvar editorconfig-exclude-regexps nil
   "List of regexps to exclude files from editorconfig processing.")
 
+;; Configure markdown preview with marked
+(after! markdown-mode
+  ;; Use marked for markdown preview
+  (setq markdown-command "marked")
+  ;; Enable live preview
+  (setq markdown-live-preview-engine 'marked))
+
 ;; Place any additional user settings here.
 
