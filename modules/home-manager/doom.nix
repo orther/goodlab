@@ -43,8 +43,11 @@ in {
       pkgs.nodejs # Required for marked (markdown preview, includes npm)
     ];
 
-    # Ensure `doom` CLI is on PATH for activation scripts
-    sessionPath = lib.mkIf pkgs.stdenv.isDarwin (lib.mkAfter ["$HOME/.config/emacs/bin"]);
+    # Ensure `doom` CLI and npm global packages are on PATH
+    sessionPath = lib.mkIf pkgs.stdenv.isDarwin (lib.mkAfter [
+      "$HOME/.config/emacs/bin"
+      "$HOME/.npm-global/bin"
+    ]);
   };
 
   # Symlink Emacs.app to ~/Applications for Spotlight
@@ -103,7 +106,9 @@ in {
 
   # Install marked globally for markdown preview
   home.activation.installMarked = lib.hm.dag.entryAfter ["writeBoundary"] ''
-    if ! command -v marked >/dev/null 2>&1; then
+    export NPM_CONFIG_PREFIX="$HOME/.npm-global"
+    mkdir -p "$HOME/.npm-global/bin"
+    if [ ! -f "$HOME/.npm-global/bin/marked" ]; then
       echo "Installing marked for Emacs markdown preview..."
       export PATH="${pkgs.nodejs}/bin:$PATH"
       $DRY_RUN_CMD npm install -g marked || true
