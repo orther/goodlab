@@ -18,7 +18,28 @@
 
   ;; Enable auto-imports specifically for JS/TS
   (setq lsp-typescript-suggest-auto-imports t)
-  (setq lsp-javascript-suggest-auto-imports t))
+  (setq lsp-javascript-suggest-auto-imports t)
+
+  ;; Enable inline type hints for TypeScript
+  (setq lsp-typescript-inlay-hints-include-infer-parameter-type-hints t)
+  (setq lsp-typescript-inlay-hints-include-infer-property-declaration-type-hints t)
+
+  ;; Enable error checking and diagnostics
+  (setq lsp-diagnostics-provider :auto)
+  (setq lsp-ui-sideline-show-diagnostics t)
+  (setq lsp-ui-sideline-show-code-actions t)
+
+  ;; Enable flycheck for type checking
+  (setq lsp-prefer-flymake nil))
+
+;; Configure TypeScript/TSX modes
+(after! typescript-mode
+  ;; Use tree-sitter for better syntax highlighting
+  (setq typescript-indent-level 2)
+
+  ;; Enable LSP for TypeScript files
+  (add-hook 'typescript-mode-hook #'lsp!)
+  (add-hook 'typescript-tsx-mode-hook #'lsp!))
 
 ;; Configure company mode for better completion experience
 (after! company
