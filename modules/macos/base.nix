@@ -59,7 +59,6 @@
       menuExtraClock = {
         ShowSeconds = true;
         Show24Hour = false;
-        ShowAMPM = true;
       };
 
       NSGlobalDomain = {
