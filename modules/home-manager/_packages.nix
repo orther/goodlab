@@ -53,6 +53,7 @@
       nodejs
       nodePackages_latest.eas-cli
       nodePackages.typescript-language-server
+      nodePackages.typescript # Provides tsserver for typescript-language-server
       sops
       statix
       stripe-cli
