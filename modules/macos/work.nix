@@ -89,12 +89,11 @@
 
         menuExtraClock = {
           ShowSeconds = true;
-          Show24Hour = true;
-          ShowAMPM = false;
+          Show24Hour = false;
         };
 
         NSGlobalDomain = {
-          AppleICUForce24HourTime = true;
+          AppleICUForce24HourTime = false;
           AppleInterfaceStyle = "Dark";
           # inspo: https://apple.stackexchange.com/questions/261163/default-value-for-nsglobaldomain-initialkeyrepeat
           KeyRepeat = 2;
