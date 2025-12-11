@@ -4,11 +4,13 @@
       user-mail-address "brandon@orther.dev")
 
 ;; Ensure Emacs can find executables in Nix profile and npm global
-(add-to-list 'exec-path "/etc/profiles/per-user/brandon.orther/bin")
-(add-to-list 'exec-path (expand-file-name "~/.npm-global/bin"))
-(setenv "PATH" (concat "/etc/profiles/per-user/brandon.orther/bin:"
-                       (expand-file-name "~/.npm-global/bin:")
-                       (getenv "PATH")))
+(let ((nix-profile-bin (concat "/etc/profiles/per-user/" (user-login-name) "/bin"))
+      (npm-global-bin (expand-file-name "~/.npm-global/bin")))
+  (add-to-list 'exec-path nix-profile-bin)
+  (add-to-list 'exec-path npm-global-bin)
+  (setenv "PATH" (concat nix-profile-bin ":"
+                         npm-global-bin ":"
+                         (getenv "PATH"))))
 
 ;; Configure tree-sitter grammar paths
 (when (boundp 'treesit-extra-load-path)
