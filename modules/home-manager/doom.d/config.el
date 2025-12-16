@@ -36,7 +36,8 @@
   ;; Enable error checking and diagnostics
   (setq lsp-diagnostics-provider :auto)
   (setq lsp-ui-sideline-show-diagnostics t)
-  (setq lsp-ui-sideline-show-code-actions t)
+  ;; Disable code action lightbulbs in sideline
+  (setq lsp-ui-sideline-show-code-actions nil)
 
   ;; Enable flycheck for type checking
   (setq lsp-prefer-flymake nil))
