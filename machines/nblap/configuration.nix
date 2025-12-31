@@ -31,10 +31,11 @@
         home.username = lib.mkForce "brandon.orther";
         home.homeDirectory = lib.mkForce "/Users/brandon.orther";
 
-        # Corporate network CA certificates for Elixir/Hex and Node.js
+        # Corporate network CA certificates for Elixir/Hex, Node.js, and AWS CLI
         home.sessionVariables = {
           HEX_CACERTS_PATH = "/opt/homebrew/etc/ca-certificates/cert.pem";
           NODE_EXTRA_CA_CERTS = "/opt/homebrew/etc/ca-certificates/cert.pem";
+          AWS_CA_BUNDLE = "/opt/homebrew/etc/ca-certificates/cert.pem";
         };
 
         # Enable AWS SSM configuration for CareCar infrastructure access

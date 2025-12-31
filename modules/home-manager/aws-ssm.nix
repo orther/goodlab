@@ -28,6 +28,7 @@ in {
       awscli2 # AWS CLI v2
       ssm-session-manager-plugin # AWS Session Manager plugin
       awsume # AWS credential management tool
+      aws-sso-util # AWS SSO utility for profile management
     ];
 
     # Configure awsume shell integration and CareCar helpers
