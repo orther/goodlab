@@ -30,53 +30,18 @@ in {
       awsume # AWS credential management tool
     ];
 
-    # Configure SSH to use SSM as a transparent proxy
-    programs.ssh = lib.mkIf cfg.enableSshProxy {
-      enable = true;
-      matchBlocks = {
-        # Generic SSM proxy for any EC2 instance ID
-        # Usage: ssh i-<instance-id> or ssh mi-<instance-id>
-        # IMPORTANT: Must authenticate with awsume first
-        "i-* mi-*" = {
-          proxyCommand = "sh -c 'aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p'";
-          user = "ubuntu";
-          extraOptions = {
-            StrictHostKeyChecking = "no";
-            UserKnownHostsFile = "/dev/null";
-          };
-        };
-
-        # CareCar acceptance environment bastion
-        "carecar-acceptance-bastion" = lib.mkIf cfg.enableCareCar {
-          proxyCommand = "sh -c 'aws ssm start-session --target $(aws ec2 describe-instances --filters \"Name=tag:Name,Values=bastion\" \"Name=instance-state-name,Values=running\" --query \"Reservations[0].Instances[0].InstanceId\" --output text --region us-west-2) --document-name AWS-StartSSHSession --parameters portNumber=%p --region us-west-2'";
-          user = "ubuntu";
-          extraOptions = {
-            StrictHostKeyChecking = "no";
-            UserKnownHostsFile = "/dev/null";
-          };
-        };
-
-        # CareCar production environment bastion
-        "carecar-prod-bastion" = lib.mkIf cfg.enableCareCar {
-          proxyCommand = "sh -c 'aws ssm start-session --target $(aws ec2 describe-instances --filters \"Name=tag:Name,Values=bastion\" \"Name=instance-state-name,Values=running\" --query \"Reservations[0].Instances[0].InstanceId\" --output text --region us-west-2) --document-name AWS-StartSSHSession --parameters portNumber=%p --region us-west-2'";
-          user = "ubuntu";
-          extraOptions = {
-            StrictHostKeyChecking = "no";
-            UserKnownHostsFile = "/dev/null";
-          };
-        };
-      };
-    };
-
-    # Add CareCar database tunnel helper functions to zsh
-    programs.zsh = lib.mkIf cfg.enableCareCar {
-      shellAliases = {
-        # Quick aliases for assuming roles
-        "awsume-carecar-staging" = "awsume carecar-hq-staging.AWSAdministratorAccess --region us-west-2";
-        "awsume-carecar-prod" = "awsume carecar-hq-prod.AWSAdministratorAccess --region us-west-2";
-      };
-
+    # Configure awsume shell integration and CareCar helpers
+    programs.zsh = {
       initExtra = ''
+        # awsume alias and autocomplete configuration
+        alias awsume="source \$(${pkgs.awsume}/bin/awsume)"
+
+        # awsume autocompletion
+        if command -v awsume >/dev/null 2>&1; then
+          fpath=(${pkgs.awsume}/share/zsh/site-functions $fpath)
+        fi
+      '' + lib.optionalString cfg.enableCareCar ''
+
         # CareCar AWS SSM Database Tunnel Helper Functions
         # These functions establish port forwarding tunnels to RDS databases via SSM
 
@@ -132,6 +97,50 @@ in {
                     --output text)
         }
       '';
+
+      shellAliases = lib.mkIf cfg.enableCareCar {
+        # Quick aliases for assuming roles
+        "awsume-carecar-staging" = "awsume carecar-hq-staging.AWSAdministratorAccess --region us-west-2";
+        "awsume-carecar-prod" = "awsume carecar-hq-prod.AWSAdministratorAccess --region us-west-2";
+      };
+    };
+
+    # Configure SSH to use SSM as a transparent proxy
+    programs.ssh = lib.mkIf cfg.enableSshProxy {
+      enable = true;
+      matchBlocks = {
+        # Generic SSM proxy for any EC2 instance ID
+        # Usage: ssh i-<instance-id> or ssh mi-<instance-id>
+        # IMPORTANT: Must authenticate with awsume first
+        "i-* mi-*" = {
+          proxyCommand = "sh -c 'aws ssm start-session --target %h --document-name AWS-StartSSHSession --parameters portNumber=%p'";
+          user = "ubuntu";
+          extraOptions = {
+            StrictHostKeyChecking = "no";
+            UserKnownHostsFile = "/dev/null";
+          };
+        };
+
+        # CareCar acceptance environment bastion
+        "carecar-acceptance-bastion" = lib.mkIf cfg.enableCareCar {
+          proxyCommand = "sh -c 'aws ssm start-session --target $(aws ec2 describe-instances --filters \"Name=tag:Name,Values=bastion\" \"Name=instance-state-name,Values=running\" --query \"Reservations[0].Instances[0].InstanceId\" --output text --region us-west-2) --document-name AWS-StartSSHSession --parameters portNumber=%p --region us-west-2'";
+          user = "ubuntu";
+          extraOptions = {
+            StrictHostKeyChecking = "no";
+            UserKnownHostsFile = "/dev/null";
+          };
+        };
+
+        # CareCar production environment bastion
+        "carecar-prod-bastion" = lib.mkIf cfg.enableCareCar {
+          proxyCommand = "sh -c 'aws ssm start-session --target $(aws ec2 describe-instances --filters \"Name=tag:Name,Values=bastion\" \"Name=instance-state-name,Values=running\" --query \"Reservations[0].Instances[0].InstanceId\" --output text --region us-west-2) --document-name AWS-StartSSHSession --parameters portNumber=%p --region us-west-2'";
+          user = "ubuntu";
+          extraOptions = {
+            StrictHostKeyChecking = "no";
+            UserKnownHostsFile = "/dev/null";
+          };
+        };
+      };
     };
   };
 }
