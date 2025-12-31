@@ -11,17 +11,9 @@ Quick start guide for setting up AWS Systems Manager access to CareCar infrastru
 
 ## One-Time Setup
 
-### Step 1: Configure awsume
+> **Note**: The module automatically configures awsume shell integration, so you don't need to run `awsume-configure`.
 
-Initialize awsume configuration:
-
-```bash
-awsume-configure
-```
-
-Accept the default settings when prompted. This creates `~/.awsume/config.yaml`.
-
-### Step 2: Configure AWS SSO
+### Step 1: Configure AWS SSO
 
 Set up AWS Single Sign-On with CareCar:
 
@@ -40,7 +32,7 @@ Answer the prompts:
 
 A browser window will open for Okta authentication.
 
-### Step 3: Populate All Available Profiles
+### Step 2: Populate All Available Profiles
 
 Automatically configure all CareCar AWS accounts you have access to:
 
@@ -53,7 +45,7 @@ This discovers and configures profiles for all accessible accounts and roles:
 - `carecar-hq-prod.AWSAdministratorAccess`
 - And any other accounts you have access to
 
-### Step 4: Verify Setup
+### Step 3: Verify Setup
 
 List configured profiles:
 
