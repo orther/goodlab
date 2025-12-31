@@ -26,7 +26,7 @@ in {
     # Install required packages
     home.packages = with pkgs; [
       awscli2 # AWS CLI v2
-      session-manager-plugin # AWS Session Manager plugin
+      ssm-session-manager-plugin # AWS Session Manager plugin
       python311Packages.awsume # AWS credential management tool
     ];
 
