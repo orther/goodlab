@@ -25,6 +25,7 @@
           inputs.self.lib.hmModules.alacritty
           inputs.self.lib.hmModules."1password"
           inputs.self.lib.hmModules.doom
+          inputs.self.lib.hmModules.aws-ssm
         ];
         # Override defaults from HM base for this host
         home.username = lib.mkForce "brandon.orther";
@@ -34,6 +35,13 @@
         home.sessionVariables = {
           HEX_CACERTS_PATH = "/opt/homebrew/etc/ca-certificates/cert.pem";
           NODE_EXTRA_CA_CERTS = "/opt/homebrew/etc/ca-certificates/cert.pem";
+        };
+
+        # Enable AWS SSM configuration for CareCar infrastructure access
+        programs.aws-ssm = {
+          enable = true;
+          enableSshProxy = true;
+          enableCareCar = true;
         };
       };
     };
