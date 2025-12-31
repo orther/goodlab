@@ -27,7 +27,7 @@ in {
     home.packages = with pkgs; [
       awscli2 # AWS CLI v2
       ssm-session-manager-plugin # AWS Session Manager plugin
-      python311Packages.awsume # AWS credential management tool
+      awsume # AWS credential management tool
     ];
 
     # Configure SSH to use SSM as a transparent proxy
