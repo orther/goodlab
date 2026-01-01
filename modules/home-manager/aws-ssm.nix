@@ -34,11 +34,13 @@ in {
     # Configure awsume shell integration and CareCar helpers
     programs.zsh = {
       initExtra = ''
-        # awsume alias and autocomplete configuration
-        alias awsume="source \$(${pkgs.awsume}/bin/awsume)"
+        # awsume function wrapper (not alias) to properly handle arguments
+        awsume() {
+          source <(${pkgs.awsume}/bin/awsume "$@")
+        }
 
         # awsume autocompletion
-        if command -v awsume >/dev/null 2>&1; then
+        if command -v ${pkgs.awsume}/bin/awsume >/dev/null 2>&1; then
           fpath=(${pkgs.awsume}/share/zsh/site-functions $fpath)
         fi
       '' + lib.optionalString cfg.enableCareCar ''
