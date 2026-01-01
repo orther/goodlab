@@ -27,36 +27,19 @@ in {
     home.packages = with pkgs; [
       awscli2 # AWS CLI v2
       ssm-session-manager-plugin # AWS Session Manager plugin
-      awsume # AWS credential management tool
       aws-sso-util # AWS SSO utility for profile management
     ];
 
-    # Configure awsume shell integration and CareCar helpers
+    # Configure CareCar helper functions
     programs.zsh = {
-      initExtra = ''
-        # awsume function wrapper that properly sources the output
-        awsume() {
-          local awsume_bin="${pkgs.awsume}/bin/awsume"
-          local output
-          output=$($awsume_bin "$@")
-          if [ $? -eq 0 ]; then
-            eval "$output"
-          else
-            echo "$output"
-            return 1
-          fi
-        }
-
-        # awsume autocompletion
-        fpath=(${pkgs.awsume}/share/zsh/site-functions $fpath)
-      '' + lib.optionalString cfg.enableCareCar ''
+      initExtra = lib.optionalString cfg.enableCareCar ''
 
         # CareCar AWS SSM Database Tunnel Helper Functions
         # These functions establish port forwarding tunnels to RDS databases via SSM
 
         carecar-acceptance-db() {
-            echo "🔐 Assuming carecar-hq-staging AWS role..."
-            awsume carecar-hq-staging.AWSAdministratorAccess --region us-west-2
+            echo "🔐 Using carecar-hq-staging AWS profile..."
+            export AWS_PROFILE=carecar-hq-staging.AWSAdministratorAccess
             echo "🚀 Connecting to acceptance database (localhost:5434)..."
             echo "   Database: acceptance-db.cbpfxk1gzmnb.us-west-2.rds.amazonaws.com"
             echo "   Use Ctrl+C to disconnect"
@@ -71,8 +54,8 @@ in {
         }
 
         carecar-prod-db() {
-            echo "🔐 Assuming carecar-hq-prod AWS role..."
-            awsume carecar-hq-prod.AWSAdministratorAccess --region us-west-2
+            echo "🔐 Using carecar-hq-prod AWS profile..."
+            export AWS_PROFILE=carecar-hq-prod.AWSAdministratorAccess
             echo "⚠️  PRODUCTION DATABASE ACCESS ⚠️"
             echo "🚀 Connecting to production database (localhost:5433)..."
             echo "   Database: prod-db.c53hlgaegw8h.us-west-2.rds.amazonaws.com"
@@ -91,11 +74,11 @@ in {
         carecar-ssm-bastion() {
             local env="''${1:-staging}"
             if [[ "$env" == "prod" ]]; then
-                echo "🔐 Assuming carecar-hq-prod AWS role..."
-                awsume carecar-hq-prod.AWSAdministratorAccess --region us-west-2
+                echo "🔐 Using carecar-hq-prod AWS profile..."
+                export AWS_PROFILE=carecar-hq-prod.AWSAdministratorAccess
             else
-                echo "🔐 Assuming carecar-hq-staging AWS role..."
-                awsume carecar-hq-staging.AWSAdministratorAccess --region us-west-2
+                echo "🔐 Using carecar-hq-staging AWS profile..."
+                export AWS_PROFILE=carecar-hq-staging.AWSAdministratorAccess
             fi
             echo "🚀 Starting SSM session to bastion..."
             aws ssm start-session \
@@ -108,9 +91,9 @@ in {
       '';
 
       shellAliases = lib.mkIf cfg.enableCareCar {
-        # Quick aliases for assuming roles
-        "awsume-carecar-staging" = "awsume carecar-hq-staging.AWSAdministratorAccess --region us-west-2";
-        "awsume-carecar-prod" = "awsume carecar-hq-prod.AWSAdministratorAccess --region us-west-2";
+        # Quick aliases for setting AWS profile
+        "aws-carecar-staging" = "export AWS_PROFILE=carecar-hq-staging.AWSAdministratorAccess";
+        "aws-carecar-prod" = "export AWS_PROFILE=carecar-hq-prod.AWSAdministratorAccess";
       };
     };
 

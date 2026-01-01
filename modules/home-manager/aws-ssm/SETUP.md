@@ -68,20 +68,27 @@ If successful, you'll see your AWS identity information.
 
 ### Authentication Required Before Each Session
 
-SSM requires active AWS credentials. Authenticate before using any SSM features:
+SSM requires active AWS credentials. First, login to AWS SSO (opens browser):
+
+```bash
+# Login to AWS SSO (only needed once per session, or when credentials expire)
+aws sso login --sso-session carecar
+```
+
+Then set your AWS profile for the session:
 
 ```bash
 # For staging environment
-awsume carecar-hq-staging.AWSAdministratorAccess --region us-west-2
+export AWS_PROFILE=carecar-hq-staging.AWSAdministratorAccess
 
-# For production environment (requires MFA)
-awsume carecar-hq-prod.AWSAdministratorAccess --region us-west-2
+# For production environment
+export AWS_PROFILE=carecar-hq-prod.AWSAdministratorAccess
 ```
 
 **Shortcut aliases:**
 ```bash
-awsume-carecar-staging  # Staging authentication
-awsume-carecar-prod     # Production authentication
+aws-carecar-staging  # Set staging profile
+aws-carecar-prod     # Set production profile
 ```
 
 ### SSH to EC2 Instances
@@ -156,10 +163,13 @@ carecar-ssm-bastion prod
 ### Accessing Staging Infrastructure
 
 ```bash
-# 1. Authenticate
-awsume-carecar-staging
+# 1. Login to SSO (if not already logged in)
+aws sso login --sso-session carecar
 
-# 2. Use any of these features:
+# 2. Set staging profile
+aws-carecar-staging
+
+# 3. Use any of these features:
 ssh carecar-acceptance-bastion        # Interactive SSH
 carecar-acceptance-db                 # Database tunnel
 ssh i-<instance-id>                   # Direct instance access
@@ -169,10 +179,13 @@ scp file.txt i-<instance-id>:/tmp/    # File transfer
 ### Accessing Production Infrastructure
 
 ```bash
-# 1. Authenticate (requires MFA)
-awsume-carecar-prod
+# 1. Login to SSO (if not already logged in)
+aws sso login --sso-session carecar
 
-# 2. Use production features:
+# 2. Set production profile
+aws-carecar-prod
+
+# 3. Use production features:
 ssh carecar-prod-bastion              # Interactive SSH
 carecar-prod-db                       # Database tunnel (⚠️ PRODUCTION)
 ```
@@ -198,10 +211,11 @@ aws ec2 describe-instances \
 
 ### "Unable to locate credentials"
 
-You forgot to authenticate with `awsume`:
+You need to login to AWS SSO and set your profile:
 
 ```bash
-awsume carecar-hq-staging.AWSAdministratorAccess --region us-west-2
+aws sso login --sso-session carecar
+export AWS_PROFILE=carecar-hq-staging.AWSAdministratorAccess
 ```
 
 ### "Session Manager plugin is not found"
@@ -223,11 +237,11 @@ The EC2 instance may not have SSM agent running or lacks IAM permissions. Contac
 
 ### "Could not connect to the endpoint URL"
 
-Ensure you're using the correct AWS region:
+Ensure you're using the correct AWS region and profile:
 
 ```bash
 export AWS_DEFAULT_REGION=us-west-2
-awsume carecar-hq-staging.AWSAdministratorAccess --region us-west-2
+export AWS_PROFILE=carecar-hq-staging.AWSAdministratorAccess
 ```
 
 ### SSH Connection Hangs
@@ -240,17 +254,12 @@ ssh -vvv i-0123456789abcdef0
 
 Check the ProxyCommand execution output for errors.
 
-### MFA Token Expired
+### SSO Session Expired
 
-Tokens expire after a period. Re-authenticate:
+SSO sessions expire after a period. Re-login:
 
 ```bash
-awsume carecar-hq-staging.AWSAdministratorAccess --region us-west-2
-```
-
-For automatic renewal, use:
-```bash
-awsume --auto-refresh carecar-hq-staging.AWSAdministratorAccess --region us-west-2
+aws sso login --sso-session carecar
 ```
 
 ## Security Best Practices

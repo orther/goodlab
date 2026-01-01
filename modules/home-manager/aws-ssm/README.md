@@ -124,14 +124,18 @@ aws sts get-caller-identity
 
 ### Authentication Workflow
 
-**IMPORTANT**: You must authenticate with `awsume` before using SSH/SCP or database tunnels. SSM relies on AWS credentials from your environment.
+**IMPORTANT**: You must authenticate with AWS SSO before using SSH/SCP or database tunnels. SSM relies on AWS credentials from your environment.
 
 ```bash
-# Authenticate for staging environment
-awsume carecar-hq-staging.AWSAdministratorAccess --region us-west-2
+# Login to AWS SSO (opens browser, only needed once per session or when expired)
+aws sso login --sso-session carecar
 
-# Authenticate for production environment
-awsume carecar-hq-prod.AWSAdministratorAccess --region us-west-2
+# Then set your AWS profile for the session:
+# For staging environment
+export AWS_PROFILE=carecar-hq-staging.AWSAdministratorAccess
+
+# For production environment
+export AWS_PROFILE=carecar-hq-prod.AWSAdministratorAccess
 ```
 
 ### SSH and SCP via SSM
@@ -222,14 +226,14 @@ carecar-ssm-bastion prod
 The module provides shell aliases for common operations:
 
 ```bash
-# Authenticate to staging
-awsume-carecar-staging
+# Set staging profile
+aws-carecar-staging
 
-# Authenticate to production
-awsume-carecar-prod
+# Set production profile
+aws-carecar-prod
 ```
 
-These are shortcuts for the full `awsume` commands with region specification.
+These are shortcuts for setting the AWS_PROFILE environment variable.
 
 ## Advanced Usage
 
@@ -292,10 +296,11 @@ The EC2 instance may not have the SSM agent running or lacks proper IAM permissi
 
 ### "Unable to locate credentials"
 
-You need to authenticate with `awsume` first:
+You need to login to AWS SSO and set your profile:
 
 ```bash
-awsume carecar-hq-staging.AWSAdministratorAccess --region us-west-2
+aws sso login --sso-session carecar
+export AWS_PROFILE=carecar-hq-staging.AWSAdministratorAccess
 ```
 
 ### "Could not connect to the endpoint URL"
@@ -318,15 +323,13 @@ ssh -vvv i-0123456789abcdef0
 
 Look for errors in the ProxyCommand execution.
 
-### awsume Token Expired
+### SSO Session Expired
 
-MFA tokens expire after a period. Re-authenticate:
+SSO sessions expire after a period. Re-login:
 
 ```bash
-awsume carecar-hq-staging.AWSAdministratorAccess --region us-west-2
+aws sso login --sso-session carecar
 ```
-
-Consider using `awsume --auto-refresh` for automatic token renewal.
 
 ## Security Considerations
 
@@ -388,7 +391,7 @@ SSH connection established
 ```
 carecar-acceptance-db
   ↓
-awsume (authenticate)
+Set AWS_PROFILE (uses cached SSO credentials)
   ↓
 Find bastion instance ID
   ↓
