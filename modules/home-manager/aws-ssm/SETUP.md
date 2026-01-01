@@ -23,8 +23,8 @@ aws configure sso
 
 Answer the prompts:
 - **SSO session name**: `carecar` (or any name you prefer)
-- **SSO start URL**: `https://carecar.awsapps.com/start/`
-- **SSO region**: `us-west-2`
+- **SSO start URL**: `https://carecar.awsapps.com/start/#` (note the trailing `/#`)
+- **SSO region**: `us-east-1`
 - **SSO registration scopes**: Press Enter for default
 - **CLI default client Region**: `us-west-2`
 - **CLI default output format**: `json` (or your preference)
@@ -37,7 +37,7 @@ A browser window will open for Okta authentication.
 Automatically configure all CareCar AWS accounts you have access to:
 
 ```bash
-aws-sso-util configure populate -u https://carecar.awsapps.com/start/
+aws-sso-util configure populate -u https://carecar.awsapps.com/start/#
 ```
 
 This discovers and configures profiles for all accessible accounts and roles:

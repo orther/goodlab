@@ -86,8 +86,8 @@ aws configure sso
 ```
 
 Follow the prompts:
-- **SSO start URL**: `https://carecar.awsapps.com/start/`
-- **SSO region**: `us-west-2`
+- **SSO start URL**: `https://carecar.awsapps.com/start/#` (note the trailing `/#`)
+- **SSO region**: `us-east-1`
 - **Account**: Select your default account (e.g., `carecar-hq-staging`)
 - **Role**: Select your role (e.g., `AWSAdministratorAccess`)
 - **CLI profile name**: Use a descriptive name (e.g., `carecar-staging-admin`)
@@ -97,7 +97,7 @@ Follow the prompts:
 Automatically configure all accessible AWS accounts:
 
 ```bash
-aws-sso-util configure populate -u https://carecar.awsapps.com/start/
+aws-sso-util configure populate -u https://carecar.awsapps.com/start/#
 ```
 
 This discovers and configures profiles for all accounts and roles you have access to, including:
