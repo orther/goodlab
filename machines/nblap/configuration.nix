@@ -31,11 +31,18 @@
         home.username = lib.mkForce "brandon.orther";
         home.homeDirectory = lib.mkForce "/Users/brandon.orther";
 
-        # Corporate network CA certificates for Elixir/Hex, Node.js, and AWS CLI
+        # Corporate network CA certificates - use Zscaler-managed bundle
+        # The zscaler module automatically extracts and updates certificates from macOS keychain
         home.sessionVariables = {
-          HEX_CACERTS_PATH = "/opt/homebrew/etc/ca-certificates/cert.pem";
-          NODE_EXTRA_CA_CERTS = "/opt/homebrew/etc/ca-certificates/cert.pem";
-          AWS_CA_BUNDLE = "/opt/homebrew/etc/ca-certificates/cert.pem";
+          # Use Zscaler-managed certificates for all tools
+          HEX_CACERTS_PATH = "/etc/ssl/nix-corporate/ca-bundle.pem";
+          NODE_EXTRA_CA_CERTS = "/etc/ssl/nix-corporate/ca-bundle.pem";
+          AWS_CA_BUNDLE = "/etc/ssl/nix-corporate/ca-bundle.pem";
+
+          # Fallback to homebrew if Zscaler certs unavailable (shouldn't happen)
+          # HEX_CACERTS_PATH = "/opt/homebrew/etc/ca-certificates/cert.pem";
+          # NODE_EXTRA_CA_CERTS = "/opt/homebrew/etc/ca-certificates/cert.pem";
+          # AWS_CA_BUNDLE = "/opt/homebrew/etc/ca-certificates/cert.pem";
         };
 
         # Enable AWS SSM configuration for CareCar infrastructure access
