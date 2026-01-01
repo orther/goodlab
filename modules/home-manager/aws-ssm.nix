@@ -34,15 +34,21 @@ in {
     # Configure awsume shell integration and CareCar helpers
     programs.zsh = {
       initExtra = ''
-        # awsume function wrapper (not alias) to properly handle arguments
+        # awsume function wrapper that properly sources the output
         awsume() {
-          source <(${pkgs.awsume}/bin/awsume "$@")
+          local awsume_bin="${pkgs.awsume}/bin/awsume"
+          local output
+          output=$($awsume_bin "$@")
+          if [ $? -eq 0 ]; then
+            eval "$output"
+          else
+            echo "$output"
+            return 1
+          fi
         }
 
         # awsume autocompletion
-        if command -v ${pkgs.awsume}/bin/awsume >/dev/null 2>&1; then
-          fpath=(${pkgs.awsume}/share/zsh/site-functions $fpath)
-        fi
+        fpath=(${pkgs.awsume}/share/zsh/site-functions $fpath)
       '' + lib.optionalString cfg.enableCareCar ''
 
         # CareCar AWS SSM Database Tunnel Helper Functions
