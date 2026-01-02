@@ -11,8 +11,6 @@ Quick start guide for setting up AWS Systems Manager access to CareCar infrastru
 
 ## One-Time Setup
 
-> **Note**: The module automatically configures awsume shell integration, so you don't need to run `awsume-configure`.
-
 ### Step 1: Configure AWS SSO
 
 Set up AWS Single Sign-On with CareCar:

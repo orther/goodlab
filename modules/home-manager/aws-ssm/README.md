@@ -67,17 +67,7 @@ For CareCar infrastructure access on work machines:
 
 After enabling the module and rebuilding your configuration, complete the following one-time setup:
 
-### 1. Configure awsume
-
-Initialize awsume configuration:
-
-```bash
-awsume-configure
-```
-
-This creates `~/.awsume/config.yaml` with default settings.
-
-### 2. Configure AWS SSO
+### 1. Configure AWS SSO
 
 Set up AWS Single Sign-On:
 
@@ -92,9 +82,9 @@ Follow the prompts:
 - **Role**: Select your role (e.g., `AWSAdministratorAccess`)
 - **CLI profile name**: Use a descriptive name (e.g., `carecar-staging-admin`)
 
-### 3. Populate All Available Profiles
+### 2. Populate All Available Profiles (Optional)
 
-Automatically configure all accessible AWS accounts:
+Automatically configure all accessible AWS accounts using `aws-sso-util`:
 
 ```bash
 aws-sso-util configure populate -u https://carecar.awsapps.com/start/#
@@ -105,7 +95,9 @@ This discovers and configures profiles for all accounts and roles you have acces
 - `carecar-hq-prod.AWSAdministratorAccess`
 - And any other accessible accounts
 
-### 4. Verify Configuration
+> **Note**: This step is optional. The module works with manually configured profiles from step 1.
+
+### 3. Verify Configuration
 
 List available profiles:
 
@@ -116,8 +108,8 @@ aws configure list-profiles
 Test authentication:
 
 ```bash
-awsume carecar-hq-staging.AWSAdministratorAccess --region us-west-2
-aws sts get-caller-identity
+aws sso login --sso-session carecar
+aws sts get-caller-identity --profile carecar-hq-staging.AWSAdministratorAccess
 ```
 
 ## Usage

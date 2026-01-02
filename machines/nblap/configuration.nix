@@ -50,6 +50,22 @@
           enable = true;
           enableSshProxy = true;
           enableCareCar = true;
+          region = "us-west-2";
+          bastionTag = "bastion";
+
+          # Database endpoints for SSM port forwarding
+          databases = {
+            acceptance = {
+              host = "acceptance-db.cbpfxk1gzmnb.us-west-2.rds.amazonaws.com";
+              port = 5432;
+              localPort = 5434;
+            };
+            production = {
+              host = "prod-db.c53hlgaegw8h.us-west-2.rds.amazonaws.com";
+              port = 5432;
+              localPort = 5433;
+            };
+          };
         };
       };
     };
