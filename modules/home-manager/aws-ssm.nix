@@ -71,6 +71,30 @@ in {
         # CareCar AWS SSM Helper Functions
         # These functions establish connections to AWS infrastructure via SSM
 
+        # Helper function to check AWS authentication status
+        _carecar_check_auth() {
+            local check_output=$(aws sts get-caller-identity 2>&1)
+            local exit_code=$?
+
+            if [[ $exit_code -ne 0 ]]; then
+                echo "" >&2
+                echo "❌ AWS authentication failed" >&2
+                if [[ "$check_output" =~ "Token has expired" ]]; then
+                    echo "   Your SSO session has expired" >&2
+                elif [[ "$check_output" =~ "No AWS credentials" || "$check_output" =~ "Unable to locate credentials" ]]; then
+                    echo "   No AWS credentials found" >&2
+                else
+                    echo "   $check_output" >&2
+                fi
+                echo "" >&2
+                echo "🔑 To fix this, run:" >&2
+                echo "   aws sso login --sso-session carecar" >&2
+                echo "" >&2
+                return 1
+            fi
+            return 0
+        }
+
         # Helper function to find the latest running bastion instance
         _carecar_get_bastion_instance() {
             local instance_id=$(aws ec2 describe-instances \
@@ -82,7 +106,7 @@ in {
 
             if [[ -z "$instance_id" || "$instance_id" == "None" || "$instance_id" =~ "error" ]]; then
                 echo "❌ Error: No running bastion instance found" >&2
-                echo "   Make sure you're authenticated: aws sso login --sso-session carecar" >&2
+                echo "   Verify you're authenticated and have access to the bastion" >&2
                 return 1
             fi
 
@@ -93,6 +117,8 @@ ${lib.optionalString (cfg.databases ? acceptance) ''
         carecar-acceptance-db() {
             echo "🔐 Using carecar-hq-staging AWS profile..."
             export AWS_PROFILE=carecar-hq-staging.AWSAdministratorAccess
+
+            _carecar_check_auth || return 1
 
             echo "🔍 Finding bastion instance..."
             local instance_id=$(_carecar_get_bastion_instance) || return 1
@@ -114,6 +140,8 @@ ${lib.optionalString (cfg.databases ? acceptance) ''
             echo "🔐 Using carecar-hq-prod AWS profile..."
             export AWS_PROFILE=carecar-hq-prod.AWSAdministratorAccess
             echo "⚠️  PRODUCTION DATABASE ACCESS ⚠️"
+
+            _carecar_check_auth || return 1
 
             echo "🔍 Finding bastion instance..."
             local instance_id=$(_carecar_get_bastion_instance) || return 1
@@ -140,6 +168,8 @@ ${lib.optionalString (cfg.databases ? acceptance) ''
                 echo "🔐 Using carecar-hq-staging AWS profile..."
                 export AWS_PROFILE=carecar-hq-staging.AWSAdministratorAccess
             fi
+
+            _carecar_check_auth || return 1
 
             echo "🔍 Finding bastion instance..."
             local instance_id=$(_carecar_get_bastion_instance) || return 1
