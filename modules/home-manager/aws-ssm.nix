@@ -76,12 +76,13 @@ in {
             local check_output=$(aws sts get-caller-identity 2>&1)
             local exit_code=$?
 
-            if [[ $exit_code -ne 0 ]]; then
+            # Check both exit code and output content for errors
+            if [[ $exit_code -ne 0 ]] || [[ "$check_output" =~ "Error" ]] || [[ "$check_output" =~ "expired" ]] || [[ "$check_output" =~ "Unable to locate credentials" ]]; then
                 echo "" >&2
                 echo "❌ AWS authentication failed" >&2
-                if [[ "$check_output" =~ "Token has expired" ]]; then
+                if [[ "$check_output" =~ "Token has expired" ]] || [[ "$check_output" =~ "expired" ]]; then
                     echo "   Your SSO session has expired" >&2
-                elif [[ "$check_output" =~ "No AWS credentials" || "$check_output" =~ "Unable to locate credentials" ]]; then
+                elif [[ "$check_output" =~ "No AWS credentials" ]] || [[ "$check_output" =~ "Unable to locate credentials" ]]; then
                     echo "   No AWS credentials found" >&2
                 else
                     echo "   $check_output" >&2
