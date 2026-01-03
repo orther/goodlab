@@ -68,118 +68,118 @@ in {
     programs.zsh = {
       initExtra = lib.optionalString cfg.enableCareCar ''
 
-        # CareCar AWS SSM Helper Functions
-        # These functions establish connections to AWS infrastructure via SSM
+                # CareCar AWS SSM Helper Functions
+                # These functions establish connections to AWS infrastructure via SSM
 
-        # Helper function to check AWS authentication status
-        _carecar_check_auth() {
-            local check_output=$(aws sts get-caller-identity 2>&1)
-            local exit_code=$?
+                # Helper function to check AWS authentication status
+                _carecar_check_auth() {
+                    local check_output=$(aws sts get-caller-identity 2>&1)
+                    local exit_code=$?
 
-            # Check both exit code and output content for errors
-            if [[ $exit_code -ne 0 ]] || [[ "$check_output" =~ "Error" ]] || [[ "$check_output" =~ "expired" ]] || [[ "$check_output" =~ "Unable to locate credentials" ]]; then
-                echo "" >&2
-                echo "❌ AWS authentication failed" >&2
-                if [[ "$check_output" =~ "Token has expired" ]] || [[ "$check_output" =~ "expired" ]]; then
-                    echo "   Your SSO session has expired" >&2
-                elif [[ "$check_output" =~ "No AWS credentials" ]] || [[ "$check_output" =~ "Unable to locate credentials" ]]; then
-                    echo "   No AWS credentials found" >&2
-                else
-                    echo "   $check_output" >&2
-                fi
-                echo "" >&2
-                echo "🔑 To fix this, run:" >&2
-                echo "   aws sso login --sso-session carecar" >&2
-                echo "" >&2
-                return 1
-            fi
-            return 0
-        }
+                    # Check both exit code and output content for errors
+                    if [[ $exit_code -ne 0 ]] || [[ "$check_output" =~ "Error" ]] || [[ "$check_output" =~ "expired" ]] || [[ "$check_output" =~ "Unable to locate credentials" ]]; then
+                        echo "" >&2
+                        echo "❌ AWS authentication failed" >&2
+                        if [[ "$check_output" =~ "Token has expired" ]] || [[ "$check_output" =~ "expired" ]]; then
+                            echo "   Your SSO session has expired" >&2
+                        elif [[ "$check_output" =~ "No AWS credentials" ]] || [[ "$check_output" =~ "Unable to locate credentials" ]]; then
+                            echo "   No AWS credentials found" >&2
+                        else
+                            echo "   $check_output" >&2
+                        fi
+                        echo "" >&2
+                        echo "🔑 To fix this, run:" >&2
+                        echo "   aws sso login --sso-session carecar" >&2
+                        echo "" >&2
+                        return 1
+                    fi
+                    return 0
+                }
 
-        # Helper function to find the latest running bastion instance
-        _carecar_get_bastion_instance() {
-            local instance_id=$(aws ec2 describe-instances \
-                --region ${cfg.region} \
-                --filters "Name=tag:Name,Values=${cfg.bastionTag}" \
-                          "Name=instance-state-name,Values=running" \
-                --query "max_by(Reservations[].Instances[], &LaunchTime).InstanceId" \
-                --output text 2>&1)
+                # Helper function to find the latest running bastion instance
+                _carecar_get_bastion_instance() {
+                    local instance_id=$(aws ec2 describe-instances \
+                        --region ${cfg.region} \
+                        --filters "Name=tag:Name,Values=${cfg.bastionTag}" \
+                                  "Name=instance-state-name,Values=running" \
+                        --query "max_by(Reservations[].Instances[], &LaunchTime).InstanceId" \
+                        --output text 2>&1)
 
-            if [[ -z "$instance_id" || "$instance_id" == "None" || "$instance_id" =~ "error" ]]; then
-                echo "❌ Error: No running bastion instance found" >&2
-                echo "   Verify you're authenticated and have access to the bastion" >&2
-                return 1
-            fi
+                    if [[ -z "$instance_id" || "$instance_id" == "None" || "$instance_id" =~ "error" ]]; then
+                        echo "❌ Error: No running bastion instance found" >&2
+                        echo "   Verify you're authenticated and have access to the bastion" >&2
+                        return 1
+                    fi
 
-            echo "$instance_id"
-        }
-${lib.optionalString (cfg.databases ? acceptance) ''
-        # Connect to acceptance database via SSM port forwarding
-        carecar-acceptance-db() {
-            echo "🔐 Using carecar-hq-staging AWS profile..."
-            export AWS_PROFILE=carecar-hq-staging.AWSAdministratorAccess
+                    echo "$instance_id"
+                }
+        ${lib.optionalString (cfg.databases ? acceptance) ''
+          # Connect to acceptance database via SSM port forwarding
+          carecar-acceptance-db() {
+              echo "🔐 Using carecar-hq-staging AWS profile..."
+              export AWS_PROFILE=carecar-hq-staging.AWSAdministratorAccess
 
-            _carecar_check_auth || return 1
+              _carecar_check_auth || return 1
 
-            echo "🔍 Finding bastion instance..."
-            local instance_id=$(_carecar_get_bastion_instance) || return 1
+              echo "🔍 Finding bastion instance..."
+              local instance_id=$(_carecar_get_bastion_instance) || return 1
 
-            echo "🚀 Connecting to acceptance database (localhost:${toString cfg.databases.acceptance.localPort})..."
-            echo "   Bastion: $instance_id"
-            echo "   Database: ${cfg.databases.acceptance.host}:${toString cfg.databases.acceptance.port}"
-            echo "   Use Ctrl+C to disconnect"
+              echo "🚀 Connecting to acceptance database (localhost:${toString cfg.databases.acceptance.localPort})..."
+              echo "   Bastion: $instance_id"
+              echo "   Database: ${cfg.databases.acceptance.host}:${toString cfg.databases.acceptance.port}"
+              echo "   Use Ctrl+C to disconnect"
 
-            aws ssm start-session \
-                --region ${cfg.region} \
-                --target "$instance_id" \
-                --document-name AWS-StartPortForwardingSessionToRemoteHost \
-                --parameters host="${cfg.databases.acceptance.host}",portNumber="${toString cfg.databases.acceptance.port}",localPortNumber="${toString cfg.databases.acceptance.localPort}"
-        }
-''}${lib.optionalString (cfg.databases ? production) ''
-        # Connect to production database via SSM port forwarding
-        carecar-prod-db() {
-            echo "🔐 Using carecar-hq-prod AWS profile..."
-            export AWS_PROFILE=carecar-hq-prod.AWSAdministratorAccess
-            echo "⚠️  PRODUCTION DATABASE ACCESS ⚠️"
+              aws ssm start-session \
+                  --region ${cfg.region} \
+                  --target "$instance_id" \
+                  --document-name AWS-StartPortForwardingSessionToRemoteHost \
+                  --parameters host="${cfg.databases.acceptance.host}",portNumber="${toString cfg.databases.acceptance.port}",localPortNumber="${toString cfg.databases.acceptance.localPort}"
+          }
+        ''}${lib.optionalString (cfg.databases ? production) ''
+          # Connect to production database via SSM port forwarding
+          carecar-prod-db() {
+              echo "🔐 Using carecar-hq-prod AWS profile..."
+              export AWS_PROFILE=carecar-hq-prod.AWSAdministratorAccess
+              echo "⚠️  PRODUCTION DATABASE ACCESS ⚠️"
 
-            _carecar_check_auth || return 1
+              _carecar_check_auth || return 1
 
-            echo "🔍 Finding bastion instance..."
-            local instance_id=$(_carecar_get_bastion_instance) || return 1
+              echo "🔍 Finding bastion instance..."
+              local instance_id=$(_carecar_get_bastion_instance) || return 1
 
-            echo "🚀 Connecting to production database (localhost:${toString cfg.databases.production.localPort})..."
-            echo "   Bastion: $instance_id"
-            echo "   Database: ${cfg.databases.production.host}:${toString cfg.databases.production.port}"
-            echo "   Use Ctrl+C to disconnect"
+              echo "🚀 Connecting to production database (localhost:${toString cfg.databases.production.localPort})..."
+              echo "   Bastion: $instance_id"
+              echo "   Database: ${cfg.databases.production.host}:${toString cfg.databases.production.port}"
+              echo "   Use Ctrl+C to disconnect"
 
-            aws ssm start-session \
-                --region ${cfg.region} \
-                --target "$instance_id" \
-                --document-name AWS-StartPortForwardingSessionToRemoteHost \
-                --parameters host="${cfg.databases.production.host}",portNumber="${toString cfg.databases.production.port}",localPortNumber="${toString cfg.databases.production.localPort}"
-        }
-''}
-        # Interactive SSM session to bastion host
-        carecar-ssm-bastion() {
-            local env="''${1:-staging}"
-            if [[ "$env" == "prod" ]]; then
-                echo "🔐 Using carecar-hq-prod AWS profile..."
-                export AWS_PROFILE=carecar-hq-prod.AWSAdministratorAccess
-            else
-                echo "🔐 Using carecar-hq-staging AWS profile..."
-                export AWS_PROFILE=carecar-hq-staging.AWSAdministratorAccess
-            fi
+              aws ssm start-session \
+                  --region ${cfg.region} \
+                  --target "$instance_id" \
+                  --document-name AWS-StartPortForwardingSessionToRemoteHost \
+                  --parameters host="${cfg.databases.production.host}",portNumber="${toString cfg.databases.production.port}",localPortNumber="${toString cfg.databases.production.localPort}"
+          }
+        ''}
+                # Interactive SSM session to bastion host
+                carecar-ssm-bastion() {
+                    local env="''${1:-staging}"
+                    if [[ "$env" == "prod" ]]; then
+                        echo "🔐 Using carecar-hq-prod AWS profile..."
+                        export AWS_PROFILE=carecar-hq-prod.AWSAdministratorAccess
+                    else
+                        echo "🔐 Using carecar-hq-staging AWS profile..."
+                        export AWS_PROFILE=carecar-hq-staging.AWSAdministratorAccess
+                    fi
 
-            _carecar_check_auth || return 1
+                    _carecar_check_auth || return 1
 
-            echo "🔍 Finding bastion instance..."
-            local instance_id=$(_carecar_get_bastion_instance) || return 1
+                    echo "🔍 Finding bastion instance..."
+                    local instance_id=$(_carecar_get_bastion_instance) || return 1
 
-            echo "🚀 Starting SSM session to bastion ($instance_id)..."
-            aws ssm start-session \
-                --region ${cfg.region} \
-                --target "$instance_id"
-        }
+                    echo "🚀 Starting SSM session to bastion ($instance_id)..."
+                    aws ssm start-session \
+                        --region ${cfg.region} \
+                        --target "$instance_id"
+                }
       '';
 
       shellAliases = lib.mkIf cfg.enableCareCar {

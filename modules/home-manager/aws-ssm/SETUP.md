@@ -20,6 +20,7 @@ aws configure sso
 ```
 
 Answer the prompts:
+
 - **SSO session name**: `carecar` (or any name you prefer)
 - **SSO start URL**: `https://carecar.awsapps.com/start/#` (note the trailing `/#`)
 - **SSO region**: `us-east-1`
@@ -39,6 +40,7 @@ aws-sso-util configure populate -u https://carecar.awsapps.com/start/#
 ```
 
 This discovers and configures profiles for all accessible accounts and roles:
+
 - `carecar-hq-staging.AWSAdministratorAccess`
 - `carecar-hq-prod.AWSAdministratorAccess`
 - And any other accounts you have access to
@@ -84,6 +86,7 @@ export AWS_PROFILE=carecar-hq-prod.AWSAdministratorAccess
 ```
 
 **Shortcut aliases:**
+
 ```bash
 aws-carecar-staging  # Set staging profile
 aws-carecar-prod     # Set production profile
@@ -117,11 +120,13 @@ carecar-acceptance-db
 ```
 
 This:
+
 1. Authenticates with staging credentials
 2. Establishes tunnel to acceptance database on `localhost:5434`
 3. Keeps the tunnel open (use Ctrl+C to close)
 
 Connect with your database client:
+
 ```bash
 psql -h localhost -p 5434 -U your_username -d database_name
 ```
@@ -133,6 +138,7 @@ carecar-prod-db
 ```
 
 This:
+
 1. Authenticates with production credentials (MFA required)
 2. Establishes tunnel to production database on `localhost:5433`
 3. Keeps the tunnel open (use Ctrl+C to close)
@@ -140,6 +146,7 @@ This:
 **⚠️ WARNING**: This provides access to production data. Use with extreme caution.
 
 Connect with your database client:
+
 ```bash
 psql -h localhost -p 5433 -U your_username -d database_name
 ```
@@ -225,6 +232,7 @@ which ssm-session-manager-plugin
 ```
 
 If missing, rebuild your configuration:
+
 ```bash
 just deploy nblap
 ```
@@ -278,6 +286,7 @@ aws sso login --sso-session carecar
 ## Support
 
 For issues:
+
 - **Module configuration**: See [README.md](./README.md)
 - **AWS credentials**: Contact your AWS administrator or review Okta setup
 - **Infrastructure access**: Contact the infrastructure team

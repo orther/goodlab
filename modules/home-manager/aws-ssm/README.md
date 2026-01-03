@@ -76,6 +76,7 @@ aws configure sso
 ```
 
 Follow the prompts:
+
 - **SSO start URL**: `https://carecar.awsapps.com/start/#` (note the trailing `/#`)
 - **SSO region**: `us-east-1`
 - **Account**: Select your default account (e.g., `carecar-hq-staging`)
@@ -91,6 +92,7 @@ aws-sso-util configure populate -u https://carecar.awsapps.com/start/#
 ```
 
 This discovers and configures profiles for all accounts and roles you have access to, including:
+
 - `carecar-hq-staging.AWSAdministratorAccess`
 - `carecar-hq-prod.AWSAdministratorAccess`
 - And any other accessible accounts
@@ -174,11 +176,13 @@ carecar-acceptance-db
 ```
 
 This:
+
 1. Authenticates with `carecar-hq-staging` role
 2. Finds the latest bastion instance
 3. Opens a tunnel to the acceptance database on `localhost:5434`
 
 Connect with your database client:
+
 ```bash
 psql -h localhost -p 5434 -U your_username -d acceptance_db
 ```
@@ -190,6 +194,7 @@ carecar-prod-db
 ```
 
 This:
+
 1. Authenticates with `carecar-hq-prod` role
 2. Finds the latest bastion instance
 3. Opens a tunnel to the production database on `localhost:5433`
@@ -197,6 +202,7 @@ This:
 **⚠️ WARNING**: This provides access to production data. Use with extreme caution.
 
 Connect with your database client:
+
 ```bash
 psql -h localhost -p 5433 -U your_username -d production_db
 ```
@@ -334,6 +340,7 @@ aws sso login --sso-session carecar
 ### Audit Logging
 
 All SSM sessions are automatically logged to CloudWatch Logs:
+
 - **Session start/end times**
 - **Commands executed** (when configured)
 - **User identity** (via AWS credentials)
@@ -398,11 +405,11 @@ Database accessible on localhost:5434
 
 ## Module Options Reference
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `programs.aws-ssm.enable` | boolean | `false` | Enable AWS SSM configuration |
-| `programs.aws-ssm.enableSshProxy` | boolean | `true` | Configure SSH ProxyCommand for SSM |
-| `programs.aws-ssm.enableCareCar` | boolean | `false` | Enable CareCar-specific features |
+| Option                            | Type    | Default | Description                        |
+| --------------------------------- | ------- | ------- | ---------------------------------- |
+| `programs.aws-ssm.enable`         | boolean | `false` | Enable AWS SSM configuration       |
+| `programs.aws-ssm.enableSshProxy` | boolean | `true`  | Configure SSH ProxyCommand for SSM |
+| `programs.aws-ssm.enableCareCar`  | boolean | `false` | Enable CareCar-specific features   |
 
 ## Related Documentation
 
@@ -414,6 +421,7 @@ Database accessible on localhost:5434
 ## Support
 
 For issues related to:
+
 - **Module configuration**: Check this README and module source code
 - **AWS credentials**: Contact your AWS administrator or review Okta setup
 - **Infrastructure access**: Check with the infrastructure team
