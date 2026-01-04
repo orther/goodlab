@@ -7,7 +7,7 @@ This home-manager module provides secure, audited access to AWS infrastructure v
 ### Core Capabilities
 
 - **AWS CLI v2** and **Session Manager Plugin** for SSM connectivity
-- **awsume** for seamless AWS credential and role management with MFA support
+- **AWS SSO (Identity Center)** integration for seamless authentication with MFA support
 - **SSH ProxyCommand** integration for transparent SSM access via standard `ssh` and `scp` commands
 - **Automatic audit logging** to CloudWatch for all sessions
 - **Outbound-only connections** with no open inbound ports required
@@ -415,7 +415,8 @@ Database accessible on localhost:5434
 
 - [AWS Systems Manager Session Manager](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager.html)
 - [AWS Session Manager Plugin Installation](https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
-- [awsume Documentation](https://awsu.me/)
+- [AWS SSO CLI Configuration](https://docs.aws.amazon.com/cli/latest/userguide/sso-configure-profile-token.html)
+- [aws-sso-util Documentation](https://github.com/benkehoe/aws-sso-util)
 - [CareCar Infrastructure Repository](https://github.com/CareCarInc/infrastructure)
 
 ## Support

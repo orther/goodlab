@@ -54,14 +54,15 @@
           bastionTag = "bastion";
 
           # Database endpoints for SSM port forwarding
+          # Hosts are read from SOPS secrets at runtime
           databases = {
             acceptance = {
-              host = "acceptance-db.cbpfxk1gzmnb.us-west-2.rds.amazonaws.com";
+              host = "/run/secrets/carecar/acceptance-db-host";
               port = 5432;
               localPort = 5434;
             };
             production = {
-              host = "prod-db.c53hlgaegw8h.us-west-2.rds.amazonaws.com";
+              host = "/run/secrets/carecar/production-db-host";
               port = 5432;
               localPort = 5433;
             };
@@ -74,6 +75,10 @@
   sops = {
     defaultSopsFile = ./../../secrets/secrets.yaml;
     age.keyFile = "/Users/brandon.orther/.config/sops/age/keys.txt";
+    secrets = {
+      "carecar/acceptance-db-host" = {};
+      "carecar/production-db-host" = {};
+    };
   };
 
   networking = {

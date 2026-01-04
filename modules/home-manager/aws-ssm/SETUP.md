@@ -58,8 +58,8 @@ You should see multiple `carecar-*` profiles.
 Test authentication:
 
 ```bash
-awsume carecar-hq-staging.AWSAdministratorAccess --region us-west-2
-aws sts get-caller-identity
+aws sso login --sso-session carecar
+aws sts get-caller-identity --profile carecar-hq-staging.AWSAdministratorAccess
 ```
 
 If successful, you'll see your AWS identity information.

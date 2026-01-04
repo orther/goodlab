@@ -33,6 +33,18 @@ in {
       description = "EC2 tag:Name value for bastion instances";
     };
 
+    stagingProfile = lib.mkOption {
+      type = lib.types.str;
+      default = "carecar-hq-staging.AWSAdministratorAccess";
+      description = "AWS profile name for staging environment";
+    };
+
+    productionProfile = lib.mkOption {
+      type = lib.types.str;
+      default = "carecar-hq-prod.AWSAdministratorAccess";
+      description = "AWS profile name for production environment";
+    };
+
     databases = lib.mkOption {
       type = lib.types.attrsOf (lib.types.submodule {
         options = {
@@ -116,30 +128,36 @@ in {
         ${lib.optionalString (cfg.databases ? acceptance) ''
           # Connect to acceptance database via SSM port forwarding
           carecar-acceptance-db() {
-              echo "🔐 Using carecar-hq-staging AWS profile..."
-              export AWS_PROFILE=carecar-hq-staging.AWSAdministratorAccess
+              echo "🔐 Using staging AWS profile..."
+              export AWS_PROFILE=${cfg.stagingProfile}
 
               _carecar_check_auth || return 1
 
               echo "🔍 Finding bastion instance..."
               local instance_id=$(_carecar_get_bastion_instance) || return 1
 
+              # Read database host from file if it starts with /, otherwise use as-is
+              local db_host="${cfg.databases.acceptance.host}"
+              if [[ "$db_host" == /* ]]; then
+                  db_host=$(cat "$db_host")
+              fi
+
               echo "🚀 Connecting to acceptance database (localhost:${toString cfg.databases.acceptance.localPort})..."
               echo "   Bastion: $instance_id"
-              echo "   Database: ${cfg.databases.acceptance.host}:${toString cfg.databases.acceptance.port}"
+              echo "   Database: $db_host:${toString cfg.databases.acceptance.port}"
               echo "   Use Ctrl+C to disconnect"
 
               aws ssm start-session \
                   --region ${cfg.region} \
                   --target "$instance_id" \
                   --document-name AWS-StartPortForwardingSessionToRemoteHost \
-                  --parameters host="${cfg.databases.acceptance.host}",portNumber="${toString cfg.databases.acceptance.port}",localPortNumber="${toString cfg.databases.acceptance.localPort}"
+                  --parameters host="$db_host",portNumber="${toString cfg.databases.acceptance.port}",localPortNumber="${toString cfg.databases.acceptance.localPort}"
           }
         ''}${lib.optionalString (cfg.databases ? production) ''
           # Connect to production database via SSM port forwarding
           carecar-prod-db() {
-              echo "🔐 Using carecar-hq-prod AWS profile..."
-              export AWS_PROFILE=carecar-hq-prod.AWSAdministratorAccess
+              echo "🔐 Using production AWS profile..."
+              export AWS_PROFILE=${cfg.productionProfile}
               echo "⚠️  PRODUCTION DATABASE ACCESS ⚠️"
 
               _carecar_check_auth || return 1
@@ -147,27 +165,33 @@ in {
               echo "🔍 Finding bastion instance..."
               local instance_id=$(_carecar_get_bastion_instance) || return 1
 
+              # Read database host from file if it starts with /, otherwise use as-is
+              local db_host="${cfg.databases.production.host}"
+              if [[ "$db_host" == /* ]]; then
+                  db_host=$(cat "$db_host")
+              fi
+
               echo "🚀 Connecting to production database (localhost:${toString cfg.databases.production.localPort})..."
               echo "   Bastion: $instance_id"
-              echo "   Database: ${cfg.databases.production.host}:${toString cfg.databases.production.port}"
+              echo "   Database: $db_host:${toString cfg.databases.production.port}"
               echo "   Use Ctrl+C to disconnect"
 
               aws ssm start-session \
                   --region ${cfg.region} \
                   --target "$instance_id" \
                   --document-name AWS-StartPortForwardingSessionToRemoteHost \
-                  --parameters host="${cfg.databases.production.host}",portNumber="${toString cfg.databases.production.port}",localPortNumber="${toString cfg.databases.production.localPort}"
+                  --parameters host="$db_host",portNumber="${toString cfg.databases.production.port}",localPortNumber="${toString cfg.databases.production.localPort}"
           }
         ''}
                 # Interactive SSM session to bastion host
                 carecar-ssm-bastion() {
                     local env="''${1:-staging}"
                     if [[ "$env" == "prod" ]]; then
-                        echo "🔐 Using carecar-hq-prod AWS profile..."
-                        export AWS_PROFILE=carecar-hq-prod.AWSAdministratorAccess
+                        echo "🔐 Using production AWS profile..."
+                        export AWS_PROFILE=${cfg.productionProfile}
                     else
-                        echo "🔐 Using carecar-hq-staging AWS profile..."
-                        export AWS_PROFILE=carecar-hq-staging.AWSAdministratorAccess
+                        echo "🔐 Using staging AWS profile..."
+                        export AWS_PROFILE=${cfg.stagingProfile}
                     fi
 
                     _carecar_check_auth || return 1
@@ -184,8 +208,8 @@ in {
 
       shellAliases = lib.mkIf cfg.enableCareCar {
         # Quick aliases for setting AWS profile
-        "aws-carecar-staging" = "export AWS_PROFILE=carecar-hq-staging.AWSAdministratorAccess";
-        "aws-carecar-prod" = "export AWS_PROFILE=carecar-hq-prod.AWSAdministratorAccess";
+        "aws-carecar-staging" = "export AWS_PROFILE=${cfg.stagingProfile}";
+        "aws-carecar-prod" = "export AWS_PROFILE=${cfg.productionProfile}";
       };
     };
 
@@ -211,7 +235,7 @@ in {
 
         # CareCar acceptance environment bastion
         "carecar-acceptance-bastion" = lib.mkIf cfg.enableCareCar {
-          proxyCommand = "sh -c 'aws ssm start-session --region ${cfg.region} --target $(aws ec2 describe-instances --region ${cfg.region} --filters \"Name=tag:Name,Values=${cfg.bastionTag}\" \"Name=instance-state-name,Values=running\" --query \"max_by(Reservations[].Instances[], &LaunchTime).InstanceId\" --output text) --document-name AWS-StartSSHSession --parameters portNumber=%p'";
+          proxyCommand = "sh -c 'INSTANCE_ID=$(aws ec2 describe-instances --region ${cfg.region} --filters \"Name=tag:Name,Values=${cfg.bastionTag}\" \"Name=instance-state-name,Values=running\" --query \"max_by(Reservations[].Instances[], &LaunchTime).InstanceId\" --output text 2>&1); if [ -z \"$INSTANCE_ID\" ] || [ \"$INSTANCE_ID\" = \"None\" ] || echo \"$INSTANCE_ID\" | grep -q \"error\\|Error\\|expired\"; then echo \"Error: Failed to find bastion instance. Check AWS credentials and permissions.\" >&2; exit 1; fi; aws ssm start-session --region ${cfg.region} --target \"$INSTANCE_ID\" --document-name AWS-StartSSHSession --parameters portNumber=%p'";
           user = "ubuntu";
           extraOptions = {
             # Disable host key checking for SSM connections:
@@ -225,7 +249,7 @@ in {
 
         # CareCar production environment bastion
         "carecar-prod-bastion" = lib.mkIf cfg.enableCareCar {
-          proxyCommand = "sh -c 'aws ssm start-session --region ${cfg.region} --target $(aws ec2 describe-instances --region ${cfg.region} --filters \"Name=tag:Name,Values=${cfg.bastionTag}\" \"Name=instance-state-name,Values=running\" --query \"max_by(Reservations[].Instances[], &LaunchTime).InstanceId\" --output text) --document-name AWS-StartSSHSession --parameters portNumber=%p'";
+          proxyCommand = "sh -c 'INSTANCE_ID=$(aws ec2 describe-instances --region ${cfg.region} --filters \"Name=tag:Name,Values=${cfg.bastionTag}\" \"Name=instance-state-name,Values=running\" --query \"max_by(Reservations[].Instances[], &LaunchTime).InstanceId\" --output text 2>&1); if [ -z \"$INSTANCE_ID\" ] || [ \"$INSTANCE_ID\" = \"None\" ] || echo \"$INSTANCE_ID\" | grep -q \"error\\|Error\\|expired\"; then echo \"Error: Failed to find bastion instance. Check AWS credentials and permissions.\" >&2; exit 1; fi; aws ssm start-session --region ${cfg.region} --target \"$INSTANCE_ID\" --document-name AWS-StartSSHSession --parameters portNumber=%p'";
           user = "ubuntu";
           extraOptions = {
             # Disable host key checking for SSM connections:
