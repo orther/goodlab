@@ -354,6 +354,10 @@
               ./machines/nblap/configuration.nix
               {
                 nixpkgs.config.allowUnfree = true;
+                nixpkgs.overlays = [
+                  # Fix sops-nix Go builds in corporate proxy environments
+                  (import ./overlays/sops-nix-goproxy.nix)
+                ];
               }
             ];
           };

@@ -146,6 +146,12 @@ in {
 
       # For Node.js applications
       NODE_EXTRA_CA_CERTS = cfg.certificatePath;
+
+      # For Go modules and proxy
+      # Use direct mode to bypass proxy.golang.org which may be blocked by corporate proxies
+      GOPROXY = "direct";
+      # Disable checksum database when using direct mode
+      GOSUMDB = "off";
     };
 
     # System activation script to set up initial certificates
@@ -166,6 +172,30 @@ in {
         echo >&2 "Corporate certificates configured successfully"
       else
         echo >&2 "Warning: Failed to extract corporate certificates"
+      fi
+
+      # Configure Go proxy settings for Nix builds
+      echo >&2 "Configuring Go proxy settings for corporate environment..."
+
+      # Update /etc/nix/nix.conf to pass GOPROXY and GOSUMDB to builds
+      NIX_CONF="/etc/nix/nix.conf"
+      if [[ -f "$NIX_CONF" ]]; then
+        # Check if configurable-impure-env is already enabled
+        if ! grep -q "configurable-impure-env" "$NIX_CONF"; then
+          # Add configurable-impure-env to experimental-features
+          sudo sed -i'.bak' 's/experimental-features = \(.*\)/experimental-features = \1 configurable-impure-env/' "$NIX_CONF"
+        fi
+
+        # Check if impure-env is already configured
+        if ! grep -q "^impure-env" "$NIX_CONF"; then
+          echo "impure-env = GOPROXY GOSUMDB NIX_SSL_CERT_FILE SSL_CERT_FILE" | sudo tee -a "$NIX_CONF" >/dev/null
+        fi
+
+        # Restart nix-daemon to apply changes
+        echo >&2 "Restarting nix-daemon to apply Go proxy settings..."
+        sudo launchctl kickstart -k system/org.nixos.nix-daemon 2>/dev/null || true
+      else
+        echo >&2 "Warning: nix.conf not found at $NIX_CONF"
       fi
     '';
 

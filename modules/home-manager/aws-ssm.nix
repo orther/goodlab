@@ -21,6 +21,18 @@ in {
       description = "Enable CareCar-specific database tunnel helper functions";
     };
 
+    enableHeartbeat = lib.mkOption {
+      type = lib.types.bool;
+      default = true;
+      description = "Enable heartbeat mechanism to keep SSM sessions alive during long operations";
+    };
+
+    heartbeatInterval = lib.mkOption {
+      type = lib.types.int;
+      default = 5;
+      description = "Seconds between heartbeat checks (default: 5)";
+    };
+
     region = lib.mkOption {
       type = lib.types.str;
       default = "us-west-2";
@@ -100,10 +112,34 @@ in {
                             echo "   $check_output" >&2
                         fi
                         echo "" >&2
-                        echo "🔑 To fix this, run:" >&2
-                        echo "   aws sso login --sso-session carecar" >&2
-                        echo "" >&2
-                        return 1
+                        echo "🔑 Would you like to run: aws sso login --sso-session carecar" >&2
+                        echo -n "   (y/n)? " >&2
+                        read -r response
+
+                        if [[ "$response" =~ ^[Yy]$ ]]; then
+                            echo "" >&2
+                            echo "🔐 Running: aws sso login --sso-session carecar" >&2
+                            aws sso login --sso-session carecar
+                            local login_result=$?
+
+                            if [[ $login_result -eq 0 ]]; then
+                                echo "" >&2
+                                echo "✅ Successfully authenticated. Continuing..." >&2
+                                echo "" >&2
+                                return 0
+                            else
+                                echo "" >&2
+                                echo "❌ Login failed" >&2
+                                echo "" >&2
+                                return 1
+                            fi
+                        else
+                            echo "" >&2
+                            echo "ℹ️  Skipping login. You can authenticate later with:" >&2
+                            echo "   aws sso login --sso-session carecar" >&2
+                            echo "" >&2
+                            return 1
+                        fi
                     fi
                     return 0
                 }
@@ -124,6 +160,40 @@ in {
                     fi
 
                     echo "$instance_id"
+                }
+
+                # Helper function to run heartbeat for SSM sessions
+                _carecar_start_heartbeat() {
+                    local session_pid=$1
+                    local local_port=$2
+
+                    if ! command -v nc >/dev/null 2>&1; then
+                        echo "⚠️  'nc' (netcat) not found — heartbeat disabled" >&2
+                        return 0
+                    fi
+
+                    echo "💓 Starting heartbeat to keep SSM session alive..." >&2
+
+                    (
+                        # Visual indicator: set terminal background to green
+                        printf '\033]11;#007700\007'
+
+                        SPINNER=('/' '|' '\' '-')
+                        i=0
+                        while ps -p $session_pid >/dev/null 2>&1; do
+                            # Check if port is still open (this keeps the connection alive)
+                            nc -z localhost "$local_port" >/dev/null 2>&1
+                            printf "\r💓 Keeping session alive %s" "''${SPINNER[$((i % 4))]}" >&2
+                            i=$(( (i + 1) % 4 ))
+                            sleep ${toString cfg.heartbeatInterval}
+                        done
+
+                        # Reset terminal background to default
+                        printf '\033]111\007'
+                        echo -e "\r✅ Session ended.                             " >&2
+                    ) &
+
+                    echo $!
                 }
         ${lib.optionalString (cfg.databases ? acceptance) ''
           # Connect to acceptance database via SSM port forwarding
@@ -146,12 +216,44 @@ in {
               echo "   Bastion: $instance_id"
               echo "   Database: $db_host:${toString cfg.databases.acceptance.port}"
               echo "   Use Ctrl+C to disconnect"
+              echo ""
 
+              ${
+            if cfg.enableHeartbeat
+            then ''
+              # Start SSM session in background
+              aws ssm start-session \
+                  --region ${cfg.region} \
+                  --target "$instance_id" \
+                  --document-name AWS-StartPortForwardingSessionToRemoteHost \
+                  --parameters host="$db_host",portNumber="${toString cfg.databases.acceptance.port}",localPortNumber="${toString cfg.databases.acceptance.localPort}" &
+
+              local session_pid=$!
+
+              # Start heartbeat to keep connection alive
+              local heartbeat_pid=$(_carecar_start_heartbeat "$session_pid" "${toString cfg.databases.acceptance.localPort}")
+
+              # Set up cleanup trap
+              trap "kill $heartbeat_pid 2>/dev/null; wait $heartbeat_pid 2>/dev/null" EXIT INT TERM
+
+              # Wait for SSM session to end
+              wait "$session_pid"
+
+              # Clean up heartbeat
+              echo "" >&2
+              echo "🧹 Cleaning up heartbeat..." >&2
+              kill "$heartbeat_pid" 2>/dev/null
+              wait "$heartbeat_pid" 2>/dev/null
+            ''
+            else ''
+              # Run SSM session without heartbeat
               aws ssm start-session \
                   --region ${cfg.region} \
                   --target "$instance_id" \
                   --document-name AWS-StartPortForwardingSessionToRemoteHost \
                   --parameters host="$db_host",portNumber="${toString cfg.databases.acceptance.port}",localPortNumber="${toString cfg.databases.acceptance.localPort}"
+            ''
+          }
           }
         ''}${lib.optionalString (cfg.databases ? production) ''
           # Connect to production database via SSM port forwarding
@@ -175,12 +277,44 @@ in {
               echo "   Bastion: $instance_id"
               echo "   Database: $db_host:${toString cfg.databases.production.port}"
               echo "   Use Ctrl+C to disconnect"
+              echo ""
 
+              ${
+            if cfg.enableHeartbeat
+            then ''
+              # Start SSM session in background
+              aws ssm start-session \
+                  --region ${cfg.region} \
+                  --target "$instance_id" \
+                  --document-name AWS-StartPortForwardingSessionToRemoteHost \
+                  --parameters host="$db_host",portNumber="${toString cfg.databases.production.port}",localPortNumber="${toString cfg.databases.production.localPort}" &
+
+              local session_pid=$!
+
+              # Start heartbeat to keep connection alive
+              local heartbeat_pid=$(_carecar_start_heartbeat "$session_pid" "${toString cfg.databases.production.localPort}")
+
+              # Set up cleanup trap
+              trap "kill $heartbeat_pid 2>/dev/null; wait $heartbeat_pid 2>/dev/null" EXIT INT TERM
+
+              # Wait for SSM session to end
+              wait "$session_pid"
+
+              # Clean up heartbeat
+              echo "" >&2
+              echo "🧹 Cleaning up heartbeat..." >&2
+              kill "$heartbeat_pid" 2>/dev/null
+              wait "$heartbeat_pid" 2>/dev/null
+            ''
+            else ''
+              # Run SSM session without heartbeat
               aws ssm start-session \
                   --region ${cfg.region} \
                   --target "$instance_id" \
                   --document-name AWS-StartPortForwardingSessionToRemoteHost \
                   --parameters host="$db_host",portNumber="${toString cfg.databases.production.port}",localPortNumber="${toString cfg.databases.production.localPort}"
+            ''
+          }
           }
         ''}
                 # Interactive SSM session to bastion host
