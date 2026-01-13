@@ -314,6 +314,7 @@
             "1password" = import ./modules/home-manager/1password.nix;
             desktop = import ./modules/home-manager/desktop.nix;
             aws-ssm = import ./modules/home-manager/aws-ssm.nix;
+            claude-code = import ./modules/home-manager/claude-code.nix;
           };
         };
 
@@ -354,6 +355,10 @@
               ./machines/nblap/configuration.nix
               {
                 nixpkgs.config.allowUnfree = true;
+                nixpkgs.overlays = [
+                  # Fix sops-nix Go builds in corporate proxy environments
+                  (import ./overlays/sops-nix-goproxy.nix)
+                ];
               }
             ];
           };

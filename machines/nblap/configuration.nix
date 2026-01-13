@@ -6,7 +6,8 @@
 }: {
   imports = [
     inputs.home-manager.darwinModules.home-manager
-    inputs.sops-nix.darwinModules.sops
+    # Temporarily disabled due to corporate proxy blocking Go module downloads
+    # inputs.sops-nix.darwinModules.sops
 
     ./hardware-configuration.nix
 
@@ -26,6 +27,7 @@
           inputs.self.lib.hmModules."1password"
           inputs.self.lib.hmModules.doom
           inputs.self.lib.hmModules.aws-ssm
+          inputs.self.lib.hmModules.claude-code
         ];
         # Override defaults from HM base for this host
         home.username = lib.mkForce "brandon.orther";
@@ -54,15 +56,15 @@
           bastionTag = "bastion";
 
           # Database endpoints for SSM port forwarding
-          # Hosts are read from SOPS secrets at runtime
+          # Temporarily hardcoded while sops-nix is disabled due to corporate proxy
           databases = {
             acceptance = {
-              host = "/run/secrets/carecar/acceptance-db-host";
+              host = "acceptance-db.cbpfxk1gzmnb.us-west-2.rds.amazonaws.com";
               port = 5432;
               localPort = 5434;
             };
             production = {
-              host = "/run/secrets/carecar/production-db-host";
+              host = "prod-db.c53hlgaegw8h.us-west-2.rds.amazonaws.com";
               port = 5432;
               localPort = 5433;
             };
@@ -72,14 +74,15 @@
     };
   };
 
-  sops = {
-    defaultSopsFile = ./../../secrets/secrets.yaml;
-    age.keyFile = "/Users/brandon.orther/.config/sops/age/keys.txt";
-    secrets = {
-      "carecar/acceptance-db-host" = {};
-      "carecar/production-db-host" = {};
-    };
-  };
+  # Temporarily disabled - requires sops-nix module
+  # sops = {
+  #   defaultSopsFile = ./../../secrets/secrets.yaml;
+  #   age.keyFile = "/Users/brandon.orther/.config/sops/age/keys.txt";
+  #   secrets = {
+  #     "carecar/acceptance-db-host" = {};
+  #     "carecar/production-db-host" = {};
+  #   };
+  # };
 
   networking = {
     hostName = "nblap";
