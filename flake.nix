@@ -314,6 +314,7 @@
             "1password" = import ./modules/home-manager/1password.nix;
             desktop = import ./modules/home-manager/desktop.nix;
             aws-ssm = import ./modules/home-manager/aws-ssm.nix;
+            claude-code = import ./modules/home-manager/claude-code.nix;
           };
         };
 
