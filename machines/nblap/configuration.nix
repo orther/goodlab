@@ -6,8 +6,7 @@
 }: {
   imports = [
     inputs.home-manager.darwinModules.home-manager
-    # Temporarily disabled due to corporate proxy blocking Go module downloads
-    # inputs.sops-nix.darwinModules.sops
+    inputs.sops-nix.darwinModules.sops
 
     ./hardware-configuration.nix
 
@@ -74,15 +73,14 @@
     };
   };
 
-  # Temporarily disabled - requires sops-nix module
-  # sops = {
-  #   defaultSopsFile = ./../../secrets/secrets.yaml;
-  #   age.keyFile = "/Users/brandon.orther/.config/sops/age/keys.txt";
-  #   secrets = {
-  #     "carecar/acceptance-db-host" = {};
-  #     "carecar/production-db-host" = {};
-  #   };
-  # };
+  sops = {
+    defaultSopsFile = ./../../secrets/secrets.yaml;
+    age.keyFile = "/Users/brandon.orther/.config/sops/age/keys.txt";
+    secrets = {
+      "carecar/acceptance-db-host" = {};
+      "carecar/production-db-host" = {};
+    };
+  };
 
   networking = {
     hostName = "nblap";

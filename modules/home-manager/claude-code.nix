@@ -1,9 +1,4 @@
-{
-  config,
-  lib,
-  pkgs,
-  ...
-}: {
+{...}: {
   # Configure MCP servers for Claude Code
   xdg.configFile."claude/.mcp.json" = {
     enable = true;
