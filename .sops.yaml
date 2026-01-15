@@ -4,6 +4,9 @@ keys:
   - &stud age1gz6jjmdce0xjh4c8st4tx5qhd5lpw2527dzfr6davwpjyrrr8ctqnv3p4z
   - &zinc age12pc2l7dyq0tlj0mm56vrwez6yr8nlve6vrucexf7x92dg7qlzcxskrf2tv
   - &vm age1aruj7g3pugj3knq2f5u02tzq6vu5edcjv25veudrsvtr2yzedpusssscpz
+  # TODO: Replace with actual public key after first boot
+  # Generate with: sudo age-keygen -y /nix/secret/initrd/ssh_host_ed25519_key
+  - &plex age1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 creation_rules:
   - path_regex: secrets/[^/]+(\.(yaml|json|env|ini|conf))?$
     key_groups:
@@ -13,3 +16,4 @@ creation_rules:
           - *stud
           - *zinc
           - *vm
+          # - *plex  # Uncomment after server installation and key generation

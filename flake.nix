@@ -34,6 +34,9 @@
       flake = false;
     };
 
+    # NixOS hardware modules for device-specific configuration
+    nixos-hardware.url = "github:NixOS/nixos-hardware";
+
     # Keep specialized inputs as GitHub for now (may not be on FlakeHub yet)
     nixarr = {
       url = "github:rasmus-kirk/nixarr";
@@ -234,6 +237,22 @@
             };
           in
             pkgs.writeText "nixos-eval-zinc.json" summary;
+
+          nixosEval-plex = let
+            sys = inputs.nixpkgs.lib.nixosSystem {
+              system = "x86_64-linux";
+              specialArgs = {
+                inherit inputs;
+                inherit (self) outputs;
+              };
+              modules = [./machines/plex/configuration.nix];
+            };
+            summary = builtins.toJSON {
+              platform = sys.pkgs.stdenv.hostPlatform.system;
+              stateVersion = sys.config.system.stateVersion or null;
+            };
+          in
+            pkgs.writeText "nixos-eval-plex.json" summary;
         };
 
         # Expose a convenient app alias for process-compose devservices
@@ -433,6 +452,15 @@
               inherit (self) outputs;
             };
             modules = [./machines/zinc/configuration.nix];
+          };
+
+          plex = nixpkgs.lib.nixosSystem {
+            system = "x86_64-linux";
+            specialArgs = {
+              inherit inputs;
+              inherit (self) outputs;
+            };
+            modules = [./machines/plex/configuration.nix];
           };
         };
       };
