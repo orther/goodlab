@@ -73,6 +73,11 @@
       url = "github:numtide/devshell";
     };
 
+    # Claude Code with automatic updates
+    claude-code-nix = {
+      url = "github:sadjow/claude-code-nix";
+    };
+
     # Local developer services orchestration
     process-compose-flake = {
       url = "github:platonic-systems/process-compose-flake";
@@ -342,6 +347,12 @@
               ./machines/stud/configuration.nix
               {
                 nixpkgs.config.allowUnfree = true;
+                nixpkgs.overlays = [
+                  # Add claude-code-nix package as overlay
+                  (_final: _prev: {
+                    claude-code = inputs.claude-code-nix.packages.aarch64-darwin.default;
+                  })
+                ];
               }
             ];
           };
