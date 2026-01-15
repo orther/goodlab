@@ -73,7 +73,8 @@
       url = "github:numtide/devshell";
     };
 
-    # Claude Code with automatic updates
+    # Claude Code via sadjow/claude-code-nix (hourly upstream checks)
+    # Provides faster updates than nixpkgs and Node.js 22 LTS runtime
     claude-code-nix = {
       url = "github:sadjow/claude-code-nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -336,10 +337,7 @@
               {
                 nixpkgs.config.allowUnfree = true;
                 nixpkgs.overlays = [
-                  # Add claude-code-nix package as overlay (architecture-aware)
-                  (_final: prev: {
-                    claude-code = inputs.claude-code-nix.packages.${prev.stdenv.hostPlatform.system}.default or prev.claude-code;
-                  })
+                  (import ./overlays/claude-code-nix.nix inputs)
                 ];
               }
             ];
@@ -355,10 +353,7 @@
               {
                 nixpkgs.config.allowUnfree = true;
                 nixpkgs.overlays = [
-                  # Add claude-code-nix package as overlay (architecture-aware)
-                  (_final: prev: {
-                    claude-code = inputs.claude-code-nix.packages.${prev.stdenv.hostPlatform.system}.default or prev.claude-code;
-                  })
+                  (import ./overlays/claude-code-nix.nix inputs)
                 ];
               }
             ];
@@ -376,11 +371,8 @@
                 nixpkgs.overlays = [
                   # Fix sops-nix Go builds in corporate proxy environments
                   (import ./overlays/sops-nix-goproxy.nix)
-                  # Add claude-code-nix package as overlay (architecture-aware)
-                  # Note: Filtered out by corporateNetwork check in _packages.nix
-                  (_final: prev: {
-                    claude-code = inputs.claude-code-nix.packages.${prev.stdenv.hostPlatform.system}.default or prev.claude-code;
-                  })
+                  # Add claude-code-nix (filtered out by corporateNetwork check)
+                  (import ./overlays/claude-code-nix.nix inputs)
                 ];
               }
             ];

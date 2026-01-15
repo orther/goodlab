@@ -23,6 +23,7 @@
           inputs.self.lib.hmModules.alacritty
           inputs.self.lib.hmModules."1password"
           inputs.self.lib.hmModules.doom
+          inputs.self.lib.hmModules.claude-code
         ];
       };
     };
