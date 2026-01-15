@@ -73,6 +73,13 @@
       url = "github:numtide/devshell";
     };
 
+    # Claude Code via sadjow/claude-code-nix (hourly upstream checks)
+    # Provides faster updates than nixpkgs and Node.js 22 LTS runtime
+    claude-code-nix = {
+      url = "github:sadjow/claude-code-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Local developer services orchestration
     process-compose-flake = {
       url = "github:platonic-systems/process-compose-flake";
@@ -329,6 +336,9 @@
               ./machines/mair/configuration.nix
               {
                 nixpkgs.config.allowUnfree = true;
+                nixpkgs.overlays = [
+                  (import ./overlays/claude-code-nix.nix inputs)
+                ];
               }
             ];
           };
@@ -342,6 +352,9 @@
               ./machines/stud/configuration.nix
               {
                 nixpkgs.config.allowUnfree = true;
+                nixpkgs.overlays = [
+                  (import ./overlays/claude-code-nix.nix inputs)
+                ];
               }
             ];
           };
@@ -358,6 +371,8 @@
                 nixpkgs.overlays = [
                   # Fix sops-nix Go builds in corporate proxy environments
                   (import ./overlays/sops-nix-goproxy.nix)
+                  # Add claude-code-nix (filtered out by corporateNetwork check)
+                  (import ./overlays/claude-code-nix.nix inputs)
                 ];
               }
             ];
