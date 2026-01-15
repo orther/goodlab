@@ -76,6 +76,7 @@
     # Claude Code with automatic updates
     claude-code-nix = {
       url = "github:sadjow/claude-code-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     # Local developer services orchestration
@@ -334,6 +335,12 @@
               ./machines/mair/configuration.nix
               {
                 nixpkgs.config.allowUnfree = true;
+                nixpkgs.overlays = [
+                  # Add claude-code-nix package as overlay (architecture-aware)
+                  (_final: prev: {
+                    claude-code = inputs.claude-code-nix.packages.${prev.stdenv.hostPlatform.system}.default or prev.claude-code;
+                  })
+                ];
               }
             ];
           };
@@ -348,9 +355,9 @@
               {
                 nixpkgs.config.allowUnfree = true;
                 nixpkgs.overlays = [
-                  # Add claude-code-nix package as overlay
-                  (_final: _prev: {
-                    claude-code = inputs.claude-code-nix.packages.aarch64-darwin.default;
+                  # Add claude-code-nix package as overlay (architecture-aware)
+                  (_final: prev: {
+                    claude-code = inputs.claude-code-nix.packages.${prev.stdenv.hostPlatform.system}.default or prev.claude-code;
                   })
                 ];
               }
@@ -369,6 +376,11 @@
                 nixpkgs.overlays = [
                   # Fix sops-nix Go builds in corporate proxy environments
                   (import ./overlays/sops-nix-goproxy.nix)
+                  # Add claude-code-nix package as overlay (architecture-aware)
+                  # Note: Filtered out by corporateNetwork check in _packages.nix
+                  (_final: prev: {
+                    claude-code = inputs.claude-code-nix.packages.${prev.stdenv.hostPlatform.system}.default or prev.claude-code;
+                  })
                 ];
               }
             ];
