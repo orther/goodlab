@@ -53,7 +53,6 @@
       nodejs
       nodePackages_latest.eas-cli
       nodePackages.typescript-language-server
-      nodePackages.typescript # Provides tsserver for typescript-language-server
       postgresql # Provides pg_dump, psql, and other PostgreSQL client tools
       sops
       statix
