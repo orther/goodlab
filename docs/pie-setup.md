@@ -286,19 +286,18 @@ nix-shell -p ssh-to-age --run "ssh-to-age < /mnt/nix/secret/initrd/ssh_host_ed25
 age1abcdefghijklmnopqrstuvwxyz0123456789abcdefghijklmnopqrs
 ```
 
-### Step 2.9: Update Configuration for This Host
+### Step 2.9: Verify Network Configuration (Optional)
 
-Check the actual Ethernet interface name:
+The configuration uses systemd-networkd match rules that automatically configure any Ethernet interface, so no manual changes are needed. You can verify your interfaces if curious:
 
 ```bash
-# Check the actual interface name
+# Check available network interfaces
 ip link show
-
-# If different from enp0s31f6, edit the configuration
-sudo nano /mnt/nix/persist/home/orther/git/goodlab/machines/pie/configuration.nix
-# Update: interfaces.enp0s31f6.useDHCP = true;
-# To use your actual interface name
+# The built-in Gigabit Ethernet is typically enp1s0 or similar
+# USB adapters show with 'u' in the name (e.g., enp2s0f1u1)
 ```
+
+No configuration changes needed - the match rules handle any interface name automatically.
 
 ### Step 2.10: Install NixOS
 
