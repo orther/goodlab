@@ -1,16 +1,18 @@
 # NixOS configuration for Pie Media Server on 2018 Mac Mini
 #
-# This configuration provides a comprehensive media server stack with:
+# This configuration provides a media server with:
 # - Jellyfin as the primary media server (free, open source, no ads)
-# - *arr services for media automation (Sonarr, Radarr, Prowlarr)
-# - Jellyseerr for family-friendly media requests
 # - Intel Quick Sync Video hardware transcoding
 # - Apple T2 chip support via nixos-hardware
 # - NFS media mount from NAS
+# - Nixflix for declarative media server configuration
+#
+# NOTE: *arr services (Sonarr, Radarr, Prowlarr) currently run on another server.
+# To enable them here later, just add: sonarr.enable = true; radarr.enable = true; etc.
 #
 # NOTE: Plex is included TEMPORARILY (2-4 weeks) for migration purposes.
 # Family members currently use Plex clients. Once migrated to Jellyfin,
-# the plex.nix import should be removed.
+# remove the plex.nix import and users.users.plex.extraGroups line.
 {
   inputs,
   outputs,
@@ -26,9 +28,8 @@
     inputs.impermanence.nixosModules.impermanence
     inputs.home-manager.nixosModules.home-manager
 
-    # Nixflix module available but not currently used
-    # Using standard NixOS modules for simpler initial setup
-    # inputs.nixflix.nixosModules.default
+    # Nixflix - Declarative media server configuration
+    inputs.nixflix.nixosModules.default
 
     # Hardware configuration
     ./hardware-configuration.nix
@@ -99,11 +100,9 @@
     wireless.enable = false;
   };
 
-  # Disable network wait services to prevent boot hangs if network is slow
-  systemd.services = {
-    "NetworkManager-wait-online".enable = lib.mkForce false;
-    "systemd-networkd-wait-online".enable = lib.mkForce false;
-  };
+  # Disable NetworkManager wait service (not using NetworkManager)
+  # Keep systemd-networkd-wait-online enabled for proper network-online.target
+  systemd.services."NetworkManager-wait-online".enable = lib.mkForce false;
 
   # ==========================================================================
   # Intel Quick Sync Video - Hardware Transcoding
@@ -148,98 +147,89 @@
   };
 
   # ==========================================================================
-  # Nixflix - Primary Media Stack
+  # Media Directory Symlink
   # ==========================================================================
-  # Nixflix provides declarative configuration for the entire media server stack.
-  # Jellyfin is the primary media server (replaces Plex long-term).
-
-  # ==========================================================================
-  # Jellyfin - Primary Media Server (via standard NixOS module)
-  # ==========================================================================
-  # Using the standard NixOS Jellyfin module for simplicity and reliability.
-  # Nixflix's API-based configuration requires secrets that must be generated
-  # after first boot, making declarative setup complex.
+  # Create symlink for cleaner media paths:
+  #   /mnt/media -> /mnt/docker-data/media
   #
-  # Free, open-source, no ads, free hardware transcoding
+  # This allows Jellyfin/Plex libraries to use:
+  #   /mnt/media/movies
+  #   /mnt/media/tv
 
-  services.jellyfin = {
+  systemd.tmpfiles.rules = [
+    "L+ /mnt/media - - - - /mnt/docker-data/media"
+  ];
+
+  # ==========================================================================
+  # Nixflix - Declarative Media Server Configuration
+  # ==========================================================================
+  # Nixflix provides declarative configuration for media services.
+  # Currently only Jellyfin is enabled. To add *arr services later:
+  #   sonarr.enable = true;
+  #   radarr.enable = true;
+  #   prowlarr.enable = true;
+  #   jellyseerr.enable = true;
+
+  nixflix = {
     enable = true;
-    openFirewall = true;
+
+    # Media directories (via NAS mount symlink)
+    mediaDir = "/mnt/media";
+    stateDir = "/var/lib/nixflix";
+
+    # Users that need access to media files
+    mediaUsers = ["orther" "plex"];
+
+    # Wait for NAS mount before starting services
+    serviceDependencies = ["mnt-docker\\x2ddata.mount"];
+
+    # ========================================================================
+    # Jellyfin - Primary Media Server
+    # ========================================================================
+    # Free, open-source, no ads, free hardware transcoding
+    jellyfin = {
+      enable = true;
+      openFirewall = true;
+
+      # Hardware transcoding via Intel Quick Sync (VAAPI)
+      encoding.enableHardwareEncoding = true;
+
+      # Admin user (required by nixflix)
+      # Password will be set via web UI on first login
+      users.admin = {
+        policy.isAdministrator = true;
+      };
+    };
+
+    # ========================================================================
+    # *arr Services - Disabled (running on separate server)
+    # ========================================================================
+    # Uncomment these when ready to move *arr services to this server:
+    #
+    # sonarr.enable = true;
+    # radarr.enable = true;
+    # prowlarr.enable = true;
+    # jellyseerr.enable = true;
+    # postgres.enable = true;  # Shared database for *arr services
   };
 
   # ==========================================================================
-  # *arr Services - Media Automation (Standard NixOS modules)
+  # Plex User Configuration (TEMPORARY)
   # ==========================================================================
-  # Using standard NixOS modules. These services will need manual
-  # configuration after first boot via their web UIs.
-  #
-  # After services start, configure:
-  # 1. Prowlarr (9696): Add indexers
-  # 2. Radarr (7878): Configure download client, add root folder /mnt/media/movies
-  # 3. Sonarr (8989): Configure download client, add root folder /mnt/media/tv
-  # 4. Jellyseerr (5055): Connect to Radarr, Sonarr, and Jellyfin
+  # Plex needs video/render groups for hardware transcoding
+  # Remove this line when removing plex.nix import
 
-  services.sonarr = {
-    enable = true;
-    openFirewall = true;
-  };
-
-  services.radarr = {
-    enable = true;
-    openFirewall = true;
-  };
-
-  services.prowlarr = {
-    enable = true;
-    openFirewall = true;
-  };
-
-  services.jellyseerr = {
-    enable = true;
-    openFirewall = true;
-  };
-
-  # ==========================================================================
-  # Media Service Users - GPU Access
-  # ==========================================================================
-  # Both Jellyfin and Plex need video/render group membership for hardware transcoding
-
-  users.users.jellyfin.extraGroups = ["video" "render"];
   users.users.plex.extraGroups = ["video" "render"];
 
   # ==========================================================================
-  # Media Service Persistence
+  # Service Persistence (Impermanence)
   # ==========================================================================
-  # Persist service state across reboots (impermanence)
+  # Persist service state across reboots
 
   environment.persistence."/nix/persist" = {
     directories = [
       {
-        directory = "/var/lib/jellyfin";
-        user = "jellyfin";
-        group = "jellyfin";
-        mode = "0700";
-      }
-      {
-        directory = "/var/lib/sonarr";
-        user = "sonarr";
-        group = "sonarr";
-        mode = "0700";
-      }
-      {
-        directory = "/var/lib/radarr";
-        user = "radarr";
-        group = "radarr";
-        mode = "0700";
-      }
-      {
-        directory = "/var/lib/prowlarr";
-        user = "prowlarr";
-        group = "prowlarr";
-        mode = "0700";
-      }
-      {
-        directory = "/var/lib/jellyseerr";
+        directory = "/var/lib/nixflix";
         user = "root";
         group = "root";
         mode = "0755";
@@ -260,10 +250,13 @@
     enable = lib.mkForce false;
     powertop.enable = false;
   };
-  services.logind.lidSwitch = "ignore";
-  services.logind.lidSwitchDocked = "ignore";
-  services.logind.lidSwitchExternalPower = "ignore";
+  # Ignore lid events - server runs with lid closed
+  services.logind.settings.Login = {
+    HandleLidSwitch = "ignore";
+    HandleLidSwitchDocked = "ignore";
+    HandleLidSwitchExternalPower = "ignore";
+  };
 
   # Server-specific boot settings
-  boot.loader.timeout = 3; # Faster boot, less waiting
+  boot.loader.timeout = lib.mkForce 3; # Faster boot, less waiting (override base module's 10)
 }

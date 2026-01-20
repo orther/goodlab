@@ -21,9 +21,8 @@
 # from Plex clients to Jellyfin clients. Once migration is complete:
 #
 # 1. Remove this import from machines/pie/configuration.nix
-# 2. Remove "plex" from nixflix.mediaUsers
-# 3. Remove users.users.plex.extraGroups line
-# 4. Rebuild: just deploy pie <ip>
+# 2. Remove users.users.plex.extraGroups line from machines/pie/configuration.nix
+# 3. Rebuild: just deploy pie <ip>
 #
 # Post-installation setup (if needed):
 # 1. Access Plex at http://pie:32400/web (or via SSH tunnel)

@@ -48,17 +48,25 @@ The T2 security chip requires special handling:
 
 ## What's Included
 
-This configuration provides a complete media server stack using **nixflix**:
+This configuration provides a media server using **nixflix** for declarative configuration:
 
 ### Primary Services
 
-| Service      | Purpose                         | Port | URL (via nginx)         |
-| ------------ | ------------------------------- | ---- | ----------------------- |
-| **Jellyfin** | Media streaming (replaces Plex) | 8096 | `http://pie/jellyfin`   |
-| Jellyseerr   | Media request interface         | 5055 | `http://pie/jellyseerr` |
-| Sonarr       | TV series management            | 8989 | `http://pie/sonarr`     |
-| Radarr       | Movie management                | 7878 | `http://pie/radarr`     |
-| Prowlarr     | Indexer management              | 9696 | `http://pie/prowlarr`   |
+| Service      | Purpose                         | Port  | Status      |
+| ------------ | ------------------------------- | ----- | ----------- |
+| **Jellyfin** | Media streaming (replaces Plex) | 8096  | **Enabled** |
+| Plex         | Media streaming (migration)     | 32400 | Temporary   |
+
+### Future Services (Available but Disabled)
+
+The \*arr services currently run on a separate server. When ready to consolidate, these can be enabled with single-line config changes in nixflix:
+
+| Service    | Purpose                 | Port | Enable With                 |
+| ---------- | ----------------------- | ---- | --------------------------- |
+| Sonarr     | TV series management    | 8989 | `sonarr.enable = true;`     |
+| Radarr     | Movie management        | 7878 | `radarr.enable = true;`     |
+| Prowlarr   | Indexer management      | 9696 | `prowlarr.enable = true;`   |
+| Jellyseerr | Media request interface | 5055 | `jellyseerr.enable = true;` |
 
 ### Why Jellyfin Over Plex?
 
@@ -456,18 +464,25 @@ ls -la /mnt/media
    - Hardware acceleration device: `/dev/dri/renderD128`
    - Enable hardware encoding
 
-### Step 4.4: Access \*arr Services
+### Step 4.4: Enable \*arr Services (Optional/Future)
 
-All services are accessible via nginx:
+The \*arr services are currently disabled since they run on a separate server. When ready to consolidate, edit `machines/pie/configuration.nix` and uncomment the relevant services in the nixflix block:
 
-| Service    | URL               | Purpose                  |
-| ---------- | ----------------- | ------------------------ |
-| Prowlarr   | `http://pie:9696` | Configure indexers first |
-| Sonarr     | `http://pie:8989` | TV series automation     |
-| Radarr     | `http://pie:7878` | Movie automation         |
-| Jellyseerr | `http://pie:5055` | Family request interface |
+```nix
+nixflix = {
+  # ... existing config ...
 
-**Recommended setup order:**
+  # Uncomment to enable:
+  # sonarr.enable = true;
+  # radarr.enable = true;
+  # prowlarr.enable = true;
+  # jellyseerr.enable = true;
+};
+```
+
+Then rebuild: `sudo nixos-rebuild switch --flake .#pie`
+
+**Recommended setup order when enabling:**
 
 1. **Prowlarr**: Add your indexers (Usenet or torrent)
 2. **Radarr/Sonarr**: Configure download clients and root folders
@@ -576,7 +591,9 @@ journalctl -u plex --since "7 days ago" | grep -i "stream\|play"
 
 ### Step 7.2: Update Configuration
 
-Edit `machines/pie/configuration.nix`:
+Edit `machines/pie/configuration.nix` and make the following changes:
+
+1. **Remove the plex.nix import:**
 
 ```nix
 imports = [
@@ -587,16 +604,16 @@ imports = [
 ];
 ```
 
-Also remove plex from the media users:
+2. **Remove plex from mediaUsers:**
 
 ```nix
 nixflix = {
   # ...
-  mediaUsers = ["orther" "jellyfin"];  # Remove "plex"
+  mediaUsers = ["orther"];  # Remove "plex"
 };
 ```
 
-And remove the plex user GPU access:
+3. **Remove plex user GPU access:**
 
 ```nix
 # REMOVE THIS LINE:
@@ -671,17 +688,7 @@ journalctl -u jellyfin -f
 - Ensure `/dev/dri/renderD128` is the hardware device path
 - Rebuild: `sudo nixos-rebuild switch --flake .#pie`
 
-#### 2. \*arr Services Can't Download
-
-**Symptom**: Sonarr/Radarr show download errors
-
-**Fixes**:
-
-- Check Prowlarr indexers are working
-- Verify download client (e.g., SABnzbd) is configured
-- Check `/mnt/docker-data/downloads` is writable
-
-#### 3. NAS Mount Failures
+#### 2. NAS Mount Failures
 
 **Symptom**: `/mnt/media` is empty or mount fails
 
@@ -698,13 +705,15 @@ ping 10.4.0.50
 sudo mount -t nfs -o nfsvers=4.1 10.4.0.50:/volume1/docker-data /mnt/test
 ```
 
-#### 4. Jellyseerr Can't Connect to Services
+#### 3. Jellyfin Can't Find Media
+
+**Symptom**: Media libraries are empty or missing
 
 **Fixes**:
 
-- Verify API keys are correct in Jellyseerr settings
-- Check services are running: `systemctl status sonarr radarr jellyfin`
-- Ensure nginx is routing correctly
+- Verify NAS mount: `ls /mnt/media`
+- Check symlink exists: `ls -la /mnt/media` (should point to `/mnt/docker-data/media`)
+- Verify service has media group: `groups jellyfin`
 
 ### Log Locations
 
@@ -712,10 +721,6 @@ sudo mount -t nfs -o nfsvers=4.1 10.4.0.50:/volume1/docker-data /mnt/test
 | ---------------- | ----------------------------------------- |
 | System journal   | `journalctl -b`                           |
 | Jellyfin         | `journalctl -u jellyfin -f`               |
-| Sonarr           | `journalctl -u sonarr -f`                 |
-| Radarr           | `journalctl -u radarr -f`                 |
-| Prowlarr         | `journalctl -u prowlarr -f`               |
-| Jellyseerr       | `journalctl -u jellyseerr -f`             |
 | Plex (temporary) | `journalctl -u plex -f`                   |
 | NAS Mount        | `journalctl -u mnt-docker\\x2ddata.mount` |
 
@@ -723,7 +728,7 @@ sudo mount -t nfs -o nfsvers=4.1 10.4.0.50:/volume1/docker-data /mnt/test
 
 ```bash
 # System status
-systemctl status jellyfin sonarr radarr prowlarr jellyseerr
+systemctl status jellyfin plex
 
 # Rebuild system
 sudo nixos-rebuild switch --flake ~/git/goodlab#pie
@@ -739,7 +744,6 @@ mount | grep nfs
 
 # Service management
 sudo systemctl restart jellyfin
-sudo systemctl restart sonarr radarr prowlarr jellyseerr
 ```
 
 ---
@@ -795,9 +799,8 @@ sudo systemctl restart sonarr radarr prowlarr jellyseerr
 
 - [ ] Access Jellyfin and complete setup wizard
 - [ ] Enable VAAPI hardware transcoding in Jellyfin
-- [ ] Configure Prowlarr indexers
-- [ ] Set up Radarr and Sonarr
-- [ ] Connect Jellyseerr to all services
+- [ ] (Optional) Configure Plex for migration period
+- [ ] (Future) Enable \*arr services when ready to consolidate
 
 ### Family Migration
 

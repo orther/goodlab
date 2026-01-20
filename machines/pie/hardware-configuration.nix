@@ -35,15 +35,6 @@
         "e1000e" # Intel Gigabit Ethernet (common on Mac Mini)
       ];
       kernelModules = [];
-      # Note: LUKS encryption is optional for plex server
-      # Uncomment if using full disk encryption:
-      # luks = {
-      #   reusePassphrases = true;
-      #   devices."cryptroot" = {
-      #     device = "/dev/nvme0n1p2";
-      #     allowDiscards = true;
-      #   };
-      # };
     };
 
     # Enable Intel GuC for better Quick Sync performance
