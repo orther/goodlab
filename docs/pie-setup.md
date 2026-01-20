@@ -406,12 +406,32 @@ cd ~/git/goodlab
 git pull origin feat/add-pie-media-server
 ```
 
-### Step 3.6: Verify Secrets Work
+### Step 3.6: Remove Temporary Password and Rebuild
+
+Now that SOPS is configured, remove the temporary initial password:
 
 ```bash
-# Rebuild the system to verify secrets decrypt properly
+# On another machine (stud/nblap), edit the pie configuration
+# Remove this line from machines/pie/configuration.nix:
+#   users.users.orther.initialPassword = "changeme";
+
+# Commit and push
+git add machines/pie/configuration.nix
+git commit -m "fix(pie): remove temporary initial password now that SOPS works"
+git push origin feat/add-pie-media-server
+```
+
+Then on the pie server:
+
+```bash
+cd ~/git/goodlab
+git pull origin feat/add-pie-media-server
+
+# Rebuild to apply SOPS-managed password
 sudo nixos-rebuild switch --flake ~/git/goodlab#pie
 ```
+
+After this rebuild, your password will be managed by SOPS secrets.
 
 ---
 
