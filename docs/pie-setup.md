@@ -272,7 +272,7 @@ sudo ssh-keygen -t rsa -b 4096 -f /mnt/nix/secret/initrd/ssh_host_rsa_key -N ""
 
 # Get the age public key for .sops.yaml
 # NOTE: Save this output - you'll need it for Step 3.2
-nix-shell -p age --run "age-keygen -y /mnt/nix/secret/initrd/ssh_host_ed25519_key"
+nix-shell -p ssh-to-age --run "ssh-to-age < /mnt/nix/secret/initrd/ssh_host_ed25519_key.pub"
 ```
 
 **IMPORTANT**: Save the age public key output! It looks like:
@@ -345,7 +345,7 @@ On the new pie server:
 
 ```bash
 # Get the public key from the SSH host key
-sudo nix-shell -p age --run "age-keygen -y /nix/secret/initrd/ssh_host_ed25519_key"
+sudo nix-shell -p ssh-to-age --run "ssh-to-age < /nix/secret/initrd/ssh_host_ed25519_key.pub"
 ```
 
 Copy this public key (starts with `age1...`).
