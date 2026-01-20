@@ -410,6 +410,8 @@ git push origin feat/add-pie-media-server
 Then on the pie server:
 
 ```bash
+# The repo is persisted at /nix/persist/home/orther/git/goodlab
+# After boot, ~/git/goodlab works via impermanence bind mount
 cd ~/git/goodlab
 git pull origin feat/add-pie-media-server
 ```
