@@ -235,8 +235,10 @@
   # User Configuration
   # ==========================================================================
 
-  # Plex needs video/render groups for hardware transcoding
-  # Remove this line when removing plex.nix import
+  # GPU access for hardware transcoding (VAAPI)
+  # Both media servers need video/render groups for Intel Quick Sync
+  users.users.jellyfin.extraGroups = ["video" "render"];
+  # Remove plex line when removing plex.nix import
   users.users.plex.extraGroups = ["video" "render"];
 
   # ==========================================================================
