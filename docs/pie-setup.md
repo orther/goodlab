@@ -301,12 +301,20 @@ No configuration changes needed - the match rules handle any interface name auto
 
 ### Step 2.10: Install NixOS
 
-```bash
-# Install using the flake configuration
-sudo nixos-install --flake /mnt/nix/persist/home/orther/git/goodlab#pie --no-root-passwd
+The T2 kernel must be compiled from source, which requires significant temporary space. Use persistent storage for the build temp directory to avoid running out of RAM:
 
-# The installation will take 10-30 minutes depending on network speed
+```bash
+# Create temp directory on persistent storage (required for kernel build)
+sudo mkdir -p /mnt/nix/tmp
+
+# Install using the flake configuration
+# TMPDIR ensures kernel compilation uses disk instead of RAM
+sudo TMPDIR=/mnt/nix/tmp nixos-install --flake /mnt/nix/persist/home/orther/git/goodlab#pie --no-root-passwd
+
+# The installation will take 30-60 minutes (kernel compilation is slow)
 ```
+
+**If you see "No space left on device" errors:** The build ran out of temp space. Ensure TMPDIR is set correctly and you have at least 20GB free on `/mnt/nix`.
 
 ### Step 2.11: First Boot
 
