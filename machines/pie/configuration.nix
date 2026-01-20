@@ -231,11 +231,17 @@
   };
 
   # ==========================================================================
-  # Plex User Configuration (TEMPORARY)
+  # User Configuration
   # ==========================================================================
+
+  # TEMPORARY: Initial password for first boot before SOPS is configured
+  # This allows console/sudo access until secrets are properly set up.
+  # REMOVE THIS after SOPS key is added and secrets are re-encrypted!
+  # Password: "changeme" (change immediately after first login)
+  users.users.orther.initialPassword = "changeme";
+
   # Plex needs video/render groups for hardware transcoding
   # Remove this line when removing plex.nix import
-
   users.users.plex.extraGroups = ["video" "render"];
 
   # ==========================================================================
