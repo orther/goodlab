@@ -340,6 +340,7 @@
         lib = {
           hmModules = {
             base = import ./modules/home-manager/base.nix;
+            server-base = import ./modules/home-manager/server-base.nix;
             fonts = import ./modules/home-manager/fonts.nix;
             alacritty = import ./modules/home-manager/alacritty.nix;
             doom = import ./modules/home-manager/doom.nix;

@@ -53,7 +53,8 @@
     users = {
       orther = {
         imports = [
-          inputs.self.lib.hmModules.base
+          # Use lightweight server-base (no wrangler, nixvim, etc.)
+          inputs.self.lib.hmModules.server-base
         ];
 
         programs.git = {
