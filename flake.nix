@@ -43,6 +43,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Declarative media server configuration (Jellyfin, *arr services)
+    nixflix = {
+      url = "github:kiriwalawren/nixflix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     nix-homebrew = {
       url = "github:zhaofengli-wip/nix-homebrew";
     };
@@ -238,21 +244,21 @@
           in
             pkgs.writeText "nixos-eval-zinc.json" summary;
 
-          nixosEval-plex = let
+          nixosEval-pie = let
             sys = inputs.nixpkgs.lib.nixosSystem {
               system = "x86_64-linux";
               specialArgs = {
                 inherit inputs;
                 inherit (self) outputs;
               };
-              modules = [./machines/plex/configuration.nix];
+              modules = [./machines/pie/configuration.nix];
             };
             summary = builtins.toJSON {
               platform = sys.pkgs.stdenv.hostPlatform.system;
               stateVersion = sys.config.system.stateVersion or null;
             };
           in
-            pkgs.writeText "nixos-eval-plex.json" summary;
+            pkgs.writeText "nixos-eval-pie.json" summary;
         };
 
         # Expose a convenient app alias for process-compose devservices
@@ -454,13 +460,13 @@
             modules = [./machines/zinc/configuration.nix];
           };
 
-          plex = nixpkgs.lib.nixosSystem {
+          pie = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
             specialArgs = {
               inherit inputs;
               inherit (self) outputs;
             };
-            modules = [./machines/plex/configuration.nix];
+            modules = [./machines/pie/configuration.nix];
           };
         };
       };

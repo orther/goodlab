@@ -1,39 +1,39 @@
-# Plex Media Server configuration with Intel Quick Sync hardware transcoding
+# ==============================================================================
+# TEMPORARY: Plex Media Server - Migration Service Only
+# ==============================================================================
 #
-# Key features:
-# - Hardware transcoding via Intel Quick Sync Video (QSV)
-# - Media accessed via NAS mount (services/nas.nix)
-# - Automatic firewall configuration
-# - Persistence for impermanence systems
+# !! THIS SERVICE IS TEMPORARY !!
 #
-# Post-installation setup:
-# 1. Access Plex at http://<ip>:32400/web (or via SSH tunnel for remote setup)
+# Plex is being phased out in favor of Jellyfin due to:
+# - Monetization frustrations (rental/purchase ads in the UI)
+# - Paid hardware transcoding (Plex Pass required)
+# - Increasing feature restrictions for non-paying users
+#
+# Jellyfin provides:
+# - Completely free and open source
+# - Free hardware transcoding (no subscription needed)
+# - No ads or upsells in the interface
+# - Full control over your media server
+#
+# MIGRATION TIMELINE: 2-4 weeks
+# =============================
+# This service exists only to give family members time to transition
+# from Plex clients to Jellyfin clients. Once migration is complete:
+#
+# 1. Remove this import from machines/pie/configuration.nix
+# 2. Remove "plex" from nixflix.mediaUsers
+# 3. Remove users.users.plex.extraGroups line
+# 4. Rebuild: just deploy pie <ip>
+#
+# Post-installation setup (if needed):
+# 1. Access Plex at http://pie:32400/web (or via SSH tunnel)
 # 2. Sign in with Plex account to claim the server
-# 3. Enable hardware transcoding in Settings → Transcoder → "Use hardware acceleration when available"
-# 4. Add media libraries:
-#    - Movies: /mnt/media/movies
-#    - TV:     /mnt/media/tv
+# 3. Enable hardware transcoding in Settings → Transcoder
+# 4. Add media libraries: /mnt/media/movies, /mnt/media/tv
+# ==============================================================================
 {pkgs, ...}: {
   # ==========================================================================
-  # NAS Media Location
-  # ==========================================================================
-  # Media files are accessed via the NAS mount from services/nas.nix
-  # which mounts /volume1/docker-data to /mnt/docker-data
-  #
-  # A symlink provides a cleaner path for Plex:
-  #   /mnt/media -> /mnt/docker-data/media
-  #
-  # When adding Plex libraries, use:
-  #   /mnt/media/movies
-  #   /mnt/media/tv
-
-  # Create symlink: /mnt/media -> /mnt/docker-data/media
-  systemd.tmpfiles.rules = [
-    "L+ /mnt/media - - - - /mnt/docker-data/media"
-  ];
-
-  # ==========================================================================
-  # Plex Media Server
+  # Plex Media Server (TEMPORARY)
   # ==========================================================================
 
   services.plex = {
@@ -54,7 +54,7 @@
   # ==========================================================================
   # Additional Plex Packages
   # ==========================================================================
-  # Optional: Install Plex companion tools
+  # Debugging tools for hardware acceleration
 
   environment.systemPackages = with pkgs; [
     # VA-API utilities for debugging hardware acceleration

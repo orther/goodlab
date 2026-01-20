@@ -1,10 +1,16 @@
-# NixOS configuration for Plex Media Server on 2018 Mac Mini
+# NixOS configuration for Pie Media Server on 2018 Mac Mini
 #
-# This configuration is optimized for a dedicated Plex server with:
+# This configuration provides a comprehensive media server stack with:
+# - Jellyfin as the primary media server (free, open source, no ads)
+# - *arr services for media automation (Sonarr, Radarr, Prowlarr)
+# - Jellyseerr for family-friendly media requests
 # - Intel Quick Sync Video hardware transcoding
 # - Apple T2 chip support via nixos-hardware
 # - NFS media mount from NAS
-# - Headless operation (no desktop environment)
+#
+# NOTE: Plex is included TEMPORARILY (2-4 weeks) for migration purposes.
+# Family members currently use Plex clients. Once migrated to Jellyfin,
+# the plex.nix import should be removed.
 {
   inputs,
   outputs,
@@ -20,6 +26,10 @@
     inputs.impermanence.nixosModules.impermanence
     inputs.home-manager.nixosModules.home-manager
 
+    # Nixflix module available but not currently used
+    # Using standard NixOS modules for simpler initial setup
+    # inputs.nixflix.nixosModules.default
+
     # Hardware configuration
     ./hardware-configuration.nix
 
@@ -29,6 +39,8 @@
     # Services
     ./../../services/tailscale.nix
     ./../../services/nas.nix # Mounts /mnt/docker-data from NAS
+
+    # TEMPORARY: Plex for migration period (remove after family migrates to Jellyfin)
     ./../../services/plex.nix
   ];
 
@@ -71,7 +83,7 @@
   # Network Configuration
   # ==========================================================================
   networking = {
-    hostName = "plex";
+    hostName = "pie";
     useDHCP = false;
     useNetworkd = true;
 
@@ -103,7 +115,7 @@
     enable = true;
     extraPackages = with pkgs; [
       # VA-API driver for Broadwell (2014) and newer - required for hardware transcoding
-      # This is the modern "iHD" driver that Plex uses for video encoding/decoding
+      # This is the modern "iHD" driver that media servers use for video encoding/decoding
       intel-media-driver
 
       # Intel Video Processing Library runtime
@@ -111,7 +123,7 @@
       # the deprecated intel-media-sdk (which has unpatched CVEs)
       vpl-gpu-rt
 
-      # OpenCL support for HDR tone mapping in Plex
+      # OpenCL support for HDR tone mapping
       intel-compute-runtime
     ];
   };
@@ -126,7 +138,6 @@
   # Apple T2 Configuration
   # ==========================================================================
   # The nixos-hardware apple-t2 module handles most T2-specific settings.
-  # Additional configuration options if needed:
 
   hardware.apple-t2 = {
     # Use stable kernel channel (recommended for server stability)
@@ -137,13 +148,104 @@
   };
 
   # ==========================================================================
-  # Plex Service Configuration
+  # Nixflix - Primary Media Stack
   # ==========================================================================
-  # Plex service is configured in services/plex.nix
-  # Here we just ensure the plex user has proper GPU access
+  # Nixflix provides declarative configuration for the entire media server stack.
+  # Jellyfin is the primary media server (replaces Plex long-term).
 
-  # Plex user needs video and render group membership for GPU access
+  # ==========================================================================
+  # Jellyfin - Primary Media Server (via standard NixOS module)
+  # ==========================================================================
+  # Using the standard NixOS Jellyfin module for simplicity and reliability.
+  # Nixflix's API-based configuration requires secrets that must be generated
+  # after first boot, making declarative setup complex.
+  #
+  # Free, open-source, no ads, free hardware transcoding
+
+  services.jellyfin = {
+    enable = true;
+    openFirewall = true;
+  };
+
+  # ==========================================================================
+  # *arr Services - Media Automation (Standard NixOS modules)
+  # ==========================================================================
+  # Using standard NixOS modules. These services will need manual
+  # configuration after first boot via their web UIs.
+  #
+  # After services start, configure:
+  # 1. Prowlarr (9696): Add indexers
+  # 2. Radarr (7878): Configure download client, add root folder /mnt/media/movies
+  # 3. Sonarr (8989): Configure download client, add root folder /mnt/media/tv
+  # 4. Jellyseerr (5055): Connect to Radarr, Sonarr, and Jellyfin
+
+  services.sonarr = {
+    enable = true;
+    openFirewall = true;
+  };
+
+  services.radarr = {
+    enable = true;
+    openFirewall = true;
+  };
+
+  services.prowlarr = {
+    enable = true;
+    openFirewall = true;
+  };
+
+  services.jellyseerr = {
+    enable = true;
+    openFirewall = true;
+  };
+
+  # ==========================================================================
+  # Media Service Users - GPU Access
+  # ==========================================================================
+  # Both Jellyfin and Plex need video/render group membership for hardware transcoding
+
+  users.users.jellyfin.extraGroups = ["video" "render"];
   users.users.plex.extraGroups = ["video" "render"];
+
+  # ==========================================================================
+  # Media Service Persistence
+  # ==========================================================================
+  # Persist service state across reboots (impermanence)
+
+  environment.persistence."/nix/persist" = {
+    directories = [
+      {
+        directory = "/var/lib/jellyfin";
+        user = "jellyfin";
+        group = "jellyfin";
+        mode = "0700";
+      }
+      {
+        directory = "/var/lib/sonarr";
+        user = "sonarr";
+        group = "sonarr";
+        mode = "0700";
+      }
+      {
+        directory = "/var/lib/radarr";
+        user = "radarr";
+        group = "radarr";
+        mode = "0700";
+      }
+      {
+        directory = "/var/lib/prowlarr";
+        user = "prowlarr";
+        group = "prowlarr";
+        mode = "0700";
+      }
+      {
+        directory = "/var/lib/jellyseerr";
+        user = "root";
+        group = "root";
+        mode = "0755";
+      }
+    ];
+  };
 
   # ==========================================================================
   # Server Optimizations
