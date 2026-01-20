@@ -256,6 +256,11 @@ cd /mnt/nix/persist
 sudo mkdir -p home/orther/git
 cd home/orther/git
 sudo git clone https://github.com/orther/goodlab.git
+cd goodlab
+
+# IMPORTANT: Checkout the pie configuration branch
+# (The pie config is in the feature branch, not main yet)
+sudo git checkout feat/add-pie-media-server
 
 # Set ownership (will be corrected after first boot)
 sudo chown -R 1000:100 /mnt/nix/persist/home
