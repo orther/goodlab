@@ -83,21 +83,38 @@
   # ==========================================================================
   # Network Configuration
   # ==========================================================================
+  # Using systemd-networkd with match rules for robust network configuration.
+  # This automatically configures any Ethernet interface, avoiding hardcoded
+  # interface names that may vary between boots or hardware configurations.
+
   networking = {
     hostName = "pie";
     useDHCP = false;
     useNetworkd = true;
-
-    # Ethernet interface - name will be confirmed after first boot
-    # Common names: enp0s31f6, eno1, enp2s0f0
-    # Run `ip link` after boot to verify and update if needed
-    interfaces.enp0s31f6.useDHCP = true;
 
     # Disable NetworkManager in favor of simpler systemd-networkd for servers
     networkmanager.enable = lib.mkForce false;
 
     # Explicitly disable WiFi - Ethernet only for server reliability
     wireless.enable = false;
+  };
+
+  # Configure any Ethernet interface for DHCP via systemd-networkd
+  # This is more robust than hardcoding interface names like enp0s31f6
+  systemd.network = {
+    enable = true;
+    networks."10-ethernet" = {
+      matchConfig.Type = "ether";
+      networkConfig = {
+        DHCP = "yes";
+        # Wait for link to be configured before network-online.target
+        LinkLocalAddressing = "no";
+      };
+      dhcpV4Config = {
+        UseDNS = true;
+        UseRoutes = true;
+      };
+    };
   };
 
   # Disable NetworkManager wait service (not using NetworkManager)
