@@ -58,7 +58,9 @@
       User = "cloudflared";
 
       # Read token from SOPS secret and run tunnel
-      ExecStart = "${pkgs.cloudflared}/bin/cloudflared tunnel run --token $(cat ${config.sops.secrets."cloudflare-tunnel-pie-token".path})";
+      ExecStart = pkgs.writeShellScript "cloudflared-tunnel-pie" ''
+        exec ${pkgs.cloudflared}/bin/cloudflared tunnel run --token "$(cat ${config.sops.secrets."cloudflare-tunnel-pie-token".path})"
+      '';
 
       # Security hardening
       NoNewPrivileges = true;
