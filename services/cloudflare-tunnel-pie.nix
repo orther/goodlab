@@ -5,140 +5,84 @@
 # Provides secure subdomain-based access to media services via Cloudflare Tunnel.
 # This is a zero-trust solution - no ports exposed to the internet.
 #
-# Subdomains configured:
-#   - jellyfin.ryatt.app → Jellyfin (port 8096)
-#   - plex.ryatt.app     → Plex (port 32400) [temporary, remove with plex.nix]
+# This uses a REMOTELY-MANAGED tunnel - ingress rules are configured in the
+# Cloudflare Zero Trust dashboard, not here. This config just connects.
+#
+# Subdomains to configure in Cloudflare Dashboard:
+#   - jellyfin.ryatt.app → http://localhost:8096
+#   - plex.ryatt.app     → http://localhost:32400 [temporary]
 #
 # Setup requirements:
 #   1. Create tunnel in Cloudflare Zero Trust Dashboard
-#   2. Download credentials JSON and encrypt with SOPS
-#   3. Ensure ryatt.app is added to your Cloudflare account
+#   2. Copy the tunnel token and save to secrets/cloudflare-tunnel-pie-token
+#   3. Configure public hostnames (ingress) in Cloudflare Dashboard
 #
-# To add more services later (e.g., *arr stack):
-#   "sonarr.ryatt.app".service = "http://localhost:8989";
-#   "radarr.ryatt.app".service = "http://localhost:7878";
-#   "prowlarr.ryatt.app".service = "http://localhost:9696";
-#   "jellyseerr.ryatt.app".service = "http://localhost:5055";
+# To add more services later, add them in Cloudflare Dashboard:
+#   - sonarr.ryatt.app → http://localhost:8989
+#   - radarr.ryatt.app → http://localhost:7878
+#   - prowlarr.ryatt.app → http://localhost:9696
+#   - jellyseerr.ryatt.app → http://localhost:5055
 # ==============================================================================
 {
   config,
   pkgs,
-  lib,
   ...
 }: {
   # ==========================================================================
-  # SOPS Secrets for Tunnel Credentials
+  # SOPS Secret for Tunnel Token
   # ==========================================================================
-  # The tunnel credentials file is a JSON file downloaded from Cloudflare
-  # when creating the tunnel. It contains the tunnel ID and secret.
+  # The tunnel token is the long string from "cloudflared service install <token>"
+  # Save it as a single-line text file and encrypt with SOPS.
 
-  sops.secrets."cloudflare-tunnel-pie" = {
-    owner = config.services.cloudflared.user;
-    inherit (config.services.cloudflared) group;
+  sops.secrets."cloudflare-tunnel-pie-token" = {
     format = "binary";
-    sopsFile = ./../secrets/cloudflare-tunnel-pie;
+    sopsFile = ./../secrets/cloudflare-tunnel-pie-token;
   };
 
   # ==========================================================================
-  # Cloudflare Tunnel Configuration
+  # Cloudflare Tunnel Service
   # ==========================================================================
+  # For remotely-managed tunnels, we just run cloudflared with the token.
+  # All ingress configuration is done in Cloudflare's dashboard.
 
-  services.cloudflared = {
-    enable = true;
-
-    tunnels."pie-media" = {
-      # Credentials file from SOPS
-      credentialsFile = config.sops.secrets."cloudflare-tunnel-pie".path;
-
-      # Default response for unmatched requests
-      default = "http_status:404";
-
-      # Ingress rules - map subdomains to local services
-      ingress = {
-        # ======================================================================
-        # Jellyfin - Primary Media Server
-        # ======================================================================
-        # Free, open-source, no ads, free hardware transcoding
-        "jellyfin.ryatt.app" = {
-          service = "http://localhost:8096";
-        };
-
-        # ======================================================================
-        # Plex - TEMPORARY (remove when plex.nix is removed)
-        # ======================================================================
-        # Kept for family migration period
-        "plex.ryatt.app" = {
-          service = "http://localhost:32400";
-        };
-
-        # ======================================================================
-        # Future: *arr Services (uncomment when enabled in nixflix)
-        # ======================================================================
-        # "sonarr.ryatt.app" = {
-        #   service = "http://localhost:8989";
-        # };
-        # "radarr.ryatt.app" = {
-        #   service = "http://localhost:7878";
-        # };
-        # "prowlarr.ryatt.app" = {
-        #   service = "http://localhost:9696";
-        # };
-        # "jellyseerr.ryatt.app" = {
-        #   service = "http://localhost:5055";
-        # };
-      };
-    };
-  };
-
-  # ==========================================================================
-  # DNS Route Configuration
-  # ==========================================================================
-  # Automatically creates CNAME records in Cloudflare DNS pointing
-  # subdomains to the tunnel. Only runs once per subdomain.
-
-  systemd.services."cloudflared-dns-routes-pie" = {
-    description = "Configure DNS routes for pie media tunnel";
-    after = ["cloudflared-tunnel-pie-media.service" "network-online.target"];
-    wants = ["cloudflared-tunnel-pie-media.service"];
+  systemd.services."cloudflared-tunnel-pie" = {
+    description = "Cloudflare Tunnel for Pie Media Server";
+    after = ["network-online.target"];
+    wants = ["network-online.target"];
     wantedBy = ["multi-user.target"];
 
-    # Use the same environment as cloudflared for authentication
     serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      User = config.services.cloudflared.user;
-      Group = config.services.cloudflared.group;
+      Type = "simple";
+      Restart = "always";
+      RestartSec = "5s";
 
-      ExecStart = pkgs.writeShellScript "setup-pie-dns-routes" ''
-        set -euo pipefail
+      # Run as dedicated user for security
+      DynamicUser = true;
+      User = "cloudflared";
 
-        # Wait for tunnel to be ready
-        sleep 5
+      # Read token from SOPS secret and run tunnel
+      ExecStart = "${pkgs.cloudflared}/bin/cloudflared tunnel run --token $(cat ${config.sops.secrets."cloudflare-tunnel-pie-token".path})";
 
-        echo "Configuring DNS routes for pie-media tunnel..."
-
-        # Create DNS records (idempotent - Cloudflare handles duplicates)
-        ${lib.getExe pkgs.cloudflared} tunnel route dns 'pie-media' 'jellyfin.ryatt.app' || true
-        ${lib.getExe pkgs.cloudflared} tunnel route dns 'pie-media' 'plex.ryatt.app' || true
-
-        echo "DNS routes configured successfully"
-      '';
+      # Security hardening
+      NoNewPrivileges = true;
+      ProtectSystem = "strict";
+      ProtectHome = true;
+      PrivateTmp = true;
+      PrivateDevices = true;
+      ProtectKernelTunables = true;
+      ProtectKernelModules = true;
+      ProtectControlGroups = true;
     };
   };
 
   # ==========================================================================
   # Persistence (for impermanence systems)
   # ==========================================================================
-  # Cloudflared stores connection state and metrics
+  # Cloudflared may store some state, but for token-based tunnels it's minimal
 
   environment.persistence."/nix/persist" = {
     directories = [
-      {
-        directory = "/var/lib/cloudflared";
-        user = config.services.cloudflared.user;
-        group = config.services.cloudflared.group;
-        mode = "0700";
-      }
+      "/var/lib/cloudflared"
     ];
   };
 }
