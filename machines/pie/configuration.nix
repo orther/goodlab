@@ -40,6 +40,7 @@
     # Services
     ./../../services/tailscale.nix
     ./../../services/nas.nix # Mounts /mnt/docker-data from NAS
+    ./../../services/cloudflare-tunnel-pie.nix # Subdomain routing via Cloudflare Tunnel
 
     # TEMPORARY: Plex for migration period (remove after family migrates to Jellyfin)
     ./../../services/plex.nix
