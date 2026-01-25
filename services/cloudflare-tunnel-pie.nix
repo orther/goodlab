@@ -14,7 +14,7 @@
 #
 # Setup requirements:
 #   1. Create tunnel in Cloudflare Zero Trust Dashboard
-#   2. Copy the tunnel token and save to secrets/cloudflare-tunnel-pie-token
+#   2. Add tunnel token to secrets/secrets.yaml as "cloudflare-tunnel-pie-token"
 #   3. Configure public hostnames (ingress) in Cloudflare Dashboard
 #
 # To add more services later, add them in Cloudflare Dashboard:
@@ -32,12 +32,9 @@
   # SOPS Secret for Tunnel Token
   # ==========================================================================
   # The tunnel token is the long string from "cloudflared service install <token>"
-  # Save it as a single-line text file and encrypt with SOPS.
+  # Add to secrets/secrets.yaml: cloudflare-tunnel-pie-token: "<token>"
 
-  sops.secrets."cloudflare-tunnel-pie-token" = {
-    format = "binary";
-    sopsFile = ./../secrets/cloudflare-tunnel-pie-token;
-  };
+  sops.secrets."cloudflare-tunnel-pie-token" = {};
 
   # ==========================================================================
   # Cloudflare Tunnel Service
