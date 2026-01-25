@@ -46,11 +46,11 @@ This guide explains how secrets (passwords, API keys, tokens) are securely manag
 
 We use **SOPS** (Secrets OPerationS) with **Age** encryption:
 
-| Tool | Purpose |
-|------|---------|
-| **SOPS** | Encrypts/decrypts YAML files, manages multiple recipients |
-| **Age** | Modern encryption tool (replaces GPG), uses simple public/private keys |
-| **sops-nix** | NixOS module that decrypts secrets at boot time |
+| Tool         | Purpose                                                                |
+| ------------ | ---------------------------------------------------------------------- |
+| **SOPS**     | Encrypts/decrypts YAML files, manages multiple recipients              |
+| **Age**      | Modern encryption tool (replaces GPG), uses simple public/private keys |
+| **sops-nix** | NixOS module that decrypts secrets at boot time                        |
 
 ### 2. Key Derivation from SSH Host Keys
 
@@ -68,16 +68,17 @@ age1pq6uyy9fp43pyxqu9unxjg6nuhuln8psl2lx0exrlpt4ec2s8sgqay5aya
 ```
 
 **Why this approach?**
+
 - SSH host keys are already unique per machine
 - No need to generate/manage separate Age keys
 - Keys are created during installation (before secrets exist)
 
 ### 3. Two Types of Secrets
 
-| Type | When Needed | Storage Location | Managed By |
-|------|-------------|------------------|------------|
-| **Regular Secrets** | After boot | `secrets/secrets.yaml` | SOPS + sops-nix |
-| **Early Boot Secrets** | During initrd | `/nix/secret/initrd/` | Manual (persist) |
+| Type                   | When Needed   | Storage Location       | Managed By       |
+| ---------------------- | ------------- | ---------------------- | ---------------- |
+| **Regular Secrets**    | After boot    | `secrets/secrets.yaml` | SOPS + sops-nix  |
+| **Early Boot Secrets** | During initrd | `/nix/secret/initrd/`  | Manual (persist) |
 
 ## File Structure
 
@@ -135,7 +136,7 @@ keys:
   - &noir age1hychfwplt2rpkzdxvz5lxy7zjf0dt0y6qrcwe2gvnm4mkelsnc7syu2y25
   - &stud age1gz6jjmdce0xjh4c8st4tx5qhd5lpw2527dzfr6davwpjyrrr8ctqnv3p4z
   - &zinc age12pc2l7dyq0tlj0mm56vrwez6yr8nlve6vrucexf7x92dg7qlzcxskrf2tv
-  - &pie age1...  # Added after machine installation
+  - &pie age1... # Added after machine installation
 
 creation_rules:
   # All secrets encrypted to all machines
@@ -229,13 +230,13 @@ nix-shell -p ssh-to-age --run "ssh-to-age < /mnt/nix/secret/initrd/ssh_host_ed25
 
 ```yaml
 keys:
-  - &newmachine age1abc123...  # Add this line
+  - &newmachine age1abc123... # Add this line
 
 creation_rules:
   - path_regex: secrets/...
     key_groups:
       - age:
-          - *newmachine  # Add this reference
+          - *newmachine # Add this reference
 ```
 
 ### Step 4: Re-encrypt Secrets
@@ -296,20 +297,20 @@ my-new-secret: "super-secret-value"
 
 ### What's Protected
 
-| Threat | Protection |
-|--------|------------|
-| Secrets in git repo | Encrypted with Age (only machines can decrypt) |
+| Threat                  | Protection                                       |
+| ----------------------- | ------------------------------------------------ |
+| Secrets in git repo     | Encrypted with Age (only machines can decrypt)   |
 | Secrets at rest on disk | Encrypted in /nix/store, decrypted only to tmpfs |
-| Secrets in memory | Only in RAM (/run/secrets is tmpfs) |
-| Unauthorized machines | Can't decrypt without private key |
+| Secrets in memory       | Only in RAM (/run/secrets is tmpfs)              |
+| Unauthorized machines   | Can't decrypt without private key                |
 
 ### What's NOT Protected
 
-| Threat | Mitigation |
-|--------|------------|
-| Root on the machine | Root can read /run/secrets - this is by design |
-| Compromise of SSH host key | Rotate key, re-encrypt secrets |
-| Secrets in service memory | Out of scope for secret management |
+| Threat                     | Mitigation                                     |
+| -------------------------- | ---------------------------------------------- |
+| Root on the machine        | Root can read /run/secrets - this is by design |
+| Compromise of SSH host key | Rotate key, re-encrypt secrets                 |
+| Secrets in service memory  | Out of scope for secret management             |
 
 ## Troubleshooting
 
@@ -348,13 +349,13 @@ sops updatekeys secrets/secrets.yaml
 
 ## Quick Reference
 
-| Task | Command |
-|------|---------|
-| Edit secrets | `just sopsedit` or `sops secrets/secrets.yaml` |
-| Update keys for all machines | `just sopsupdate` |
-| Rotate keys | `just sopsrotate` |
-| Get age key from SSH key | `ssh-to-age < /path/to/key.pub` |
-| Check secret path in NixOS | `config.sops.secrets."name".path` |
+| Task                         | Command                                        |
+| ---------------------------- | ---------------------------------------------- |
+| Edit secrets                 | `just sopsedit` or `sops secrets/secrets.yaml` |
+| Update keys for all machines | `just sopsupdate`                              |
+| Rotate keys                  | `just sopsrotate`                              |
+| Get age key from SSH key     | `ssh-to-age < /path/to/key.pub`                |
+| Check secret path in NixOS   | `config.sops.secrets."name".path`              |
 
 ## Further Reading
 
