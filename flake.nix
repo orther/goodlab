@@ -34,9 +34,18 @@
       flake = false;
     };
 
+    # NixOS hardware modules for device-specific configuration
+    nixos-hardware.url = "github:NixOS/nixos-hardware";
+
     # Keep specialized inputs as GitHub for now (may not be on FlakeHub yet)
     nixarr = {
       url = "github:rasmus-kirk/nixarr";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    # Declarative media server configuration (Jellyfin, *arr services)
+    nixflix = {
+      url = "github:kiriwalawren/nixflix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -234,6 +243,22 @@
             };
           in
             pkgs.writeText "nixos-eval-zinc.json" summary;
+
+          nixosEval-pie = let
+            sys = inputs.nixpkgs.lib.nixosSystem {
+              system = "x86_64-linux";
+              specialArgs = {
+                inherit inputs;
+                inherit (self) outputs;
+              };
+              modules = [./machines/pie/configuration.nix];
+            };
+            summary = builtins.toJSON {
+              platform = sys.pkgs.stdenv.hostPlatform.system;
+              stateVersion = sys.config.system.stateVersion or null;
+            };
+          in
+            pkgs.writeText "nixos-eval-pie.json" summary;
         };
 
         # Expose a convenient app alias for process-compose devservices
@@ -315,6 +340,7 @@
         lib = {
           hmModules = {
             base = import ./modules/home-manager/base.nix;
+            server-base = import ./modules/home-manager/server-base.nix;
             fonts = import ./modules/home-manager/fonts.nix;
             alacritty = import ./modules/home-manager/alacritty.nix;
             doom = import ./modules/home-manager/doom.nix;
@@ -433,6 +459,15 @@
               inherit (self) outputs;
             };
             modules = [./machines/zinc/configuration.nix];
+          };
+
+          pie = nixpkgs.lib.nixosSystem {
+            system = "x86_64-linux";
+            specialArgs = {
+              inherit inputs;
+              inherit (self) outputs;
+            };
+            modules = [./machines/pie/configuration.nix];
           };
         };
       };
