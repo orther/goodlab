@@ -34,7 +34,11 @@
   # The tunnel token is the long string from "cloudflared service install <token>"
   # Add to secrets/secrets.yaml: cloudflare-tunnel-pie-token: "<token>"
 
-  sops.secrets."cloudflare-tunnel-pie-token" = {};
+  sops.secrets."cloudflare-tunnel-pie-token" = {
+    # Mode 0444 allows the DynamicUser to read the token
+    # Token is still encrypted at rest, only decrypted to tmpfs at runtime
+    mode = "0444";
+  };
 
   # ==========================================================================
   # Cloudflare Tunnel Service
