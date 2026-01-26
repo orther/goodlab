@@ -44,6 +44,7 @@
       asdf-vm
       bun
       claude-code # Filtered out on corporate networks (see combinedFiltered)
+      devenv
       doppler
       flyctl
       just
