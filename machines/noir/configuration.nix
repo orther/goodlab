@@ -3,6 +3,7 @@
   outputs,
   lib,
   config,
+  pkgs,
   ...
 }: {
   imports = [
@@ -95,6 +96,11 @@
     group = "clawdbot";
     mode = "0400";
   };
+  sops.secrets."clawdbot/brave-search-api-key" = {
+    owner = "clawdbot";
+    group = "clawdbot";
+    mode = "0400";
+  };
 
   # Clawdbot - hardened system service (PR #24)
   services.clawdbot = {
@@ -122,10 +128,21 @@
         tokenFile = config.sops.secrets."clawdbot/gateway-token".path;
       };
 
-      # Bind gateway to Tailscale only for resilient private access.
-      configOverrides.gateway.bind = "tailnet";
+      configOverrides = {
+        # Bind gateway to Tailscale only for resilient private access.
+        gateway.bind = "tailnet";
 
-      plugins = []; # Start with no plugins, add later if needed
+        # Web search via Brave Search API (key injected at runtime via env)
+        tools.web = {
+          search = {
+            enabled = true;
+            provider = "brave";
+          };
+          fetch.enabled = true;
+        };
+      };
+
+      plugins = [];
     };
   };
 
@@ -145,6 +162,15 @@
     hosts = {
       "127.0.0.1" = ["odoo.orther.dev"];
     };
+  };
+
+  # Inject Brave Search API key into clawdbot gateway at runtime
+  systemd.services.clawdbot-gateway.serviceConfig = {
+    RuntimeDirectory = "clawdbot";
+    ExecStartPre = [(pkgs.writeShellScript "load-brave-key" ''
+      echo "BRAVE_SEARCH_API_KEY=$(cat ${config.sops.secrets."clawdbot/brave-search-api-key".path})" > /run/clawdbot/brave.env
+    '')];
+    EnvironmentFile = ["/run/clawdbot/brave.env"];
   };
 
   # Disable problematic wait services during NetworkManager -> systemd-networkd transition
