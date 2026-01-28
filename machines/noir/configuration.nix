@@ -164,33 +164,32 @@
     };
   };
 
-  # Inject Brave Search API key: a oneshot service creates an env file
-  # from the SOPS secret before the gateway starts.
+  # Inject Brave Search API key into the gateway config JSON at runtime.
+  # The config is in the writable state dir; we patch it before the gateway reads it.
   systemd.services.clawdbot-brave-env = {
-    description = "Prepare Brave Search API key for Clawdbot";
+    description = "Inject Brave Search API key into Clawdbot config";
     before = ["clawdbot-gateway.service"];
     requiredBy = ["clawdbot-gateway.service"];
     after = ["sops-nix.service"];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStart = pkgs.writeShellScript "prepare-brave-env" ''
+      ExecStart = pkgs.writeShellScript "inject-brave-key" ''
         set -euo pipefail
         key_file="${config.sops.secrets."clawdbot/brave-search-api-key".path}"
-        env_file="/var/lib/clawdbot/brave.env"
-        if [ -f "$key_file" ]; then
-          echo "BRAVE_SEARCH_API_KEY=$(cat "$key_file")" > "$env_file"
-          chown clawdbot:clawdbot "$env_file"
-          chmod 0400 "$env_file"
-        else
-          : > "$env_file"
+        config_file="/var/lib/clawdbot/clawdbot.json"
+
+        if [ -f "$key_file" ] && [ -f "$config_file" ]; then
+          api_key="$(cat "$key_file")"
+          # Remove any existing apiKey first (idempotent), then inject fresh
+          ${pkgs.gnused}/bin/sed -i \
+            -e 's|,"apiKey":"[^"]*"||g' \
+            -e "s|\"provider\":\"brave\"|\"provider\":\"brave\",\"apiKey\":\"$api_key\"|" \
+            "$config_file"
         fi
       '';
     };
   };
-  systemd.services.clawdbot-gateway.serviceConfig.EnvironmentFile = [
-    "-/var/lib/clawdbot/brave.env"
-  ];
 
   # Disable problematic wait services during NetworkManager -> systemd-networkd transition
   systemd.services = {
