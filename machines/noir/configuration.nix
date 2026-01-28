@@ -164,14 +164,33 @@
     };
   };
 
-  # Inject Brave Search API key into clawdbot gateway at runtime
-  systemd.services.clawdbot-gateway.serviceConfig = {
-    RuntimeDirectory = "clawdbot";
-    ExecStartPre = [(pkgs.writeShellScript "load-brave-key" ''
-      echo "BRAVE_SEARCH_API_KEY=$(cat ${config.sops.secrets."clawdbot/brave-search-api-key".path})" > /run/clawdbot/brave.env
-    '')];
-    EnvironmentFile = ["/run/clawdbot/brave.env"];
+  # Inject Brave Search API key: a oneshot service creates an env file
+  # from the SOPS secret before the gateway starts.
+  systemd.services.clawdbot-brave-env = {
+    description = "Prepare Brave Search API key for Clawdbot";
+    before = ["clawdbot-gateway.service"];
+    requiredBy = ["clawdbot-gateway.service"];
+    after = ["sops-nix.service"];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = pkgs.writeShellScript "prepare-brave-env" ''
+        set -euo pipefail
+        key_file="${config.sops.secrets."clawdbot/brave-search-api-key".path}"
+        env_file="/var/lib/clawdbot/brave.env"
+        if [ -f "$key_file" ]; then
+          echo "BRAVE_SEARCH_API_KEY=$(cat "$key_file")" > "$env_file"
+          chown clawdbot:clawdbot "$env_file"
+          chmod 0400 "$env_file"
+        else
+          : > "$env_file"
+        fi
+      '';
+    };
   };
+  systemd.services.clawdbot-gateway.serviceConfig.EnvironmentFile = [
+    "-/var/lib/clawdbot/brave.env"
+  ];
 
   # Disable problematic wait services during NetworkManager -> systemd-networkd transition
   systemd.services = {
