@@ -2,12 +2,14 @@
   inputs,
   outputs,
   lib,
+  config,
   ...
 }: {
   imports = [
     inputs.impermanence.nixosModules.impermanence
     inputs.home-manager.nixosModules.home-manager
     #inputs.nixarr.nixosModules.default
+    inputs.nix-clawdbot.nixosModules.clawdbot
 
     ./hardware-configuration.nix
 
@@ -23,12 +25,12 @@
     #./../../services/nextcloud.nix
     #./../../services/nixarr.nix
 
-    # Research Relay services (noir = Odoo + PDF-intake)
-    ./../../services/research-relay/_common-hardening.nix
-    ./../../services/research-relay/odoo.nix
-    ./../../services/research-relay/pdf-intake.nix
-    ./../../services/research-relay/age-gate.nix
-    ./../../services/research-relay/secrets.nix
+    # Research Relay services disabled - spamming errors
+    # ./../../services/research-relay/_common-hardening.nix
+    # ./../../services/research-relay/odoo.nix
+    # ./../../services/research-relay/pdf-intake.nix
+    # ./../../services/research-relay/age-gate.nix
+    # ./../../services/research-relay/secrets.nix
   ];
 
   home-manager = {
@@ -37,6 +39,11 @@
     useUserPackages = true;
     users = {
       orther = {
+        config,
+        pkgs,
+        lib,
+        ...
+      }: {
         imports = [
           inputs.self.lib.hmModules.base
         ];
@@ -62,7 +69,63 @@
             # Add more hosts as needed
           };
         };
+
       };
+    };
+  };
+
+  # System-level SOPS secrets for the hardened Clawdbot service
+  sops.secrets."clawdbot/telegram-bot-token" = {
+    owner = "clawdbot";
+    group = "clawdbot";
+    mode = "0400";
+  };
+  sops.secrets."clawdbot/openrouter-api-key" = {
+    owner = "clawdbot";
+    group = "clawdbot";
+    mode = "0400";
+  };
+  sops.secrets."clawdbot/anthropic-oauth-token" = {
+    owner = "clawdbot";
+    group = "clawdbot";
+    mode = "0400";
+  };
+  sops.secrets."clawdbot/gateway-token" = {
+    owner = "clawdbot";
+    group = "clawdbot";
+    mode = "0400";
+  };
+
+  # Clawdbot - hardened system service (PR #24)
+  services.clawdbot = {
+    enable = true;
+    documents = ./../../clawdbot-documents;
+
+    instances.default = {
+      enable = true;
+
+      providers.telegram = {
+        enable = true;
+        botTokenFile = config.sops.secrets."clawdbot/telegram-bot-token".path;
+        allowFrom = [5875599249]; # Your Telegram user ID from @userinfobot
+        groups = {
+          "*" = {requireMention = true;}; # Required in Nix mode
+        };
+      };
+
+      providers.anthropic = {
+        oauthTokenFile = config.sops.secrets."clawdbot/anthropic-oauth-token".path;
+      };
+
+      gateway.auth = {
+        mode = "token";
+        tokenFile = config.sops.secrets."clawdbot/gateway-token".path;
+      };
+
+      # Bind gateway to Tailscale only for resilient private access.
+      configOverrides.gateway.bind = "tailnet";
+
+      plugins = []; # Start with no plugins, add later if needed
     };
   };
 
@@ -72,6 +135,8 @@
     interfaces.enp2s0.useDHCP = true;
     useNetworkd = true;
     networkmanager.enable = lib.mkForce false; # Override base.nix NetworkManager setting
+    firewall.allowedTCPPorts = [];
+    firewall.interfaces.tailscale0.allowedTCPPorts = [18789];
 
     # Local DNS resolution for Odoo subdomain
     # Tailscale MagicDNS will handle this for Tailscale clients
@@ -88,10 +153,9 @@
     "systemd-networkd-wait-online".enable = lib.mkForce false;
   };
 
-  # Enable Research Relay services on noir
-  services.researchRelay = {
-    odoo.enable = true;
-    pdfIntake.enable = false; # Temporarily disabled - blocked by nixpkgs tkinter/tcl-9.0.1 packaging bug
-    # ageGate.enable = true; # Disabled - requires nginx Lua module (see AGE_GATE.md)
-  };
+  # Research Relay services disabled - spamming errors and not in use
+  # services.researchRelay = {
+  #   odoo.enable = false;
+  #   pdfIntake.enable = false;
+  # };
 }
