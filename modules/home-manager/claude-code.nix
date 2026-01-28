@@ -5,10 +5,12 @@
     text = builtins.toJSON {
       mcpServers = {
         # NixOS package search and documentation
-        nixos = {
-          command = "nix";
-          args = ["run" "github:utensils/mcp-nixos" "--"];
-        };
+        # Temporarily disabled - causes slow startup due to build times
+        # nixos = {
+        #   command = "nix";
+        #   args = ["run" "github:utensils/mcp-nixos" "--"];
+        # };
+
         # Context7 - Up-to-date code documentation from official sources
         context7 = {
           command = "${pkgs.nodejs}/bin/npx";
