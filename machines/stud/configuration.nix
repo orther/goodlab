@@ -27,6 +27,25 @@
           inputs.self.lib.hmModules.doom
           inputs.self.lib.hmModules.claude-code
         ];
+
+        # Bitcoin node tunnel via Research Relay
+        # Usage: ssh btc-tunnel
+        programs.ssh.matchBlocks."btc-tunnel" = {
+          hostname = "btc.research-relay.com";
+          user = "root";
+          identityFile = "~/.ssh/id_ed25519";
+          identitiesOnly = true;
+          localForwards = [
+            {
+              bind.port = 8332;
+              host.address = "127.0.0.1";
+              host.port = 8332;
+            }
+          ];
+          extraOptions = {
+            AddKeysToAgent = "yes";
+          };
+        };
       };
     };
   };
