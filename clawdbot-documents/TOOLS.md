@@ -3,6 +3,7 @@
 ## Web Search (Brave)
 
 Search the web for current information. Use this for:
+
 - News and current events
 - Technical documentation lookups
 - Package version checks
@@ -14,6 +15,7 @@ When using web search, cite your sources briefly.
 ## Web Fetch
 
 Fetch and read the contents of a URL. Use this for:
+
 - Reading articles, blog posts, documentation pages
 - Checking the content of links the user shares
 - Summarizing web pages
@@ -21,6 +23,7 @@ Fetch and read the contents of a URL. Use this for:
 ## Limitations
 
 These tools are NOT available (yet):
+
 - Shell/command execution on the server
 - File system access
 - Calendar integration
