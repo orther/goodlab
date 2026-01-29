@@ -27,13 +27,6 @@
           inputs.self.lib.hmModules.doom
           inputs.self.lib.hmModules.claude-code
         ];
-
-        # Clawdbot macOS app for remote gateway connection
-        # Connects to noir's gateway via "Remote over SSH" mode
-        # See: docs/clawdbot-setup.md
-        home.packages = [
-          inputs.nix-clawdbot.packages.aarch64-darwin.clawdbot-app
-        ];
       };
     };
   };
