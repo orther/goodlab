@@ -89,6 +89,12 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Clawdbot (Moltbot) - use PR #24 (includes #10) for NixOS hardened service + schema fixes
+    nix-clawdbot = {
+      url = "github:moltbot/nix-moltbot?ref=refs/pull/24/head";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # Local developer services orchestration
     process-compose-flake = {
       url = "github:platonic-systems/process-compose-flake";
@@ -380,6 +386,7 @@
                 nixpkgs.config.allowUnfree = true;
                 nixpkgs.overlays = [
                   (import ./overlays/claude-code-nix.nix inputs)
+                  inputs.nix-clawdbot.overlays.default
                 ];
               }
             ];
@@ -440,7 +447,14 @@
               inherit inputs;
               inherit (self) outputs;
             };
-            modules = [./machines/noir/configuration.nix];
+            modules = [
+              ./machines/noir/configuration.nix
+              {
+                nixpkgs.overlays = [
+                  inputs.nix-clawdbot.overlays.default
+                ];
+              }
+            ];
           };
 
           vm = nixpkgs.lib.nixosSystem {

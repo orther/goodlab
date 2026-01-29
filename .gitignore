@@ -2,4 +2,5 @@
 Brewfile
 result/
 .claude/
-AGENTS.md
+# Ignore AGENTS.md at repo root (Claude Code artifact), but allow in subdirectories
+/AGENTS.md
