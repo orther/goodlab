@@ -39,12 +39,7 @@
     useGlobalPkgs = true;
     useUserPackages = true;
     users = {
-      orther = {
-        config,
-        pkgs,
-        lib,
-        ...
-      }: {
+      orther = {...}: {
         imports = [
           inputs.self.lib.hmModules.base
         ];
@@ -70,7 +65,6 @@
             # Add more hosts as needed
           };
         };
-
       };
     };
   };
@@ -129,8 +123,9 @@
       };
 
       configOverrides = {
-        # Bind gateway to Tailscale only for resilient private access.
-        gateway.bind = "tailnet";
+        # Bind gateway to all interfaces so both Tailscale and SSH tunnel
+        # connections work. Firewall restricts port 18789 to tailscale0.
+        gateway.bind = "lan";
 
         # Web search via Brave Search API (key injected at runtime via env)
         tools.web = {
