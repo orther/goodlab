@@ -21,6 +21,7 @@
       orther = {
         imports = [
           inputs.self.lib.hmModules.base
+          inputs.self.lib.hmModules.ghostty
           inputs.self.lib.hmModules.fonts
           inputs.self.lib.hmModules."1password"
           inputs.self.lib.hmModules.doom
