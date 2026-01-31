@@ -29,6 +29,7 @@
       DOOMDATA = "$HOME/.local/share/doom/data";
       DOOMCACHE = "$HOME/.cache/doom";
       DOOMSTATE = "$HOME/.local/state/doom";
+      CODE_DIR = "$HOME/code";
       SOPS_AGE_KEY_FILE = "$HOME/.config/sops/age/keys.txt";
     };
   };
