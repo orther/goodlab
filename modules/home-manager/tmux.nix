@@ -110,9 +110,14 @@ read -n 1 -s -r"
       # Apply Tc
       set -ga terminal-overrides ",xterm-256color:RGB:smcup@:rmcup@"
       set -ga terminal-overrides ",xterm-ghostty:RGB:smcup@:rmcup@"
+      set -ga terminal-features ",xterm-256color:hyperlinks"
+      set -ga terminal-features ",xterm-ghostty:hyperlinks"
 
       # Enable focus-events
       set -g focus-events on
+
+      # Allow passthrough for OSC sequences (clickable hyperlinks, etc.)
+      set -g allow-passthrough on
 
       # Smart pane switching with awareness of Vim splits
       is_vim="ps -o state= -o comm= -t '#{pane_tty}' | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|l?n?vim?x?|fzf|atuin)(diff)?$'"
