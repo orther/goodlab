@@ -1,13 +1,16 @@
 {
   config,
+  inputs,
   lib,
   pkgs,
   ...
 }: {
   imports = [
+    inputs.catppuccin.homeModules.catppuccin
     ./_packages.nix
     ./_zsh.nix
-    ./nixvim.nix
+    ./tmux.nix
+    ./neovim.nix
   ];
 
   home = {
@@ -30,26 +33,25 @@
     };
   };
 
+  # Catppuccin flavor and accent (AlexNabokikh defaults)
+  catppuccin = {
+    flavor = "macchiato";
+    accent = "lavender";
+  };
+
   programs = {
     git = {
       enable = true;
     };
-    helix = {
-      enable = true;
-      defaultEditor = true;
-      settings = {
-        theme = "dark_high_contrast";
-      };
-    };
     fzf = {
       enable = true;
       enableZshIntegration = true;
-    };
-    zellij = {
-      enable = true;
-      settings = {
-        theme = "dracula";
-      };
+      # Avoid unsupported actions in user-provided FZF_DEFAULT_OPTS (e.g., toggle-raw on older fzf).
+      defaultOptions = [
+        "--height=40%"
+        "--layout=reverse"
+        "--border"
+      ];
     };
     tealdeer = {
       enable = true;
