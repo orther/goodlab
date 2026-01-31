@@ -74,7 +74,7 @@ sudo nixos-rebuild switch --flake .#zinc
 
 Services are disabled by default. Enable in machine configuration:
 
-**noir** (`machines/noir/configuration.nix`):
+**noir** (`hosts/noir/default.nix`):
 
 ```nix
 services.researchRelay = {
@@ -84,7 +84,7 @@ services.researchRelay = {
 };
 ```
 
-**zinc** (`machines/zinc/configuration.nix`):
+**zinc** (`hosts/zinc/default.nix`):
 
 ```nix
 services.researchRelay = {

@@ -422,11 +422,11 @@ Now that SOPS is configured, remove the temporary initial password:
 
 ```bash
 # On another machine (stud/nblap), edit the pie configuration
-# Remove this line from machines/pie/configuration.nix:
+# Remove this line from hosts/pie/default.nix:
 #   users.users.orther.initialPassword = "changeme";
 
 # Commit and push
-git add machines/pie/configuration.nix
+git add hosts/pie/default.nix
 git commit -m "fix(pie): remove temporary initial password now that SOPS works"
 git push origin feat/add-pie-media-server
 ```
@@ -500,7 +500,7 @@ ls -la /mnt/media
 
 ### Step 4.4: Enable \*arr Services (Optional/Future)
 
-The \*arr services are currently disabled since they run on a separate server. When ready to consolidate, edit `machines/pie/configuration.nix` and uncomment the relevant services in the nixflix block:
+The \*arr services are currently disabled since they run on a separate server. When ready to consolidate, edit `hosts/pie/default.nix` and uncomment the relevant services in the nixflix block:
 
 ```nix
 nixflix = {
@@ -625,7 +625,7 @@ journalctl -u plex --since "7 days ago" | grep -i "stream\|play"
 
 ### Step 7.2: Update Configuration
 
-Edit `machines/pie/configuration.nix` and make the following changes:
+Edit `hosts/pie/default.nix` and make the following changes:
 
 1. **Remove the plex.nix import:**
 
@@ -673,7 +673,7 @@ sudo rm -rf /nix/persist/var/lib/plex
 
 ```bash
 cd ~/git/goodlab
-git add machines/pie/configuration.nix
+git add hosts/pie/default.nix
 git commit -m "feat(pie): remove temporary Plex migration service"
 git push
 ```
@@ -788,8 +788,8 @@ sudo systemctl restart jellyfin
 
 | File                                      | Purpose                    |
 | ----------------------------------------- | -------------------------- |
-| `machines/pie/configuration.nix`          | Main host configuration    |
-| `machines/pie/hardware-configuration.nix` | Hardware-specific settings |
+| `hosts/pie/default.nix`          | Main host configuration    |
+| `hosts/pie/hardware-configuration.nix` | Hardware-specific settings |
 | `services/plex.nix`                       | Temporary Plex service     |
 | `services/nas.nix`                        | NAS mount configuration    |
 | `modules/nixos/base.nix`                  | Common NixOS settings      |
