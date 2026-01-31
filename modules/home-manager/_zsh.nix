@@ -19,15 +19,24 @@
         eval "$(/opt/homebrew/bin/brew shellenv)"
       fi
 
-      # Initialize asdf
-      if command -v asdf >/dev/null 2>&1; then
-        source "${pkgs.asdf-vm}/share/asdf-vm/asdf.sh"
-        source "${pkgs.asdf-vm}/share/asdf-vm/completions/asdf.bash"
-      fi
+      # Force Nix fzf even if Homebrew is earlier in PATH.
+      fzf() { command ${pkgs.fzf}/bin/fzf "$@"; }
+      fzf-tmux() { command ${pkgs.fzf}/bin/fzf-tmux "$@"; }
 
       # Initialize mise
       if command -v mise >/dev/null 2>&1; then
         eval "$(mise activate zsh)"
+      fi
+
+      # Keep Ctrl-R bound to history search (or fzf) even if keymaps get reset.
+      if (( $+widgets[fzf-history-widget] )); then
+        for keymap in emacs viins; do
+          bindkey -M "$keymap" '^R' fzf-history-widget
+        done
+      else
+        for keymap in emacs viins; do
+          bindkey -M "$keymap" '^R' history-incremental-search-backward
+        done
       fi
     '';
     plugins = [

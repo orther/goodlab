@@ -1,4 +1,5 @@
 {
+  lib,
   pkgs,
   osConfig,
   ...
@@ -41,7 +42,6 @@
       && builtins.substring 0 2 osConfig.networking.hostName != "vm"
     then [
       alejandra
-      asdf-vm
       bun
       claude-code # Filtered out on corporate networks (see combinedFiltered)
       devenv
@@ -50,7 +50,6 @@
       just
       nil
       nixfmt-rfc-style
-      nixos-rebuild # need for macOS
       nodejs
       nodePackages_latest.eas-cli
       nodePackages.typescript-language-server
@@ -60,6 +59,9 @@
       stripe-cli
       wrangler # Filtered out on corporate networks (see combinedFiltered)
       zola
+    ]
+    ++ lib.optionals pkgs.stdenv.isLinux [
+      nixos-rebuild
     ]
     else []
   );
