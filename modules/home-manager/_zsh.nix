@@ -13,7 +13,7 @@
     };
     # inspo: https://discourse.nixos.org/t/brew-not-on-path-on-m1-mac/26770/4
     initContent = ''
-      fortune
+      command -v fortune >/dev/null 2>&1 && fortune
 
       if [[ $(uname -m) == 'arm64' ]] && [[ $(uname -s) == 'Darwin' ]]; then
         eval "$(/opt/homebrew/bin/brew shellenv)"
