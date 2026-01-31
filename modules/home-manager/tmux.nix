@@ -44,7 +44,7 @@
     keyMode = "vi";
     mouse = true;
     sensibleOnTop = false;
-    terminal = "screen-256color";
+    terminal = "tmux-256color";
 
     extraConfig = ''
       # Set the prefix to `ctrl + q` instead of `ctrl + b`
@@ -109,6 +109,7 @@ read -n 1 -s -r"
 
       # Apply Tc
       set -ga terminal-overrides ",xterm-256color:RGB:smcup@:rmcup@"
+      set -ga terminal-overrides ",xterm-ghostty:RGB:smcup@:rmcup@"
 
       # Enable focus-events
       set -g focus-events on
