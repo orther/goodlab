@@ -20,8 +20,8 @@
 # This service exists only to give family members time to transition
 # from Plex clients to Jellyfin clients. Once migration is complete:
 #
-# 1. Remove this import from machines/pie/configuration.nix
-# 2. Remove users.users.plex.extraGroups line from machines/pie/configuration.nix
+# 1. Remove this import from hosts/pie/default.nix
+# 2. Remove users.users.plex.extraGroups line from hosts/pie/default.nix
 # 3. Rebuild: just deploy pie <ip>
 #
 # Post-installation setup (if needed):

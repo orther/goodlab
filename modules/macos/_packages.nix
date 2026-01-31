@@ -45,7 +45,7 @@ in {
       ];
       casks = [
         "1password"
-        "alacritty"
+        "ghostty"
         # "betterdisplay"
         # "caffeine"
         # "discord"

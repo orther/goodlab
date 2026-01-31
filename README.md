@@ -83,11 +83,11 @@ nix run nix-darwin -- switch --flake github:orther/goodlab#mair
 ### New host (macOS) checklist
 
 - Choose a hostname and copy an existing host as a template:
-  - Apple Silicon: copy `machines/stud/` → `machines/<host>/` and update names
-  - Intel: copy `machines/mair/` → `machines/<host>/` and update names
-- Set platform in `machines/<host>/hardware-configuration.nix`:
+  - Apple Silicon: copy `hosts/stud/` → `hosts/<host>/` and update names
+  - Intel: copy `hosts/mair/` → `hosts/<host>/` and update names
+- Set platform in `hosts/<host>/hardware-configuration.nix`:
   - `aarch64-darwin` (Apple Silicon) or `x86_64-darwin` (Intel)
-- Set names in `machines/<host>/configuration.nix` under `networking`:
+- Set names in `hosts/<host>/default.nix` under `networking`:
   - `hostName`, `computerName`, `localHostName`
 - SOPS keys (if needed for secrets):
   - Generate Age key: `mkdir -p ~/.config/sops/age && age-keygen -o ~/.config/sops/age/keys.txt`
@@ -106,7 +106,7 @@ nix run nix-darwin -- switch --flake github:orther/goodlab#mair
 > NixOS on your own hardware will fail. At minimum, you'll need to do the
 > following before attemping installation:
 >
-> 1. Create a configuration for your own device in the `machines/` folder
+> 1. Create a configuration for your own device in the `hosts/` folder
 > 1. Retool your own sops-nix secrets or remove them entirely if you don't use
 >    sops-nix
 > 1. Add an entry to flake.nix referencing the configuration created in step 1
@@ -168,8 +168,9 @@ just deploy MACHINE
 
 To remotely deploy `MACHINE`, which has an IP address of `10.0.10.2`
 
-````bash
+```bash
 just deploy MACHINE 10.0.10.2
+```
 
 ### Create a release tag
 
@@ -177,9 +178,7 @@ Create and push a version tag (triggers FlakeHub + GitHub Release):
 
 ```bash
 just release v0.1.0
-````
-
-````
+```
 
 ### Edit secrets
 

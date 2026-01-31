@@ -116,7 +116,7 @@ services/research-relay/age-gate.nix
 
 ### Enable Age Gate
 
-In `machines/noir/configuration.nix`:
+In `hosts/noir/default.nix`:
 
 ```nix
 services.researchRelay = {

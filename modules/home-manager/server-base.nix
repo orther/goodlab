@@ -5,12 +5,16 @@
 # Use this for media servers, NAS boxes, and other infrastructure machines.
 {
   config,
+  inputs,
   lib,
   pkgs,
   ...
 }: {
   imports = [
+    inputs.catppuccin.homeModules.catppuccin
     ./_zsh.nix
+    ./tmux.nix
+    ./neovim.nix
   ];
 
   home = {
@@ -51,13 +55,13 @@
     ];
   };
 
+  catppuccin = {
+    flavor = "macchiato";
+    accent = "lavender";
+  };
+
   programs = {
     git.enable = true;
-    helix = {
-      enable = true;
-      defaultEditor = true;
-      settings.theme = "dark_high_contrast";
-    };
     fzf = {
       enable = true;
       enableZshIntegration = true;
