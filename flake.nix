@@ -43,6 +43,11 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Catppuccin theme integration
+    catppuccin = {
+      url = "github:catppuccin/nix";
+    };
+
     # Declarative media server configuration (Jellyfin, *arr services)
     nixflix = {
       url = "github:kiriwalawren/nixflix";
@@ -225,7 +230,7 @@
                 inherit inputs;
                 inherit (self) outputs;
               };
-              modules = [./machines/noir/configuration.nix];
+              modules = [./hosts/noir/default.nix];
             };
             summary = builtins.toJSON {
               platform = sys.pkgs.stdenv.hostPlatform.system;
@@ -241,7 +246,7 @@
                 inherit inputs;
                 inherit (self) outputs;
               };
-              modules = [./machines/zinc/configuration.nix];
+              modules = [./hosts/zinc/default.nix];
             };
             summary = builtins.toJSON {
               platform = sys.pkgs.stdenv.hostPlatform.system;
@@ -257,7 +262,7 @@
                 inherit inputs;
                 inherit (self) outputs;
               };
-              modules = [./machines/pie/configuration.nix];
+              modules = [./hosts/pie/default.nix];
             };
             summary = builtins.toJSON {
               platform = sys.pkgs.stdenv.hostPlatform.system;
@@ -348,7 +353,9 @@
             base = import ./modules/home-manager/base.nix;
             server-base = import ./modules/home-manager/server-base.nix;
             fonts = import ./modules/home-manager/fonts.nix;
-            alacritty = import ./modules/home-manager/alacritty.nix;
+            ghostty = import ./modules/home-manager/ghostty.nix;
+            neovim = import ./modules/home-manager/neovim.nix;
+            tmux = import ./modules/home-manager/tmux.nix;
             doom = import ./modules/home-manager/doom.nix;
             "1password" = import ./modules/home-manager/1password.nix;
             desktop = import ./modules/home-manager/desktop.nix;
@@ -365,7 +372,7 @@
               inherit (self) outputs;
             };
             modules = [
-              ./machines/mair/configuration.nix
+              ./hosts/mair/default.nix
               {
                 nixpkgs.config.allowUnfree = true;
                 nixpkgs.overlays = [
@@ -381,7 +388,7 @@
               inherit (self) outputs;
             };
             modules = [
-              ./machines/stud/configuration.nix
+              ./hosts/stud/default.nix
               {
                 nixpkgs.config.allowUnfree = true;
                 nixpkgs.overlays = [
@@ -398,7 +405,7 @@
               inherit (self) outputs;
             };
             modules = [
-              ./machines/nblap/configuration.nix
+              ./hosts/nblap/default.nix
               {
                 nixpkgs.config.allowUnfree = true;
                 nixpkgs.overlays = [
@@ -421,7 +428,7 @@
             };
             modules = [
               (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
-              ./machines/iso1chng/configuration.nix
+              ./hosts/iso1chng/default.nix
             ];
           };
 
@@ -433,7 +440,7 @@
             };
             modules = [
               (nixpkgs + "/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix")
-              ./machines/iso1chng/configuration.nix
+              ./hosts/iso1chng/default.nix
               {
                 # Override hostname for ARM64 variant
                 networking.hostName = nixpkgs.lib.mkForce "iso-aarch64";
@@ -448,7 +455,7 @@
               inherit (self) outputs;
             };
             modules = [
-              ./machines/noir/configuration.nix
+              ./hosts/noir/default.nix
               {
                 nixpkgs.overlays = [
                   inputs.nix-clawdbot.overlays.default
@@ -463,7 +470,7 @@
               inherit inputs;
               inherit (self) outputs;
             };
-            modules = [./machines/vm/configuration.nix];
+            modules = [./hosts/vm/default.nix];
           };
 
           zinc = nixpkgs.lib.nixosSystem {
@@ -472,7 +479,7 @@
               inherit inputs;
               inherit (self) outputs;
             };
-            modules = [./machines/zinc/configuration.nix];
+            modules = [./hosts/zinc/default.nix];
           };
 
           pie = nixpkgs.lib.nixosSystem {
@@ -481,7 +488,7 @@
               inherit inputs;
               inherit (self) outputs;
             };
-            modules = [./machines/pie/configuration.nix];
+            modules = [./hosts/pie/default.nix];
           };
         };
       };

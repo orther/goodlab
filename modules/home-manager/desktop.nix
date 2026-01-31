@@ -10,7 +10,7 @@
           "org.gnome.Nautilus.desktop"
           "firefox.desktop"
           "code.desktop"
-          "alacritty.desktop"
+          "ghostty.desktop"
         ];
       };
       "org/gnome/desktop/interface" = {
