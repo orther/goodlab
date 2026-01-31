@@ -46,6 +46,7 @@
     # Catppuccin theme integration
     catppuccin = {
       url = "github:catppuccin/nix";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
     # Declarative media server configuration (Jellyfin, *arr services)
