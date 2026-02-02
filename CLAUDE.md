@@ -23,6 +23,44 @@ nix develop .#ops
 just up
 ```
 
+## Claude Code Workflow
+
+### Development Workflow (Claude Code)
+
+1. **Plan first**: outline the smallest change that solves the request.
+2. **Implement**: keep diffs minimal and targeted.
+3. **Format**: run `nix fmt` when you touch files (treefmt manages formatting).
+4. **Verify**:
+   - **Fast loop**: `just lint` (statix) + `nix fmt`
+   - **Full loop**: `nix flake check`
+5. **Summarize**: list changes, tests, and any follow-up steps.
+
+### House Rules
+
+- Keep changes small and additive; avoid refactors unless requested.
+- Do not guess commands—use existing scripts (`nix fmt`, `nix flake check`, `just lint`).
+- Prefer deterministic checks before suggesting a PR is ready.
+- If Claude makes a mistake, add the lesson to this file so guidance compounds.
+- Avoid adding new tooling (formatters/linters) without explicit approval.
+
+### Verification
+
+- **Fast loop** (local edits): `just lint` then `nix fmt`
+- **Full loop** (before PR): `nix flake check`
+
+### PR Expectations
+
+- `nix flake check` is green (or clearly explained why not).
+- Formatting is clean (`nix fmt`).
+- Note any skipped checks and remediation steps in the PR.
+
+### Claude Code Repo Helpers
+
+- Slash commands live in `.claude/commands/` (verify, fix, commit/push/PR).
+- Specialized agents live in `.claude/agents/`.
+- Permissions allowlist is in `.claude/settings.json` (no dangerous defaults).
+- Optional formatter hook example is in `.claude/hooks.json.example`.
+
 ### Deployment
 
 ```bash

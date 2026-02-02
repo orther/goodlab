@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "git status",
+      "git status -sb",
+      "git diff",
+      "git diff --stat",
+      "git diff --cached",
+      "git add -A",
+      "git commit",
+      "git push",
+      "git switch",
+      "git branch",
+      "git rev-parse",
+      "git log",
+      "git show",
+      "ls",
+      "cat",
+      "rg",
+      "find",
+      "sed",
+      "nix fmt",
+      "nix flake check",
+      "nix develop",
+      "nix run",
+      "just lint",
+      "just fmt",
+      "just check"
+    ]
+  }
+}
