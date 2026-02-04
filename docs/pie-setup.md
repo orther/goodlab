@@ -786,14 +786,14 @@ sudo systemctl restart jellyfin
 
 ### Configuration Files
 
-| File                                      | Purpose                    |
-| ----------------------------------------- | -------------------------- |
-| `hosts/pie/default.nix`          | Main host configuration    |
+| File                                   | Purpose                    |
+| -------------------------------------- | -------------------------- |
+| `hosts/pie/default.nix`                | Main host configuration    |
 | `hosts/pie/hardware-configuration.nix` | Hardware-specific settings |
-| `services/plex.nix`                       | Temporary Plex service     |
-| `services/nas.nix`                        | NAS mount configuration    |
-| `modules/nixos/base.nix`                  | Common NixOS settings      |
-| `.sops.yaml`                              | Secrets encryption keys    |
+| `services/plex.nix`                    | Temporary Plex service     |
+| `services/nas.nix`                     | NAS mount configuration    |
+| `modules/nixos/base.nix`               | Common NixOS settings      |
+| `.sops.yaml`                           | Secrets encryption keys    |
 
 ### Key Directories on Pie Server
 

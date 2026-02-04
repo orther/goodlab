@@ -32,36 +32,36 @@ All prefixed commands: press `Ctrl+q`, release, then press the command key.
 
 ### Windows (tabs)
 
-| Keybinding | Action |
-|------------|--------|
-| `prefix + c` | Create new window |
-| `prefix + r` | Rename current window |
-| `prefix + &` | Kill current window (with confirmation) |
-| `prefix + n` | Next window |
-| `prefix + p` | Previous window |
+| Keybinding     | Action                                        |
+| -------------- | --------------------------------------------- |
+| `prefix + c`   | Create new window                             |
+| `prefix + r`   | Rename current window                         |
+| `prefix + &`   | Kill current window (with confirmation)       |
+| `prefix + n`   | Next window                                   |
+| `prefix + p`   | Previous window                               |
 | `prefix + 1–9` | Jump to window by number (windows start at 1) |
-| `prefix + w` | Interactive window/session picker |
+| `prefix + w`   | Interactive window/session picker             |
 
 ### Panes (splits)
 
-| Keybinding | Action |
-|------------|--------|
-| `prefix + v` | Vertical split (side-by-side), keeps current path |
-| `prefix + s` | Horizontal split (top/bottom), keeps current path |
-| `prefix + x` | Kill current pane (with confirmation) |
-| `prefix + z` | Zoom/unzoom pane (fullscreen toggle) |
-| `prefix + q` | Show pane numbers (press number to jump) |
-| `prefix + o` | Cycle through panes |
-| `Shift + ←/→/↑/↓` | Resize pane by 8 cells (no prefix) |
+| Keybinding        | Action                                            |
+| ----------------- | ------------------------------------------------- |
+| `prefix + v`      | Vertical split (side-by-side), keeps current path |
+| `prefix + s`      | Horizontal split (top/bottom), keeps current path |
+| `prefix + x`      | Kill current pane (with confirmation)             |
+| `prefix + z`      | Zoom/unzoom pane (fullscreen toggle)              |
+| `prefix + q`      | Show pane numbers (press number to jump)          |
+| `prefix + o`      | Cycle through panes                               |
+| `Shift + ←/→/↑/↓` | Resize pane by 8 cells (no prefix)                |
 
 ### Navigation (vim-aware)
 
-| Keybinding | Action |
-|------------|--------|
+| Keybinding | Action                        |
+| ---------- | ----------------------------- |
 | `Ctrl + h` | Move left (pane or vim split) |
-| `Ctrl + j` | Move down |
-| `Ctrl + k` | Move up |
-| `Ctrl + l` | Move right |
+| `Ctrl + j` | Move down                     |
+| `Ctrl + k` | Move up                       |
+| `Ctrl + l` | Move right                    |
 
 These work **without a prefix** and pass through to vim/neovim when a vim
 process is detected (via `vim-tmux-navigator`).
@@ -70,27 +70,27 @@ process is detected (via `vim-tmux-navigator`).
 
 Enter with `prefix + [`. Navigate with vim keys.
 
-| Key | Action |
-|-----|--------|
-| `v` | Begin selection |
-| `y` | Copy selection |
-| `/` | Search forward |
-| `?` | Search backward |
+| Key          | Action                   |
+| ------------ | ------------------------ |
+| `v`          | Begin selection          |
+| `y`          | Copy selection           |
+| `/`          | Search forward           |
+| `?`          | Search backward          |
 | `Ctrl + u/d` | Scroll half-page up/down |
-| `q` or `Esc` | Exit copy mode |
+| `q` or `Esc` | Exit copy mode           |
 
 Paste with `prefix + ]`.
 
 ### Utility
 
-| Keybinding | Action |
-|------------|--------|
-| `prefix + ?` | Quick help popup (press any key to dismiss) |
-| `prefix + R` | Reload tmux config |
-| `prefix + C-l` | Send Ctrl+L (clear screen) to the pane |
-| `Ctrl + f` | Project selector (no prefix, see below) |
-| `prefix + d` | Detach from session |
-| `prefix + :` | Command mode |
+| Keybinding     | Action                                      |
+| -------------- | ------------------------------------------- |
+| `prefix + ?`   | Quick help popup (press any key to dismiss) |
+| `prefix + R`   | Reload tmux config                          |
+| `prefix + C-l` | Send Ctrl+L (clear screen) to the pane      |
+| `Ctrl + f`     | Project selector (no prefix, see below)     |
+| `prefix + d`   | Detach from session                         |
+| `prefix + :`   | Command mode                                |
 
 ---
 
@@ -226,14 +226,14 @@ shows hostname and date/time on the right. Configured in
 
 ## Configuration
 
-| Setting | Value |
-|---------|-------|
-| Base index | 1 (windows start at 1) |
-| Scrollback | 10,000 lines |
-| Key mode | vi |
-| Mouse | enabled |
-| Escape time | 10ms |
-| Terminal | screen-256color |
+| Setting     | Value                  |
+| ----------- | ---------------------- |
+| Base index  | 1 (windows start at 1) |
+| Scrollback  | 10,000 lines           |
+| Key mode    | vi                     |
+| Mouse       | enabled                |
+| Escape time | 10ms                   |
+| Terminal    | screen-256color        |
 
 **Config source:** `modules/home-manager/tmux.nix` (Nix-managed)
 

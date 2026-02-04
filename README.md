@@ -187,7 +187,7 @@ modify `secrets/secrets.yaml`:
 
 ```bash
 just sopsedit
-````
+```
 
 ### Syncing sops keys for a new machine
 
