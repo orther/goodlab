@@ -50,7 +50,7 @@
         flyctl
         just
         nil
-        nixfmt-rfc-style
+        nixfmt
         nodejs
         nodePackages_latest.eas-cli
         nodePackages.typescript-language-server

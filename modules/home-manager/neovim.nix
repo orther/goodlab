@@ -17,7 +17,7 @@
       lua-language-server
       markdownlint-cli
       nixd
-      nixfmt-rfc-style
+      nixfmt
       nodePackages.bash-language-server
       nodePackages.prettier
       pyright
