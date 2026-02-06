@@ -118,6 +118,10 @@
             # Allow passthrough for OSC sequences (clickable hyperlinks, etc.)
             set -g allow-passthrough on
 
+            # Enable extended keys for proper Shift+Enter handling in apps like Claude Code
+            set -g extended-keys on
+            set -as terminal-features 'xterm*:extkeys'
+
             # Smart pane switching with awareness of Vim splits
             is_vim="ps -o state= -o comm= -t '#{pane_tty}' | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|l?n?vim?x?|fzf|atuin)(diff)?$'"
             bind-key -n 'C-h' if-shell "$is_vim" 'send-keys C-h'  'select-pane -L'
