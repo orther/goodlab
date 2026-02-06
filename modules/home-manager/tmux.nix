@@ -120,7 +120,8 @@
 
             # Enable extended keys for proper Shift+Enter handling in apps like Claude Code
             set -g extended-keys on
-            set -as terminal-features 'xterm*:extkeys'
+            set -as terminal-features 'xterm-256color:extkeys'
+            set -as terminal-features 'xterm-ghostty:extkeys'
 
             # Smart pane switching with awareness of Vim splits
             is_vim="ps -o state= -o comm= -t '#{pane_tty}' | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|l?n?vim?x?|fzf|atuin)(diff)?$'"

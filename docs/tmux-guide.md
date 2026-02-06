@@ -233,11 +233,28 @@ shows hostname and date/time on the right. Configured in
 | Key mode    | vi                     |
 | Mouse       | enabled                |
 | Escape time | 10ms                   |
-| Terminal    | screen-256color        |
+| Terminal    | tmux-256color          |
 
 **Config source:** `modules/home-manager/tmux.nix` (Nix-managed)
 
 **Reload:** `prefix + R` after rebuilding, or deploy with `just deploy <host>`.
+
+---
+
+## Terminal Features
+
+This config enables several modern terminal features for Ghostty and other compatible terminals:
+
+| Feature       | Description                                                          |
+| ------------- | -------------------------------------------------------------------- |
+| Extended keys | Passes modifier key combinations (e.g., Shift+Enter) to applications |
+| Hyperlinks    | Clickable URLs via OSC 8 sequences                                   |
+| Passthrough   | Allows OSC sequences to reach the terminal                           |
+| True color    | RGB color support via terminal overrides                             |
+
+**Extended keys** enables applications like Claude Code to distinguish Shift+Enter (newline) from Enter (submit). After changing this setting, you must restart tmux entirely (`tmux kill-server`) for it to take effect.
+
+**Hyperlinks** allow clickable URLs in terminal output. Try `ls --hyperlink=auto` to see file links.
 
 ---
 
