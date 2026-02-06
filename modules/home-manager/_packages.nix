@@ -40,29 +40,30 @@
       builtins.substring 0 3 osConfig.networking.hostName
       != "svr"
       && builtins.substring 0 2 osConfig.networking.hostName != "vm"
-    then [
-      alejandra
-      bun
-      claude-code # Filtered out on corporate networks (see combinedFiltered)
-      devenv
-      doppler
-      flyctl
-      just
-      nil
-      nixfmt-rfc-style
-      nodejs
-      nodePackages_latest.eas-cli
-      nodePackages.typescript-language-server
-      postgresql # Provides pg_dump, psql, and other PostgreSQL client tools
-      sops
-      statix
-      stripe-cli
-      wrangler # Filtered out on corporate networks (see combinedFiltered)
-      zola
-    ]
-    ++ lib.optionals pkgs.stdenv.isLinux [
-      nixos-rebuild
-    ]
+    then
+      [
+        alejandra
+        bun
+        claude-code # Filtered out on corporate networks (see combinedFiltered)
+        devenv
+        doppler
+        flyctl
+        just
+        nil
+        nixfmt
+        nodejs
+        nodePackages_latest.eas-cli
+        nodePackages.typescript-language-server
+        postgresql # Provides pg_dump, psql, and other PostgreSQL client tools
+        sops
+        statix
+        stripe-cli
+        wrangler # Filtered out on corporate networks (see combinedFiltered)
+        zola
+      ]
+      ++ lib.optionals pkgs.stdenv.isLinux [
+        nixos-rebuild
+      ]
     else []
   );
   combined = base ++ dev;

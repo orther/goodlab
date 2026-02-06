@@ -1,5 +1,4 @@
-{ pkgs, ... }:
-{
+{pkgs, ...}: {
   home.packages = [
     (pkgs.writeShellScriptBin "cd-to-project" ''
       set -u
@@ -44,86 +43,97 @@
     keyMode = "vi";
     mouse = true;
     sensibleOnTop = false;
-    terminal = "screen-256color";
+    terminal = "tmux-256color";
 
     extraConfig = ''
-      # Set the prefix to `ctrl + q` instead of `ctrl + b`
-      set -g prefix C-q
-      unbind C-b
+            # Set the prefix to `ctrl + q` instead of `ctrl + b`
+            set -g prefix C-q
+            unbind C-b
 
-      # Use | and - to split a window vertically and horizontally instead of " and % respectively
-      unbind '"'
-      unbind %
-      bind v split-window -h -c "#{pane_current_path}"
-      bind s split-window -v -c "#{pane_current_path}"
+            # Use | and - to split a window vertically and horizontally instead of " and % respectively
+            unbind '"'
+            unbind %
+            bind v split-window -h -c "#{pane_current_path}"
+            bind s split-window -v -c "#{pane_current_path}"
 
-      # Bind Arrow keys to resize the window
-      bind -n S-Down resize-pane -D 8
-      bind -n S-Up resize-pane -U 8
-      bind -n S-Left resize-pane -L 8
-      bind -n S-Right resize-pane -R 8
+            # Bind Arrow keys to resize the window
+            bind -n S-Down resize-pane -D 8
+            bind -n S-Up resize-pane -U 8
+            bind -n S-Left resize-pane -L 8
+            bind -n S-Right resize-pane -R 8
 
-      # Rename window with prefix + r
-      bind r command-prompt -I "#W" "rename-window '%%'"
+            # Rename window with prefix + r
+            bind r command-prompt -I "#W" "rename-window '%%'"
 
-      # Reload tmux config by pressing prefix + R
-      bind R source-file ~/.config/tmux/tmux.conf \; display "TMUX Conf Reloaded"
+            # Reload tmux config by pressing prefix + R
+            bind R source-file ~/.config/tmux/tmux.conf \; display "TMUX Conf Reloaded"
 
-      # Quick help popup (prefix + ?)
-      bind ? display-popup -E "cat <<'EOF'
-TMUX Quick Help
+            # Quick help popup (prefix + ?)
+            bind ? display-popup -E "cat <<'EOF'
+      TMUX Quick Help
 
-Prefix: Ctrl+q
+      Prefix: Ctrl+q
 
-Windows
-  c   New window
-  &   Close window
-  r   Rename window
-  n/p Next/Prev window
-  0-9 Switch to window
+      Windows
+        c   New window
+        &   Close window
+        r   Rename window
+        n/p Next/Prev window
+        0-9 Switch to window
 
-Splits
-  v   Split vertical
-  s   Split horizontal
-  h/j/k/l Move between panes
-  Shift+Arrows Resize panes
+      Splits
+        v   Split vertical
+        s   Split horizontal
+        h/j/k/l Move between panes
+        Shift+Arrows Resize panes
 
-Copy mode
-  [   Enter copy mode
-  Space Start selection
-  Enter Copy
-  q   Quit copy mode
+      Copy mode
+        [   Enter copy mode
+        Space Start selection
+        Enter Copy
+        q   Quit copy mode
 
-Other
-  R   Reload config
-  l   Clear screen
-  Ctrl+f Project selector
-EOF
-read -n 1 -s -r"
+      Other
+        R   Reload config
+        l   Clear screen
+        Ctrl+f Project selector
+      EOF
+      read -n 1 -s -r"
 
-      # Clear screen with prefix + l
-      bind C-l send-keys 'C-l'
+            # Clear screen with prefix + l
+            bind C-l send-keys 'C-l'
 
-      # Open a project in a separate window
-      bind-key -n C-f run-shell "tmux new-window -n project-selector -c '$HOME/code' ${pkgs.zsh}/bin/zsh -lc 'cd-to-project'"
+            # Open a project in a separate window
+            bind-key -n C-f run-shell "tmux new-window -n project-selector -c '$HOME/code' ${pkgs.zsh}/bin/zsh -lc 'cd-to-project'"
 
-      # Apply Tc
-      set -ga terminal-overrides ",xterm-256color:RGB:smcup@:rmcup@"
+            # Apply Tc
+            set -ga terminal-overrides ",xterm-256color:RGB:smcup@:rmcup@"
+            set -ga terminal-overrides ",xterm-ghostty:RGB:smcup@:rmcup@"
+            set -ga terminal-features ",xterm-256color:hyperlinks"
+            set -ga terminal-features ",xterm-ghostty:hyperlinks"
 
-      # Enable focus-events
-      set -g focus-events on
+            # Enable focus-events
+            set -g focus-events on
 
-      # Smart pane switching with awareness of Vim splits
-      is_vim="ps -o state= -o comm= -t '#{pane_tty}' | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|l?n?vim?x?|fzf|atuin)(diff)?$'"
-      bind-key -n 'C-h' if-shell "$is_vim" 'send-keys C-h'  'select-pane -L'
-      bind-key -n 'C-j' if-shell "$is_vim" 'send-keys C-j'  'select-pane -D'
-      bind-key -n 'C-k' if-shell "$is_vim" 'send-keys C-k'  'select-pane -U'
-      bind-key -n 'C-l' if-shell "$is_vim" 'send-keys C-l'  'select-pane -R'
+            # Allow passthrough for OSC sequences (clickable hyperlinks, etc.)
+            set -g allow-passthrough on
 
-      bind-key -T copy-mode-vi 'C-h' select-pane -L
-      bind-key -T copy-mode-vi 'C-j' select-pane -D
-      bind-key -T copy-mode-vi 'C-k' select-pane -U
-      bind-key -T copy-mode-vi 'C-l' select-pane -R
+            # Enable extended keys for proper Shift+Enter handling in apps like Claude Code
+            set -g extended-keys on
+            set -as terminal-features 'xterm-256color:extkeys'
+            set -as terminal-features 'xterm-ghostty:extkeys'
+
+            # Smart pane switching with awareness of Vim splits
+            is_vim="ps -o state= -o comm= -t '#{pane_tty}' | grep -iqE '^[^TXZ ]+ +(\\S+\\/)?g?(view|l?n?vim?x?|fzf|atuin)(diff)?$'"
+            bind-key -n 'C-h' if-shell "$is_vim" 'send-keys C-h'  'select-pane -L'
+            bind-key -n 'C-j' if-shell "$is_vim" 'send-keys C-j'  'select-pane -D'
+            bind-key -n 'C-k' if-shell "$is_vim" 'send-keys C-k'  'select-pane -U'
+            bind-key -n 'C-l' if-shell "$is_vim" 'send-keys C-l'  'select-pane -R'
+
+            bind-key -T copy-mode-vi 'C-h' select-pane -L
+            bind-key -T copy-mode-vi 'C-j' select-pane -D
+            bind-key -T copy-mode-vi 'C-k' select-pane -U
+            bind-key -T copy-mode-vi 'C-l' select-pane -R
     '';
   };
 

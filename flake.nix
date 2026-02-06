@@ -277,6 +277,7 @@
         apps.devservices = {
           type = "app";
           program = "${config.process-compose.devservices.package}/bin/process-compose";
+          meta.description = "Development services (PostgreSQL, Redis) via process-compose";
         };
 
         # Developer services bundle via services-flake + process-compose

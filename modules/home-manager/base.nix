@@ -38,6 +38,7 @@
   catppuccin = {
     flavor = "macchiato";
     accent = "lavender";
+    lsd.enable = true;
   };
 
   programs = {

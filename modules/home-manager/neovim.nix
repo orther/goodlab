@@ -1,5 +1,4 @@
-{ pkgs, ... }:
-{
+{pkgs, ...}: {
   programs.neovim = {
     enable = true;
     package = pkgs.neovim-unwrapped;
@@ -18,7 +17,7 @@
       lua-language-server
       markdownlint-cli
       nixd
-      nixfmt-rfc-style
+      nixfmt
       nodePackages.bash-language-server
       nodePackages.prettier
       pyright
