@@ -192,6 +192,8 @@ This plan is broken into 5 phases that can be executed incrementally. Phase 1-2 
 
 ## Related Documents
 
+- [HETZNER-SETUP-GUIDE.md](./HETZNER-SETUP-GUIDE.md) — Step-by-step manual guide for Hetzner account and VPS setup
+- [CLAUDE-CODE-PROMPT.md](./CLAUDE-CODE-PROMPT.md) — Orchestration prompt to paste into Claude Code for NixOS deployment
 - [VPS-RESEARCH.md](./VPS-RESEARCH.md) — VPS provider comparison and recommendation
 - [TOKEN-OPTIMIZATION.md](./TOKEN-OPTIMIZATION.md) — Detailed token optimization implementation
 - [NIXOS-CONFIG.md](./NIXOS-CONFIG.md) — NixOS configuration patterns for the new VPS
