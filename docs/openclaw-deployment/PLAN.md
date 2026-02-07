@@ -177,12 +177,14 @@ These steps require manual intervention:
 
 | Item | Monthly Cost |
 |------|-------------|
-| Hetzner CX32 VPS | €6.80 (~$7.50) |
-| Hetzner backups (+20%) | €1.36 (~$1.50) |
+| Hetzner CX33 VPS (Hillsboro, OR) | $5.99 |
+| Hetzner backups (+20%) | ~$1.20 |
 | API costs (optimized) | $30-50 |
-| **Total** | **~$39-59/month** |
+| **Total** | **~$37-57/month** |
 
 vs. current estimated cost of $1,500+/month without optimization.
+
+**Location:** Hillsboro, OR — ~20-30ms latency from San Diego, CA.
 
 ## Timeline
 

@@ -9,7 +9,7 @@ OpenClaw with external API (Claude/Anthropic) has modest resource needs:
 | RAM | 2 GB | 4-8 GB |
 | vCPU | 1-2 | 2-4 |
 | Storage | 10 GB | 40-80 GB |
-| Traffic | Low (~few GB/month) | 20 TB included |
+| Traffic | Low (~few GB/month) | 1 TB included (US) |
 
 Adding Ollama (llama3.2:3b for heartbeats only) adds ~2GB RAM usage and ~2GB storage for the model weights. No GPU needed for a 3B parameter model — CPU inference is fine for simple heartbeat responses.
 
@@ -23,21 +23,45 @@ Adding Ollama (llama3.2:3b for heartbeats only) adds ~2GB RAM usage and ~2GB sto
 - Ranked #1 Best Global VPS 2025 and 2026 by VPSBenchmarks
 - Best NixOS support in the community (official NixOS wiki page, nixos-anywhere tested)
 - Transparent hourly billing with monthly cap (no lock-in)
-- 20 TB traffic included on all plans
-- Data centers in Germany, Finland, USA, Singapore
+- **Hillsboro, OR data center** — ~20-30ms latency from San Diego
 - IPv4 + IPv6 included, DDoS protection included
 
-**Relevant Plans:**
+**Important: EU vs US Plan Differences**
+
+US locations (Ashburn VA, Hillsboro OR) have different plan names and traffic caps:
+- US traffic allowance: **1 TB/month** (vs 20 TB in EU)
+- Overage: $1.20/TB (same in both regions)
+- 1 TB is more than enough for OpenClaw (~10 GB/month typical usage)
+- US plans use CX23/CX33/CX43/CX53 naming (not CX22/CX32/CX42/CX52)
+
+**US Plans (Hillsboro, OR — recommended for West Coast):**
 
 | Plan | vCPU | RAM | Storage | Price/mo | Notes |
 |------|------|-----|---------|----------|-------|
-| **CX22** | 2 shared | 4 GB | 40 GB NVMe | €3.79 | Minimum viable for API-only |
-| **CX32** | 4 shared | 8 GB | 80 GB NVMe | €6.80 | **Best fit** — room for Ollama |
-| **CAX11** | 2 ARM | 4 GB | 40 GB NVMe | €3.79 | ARM alternative (EU only) |
-| **CAX21** | 4 ARM | 8 GB | 80 GB NVMe | €6.49 | Cheapest 8GB option |
-| **CX42** | 8 shared | 16 GB | 160 GB NVMe | €16.40 | Overkill unless running local LLMs |
+| **CX23** | 2 shared | 4 GB | 40 GB NVMe | $4.09 | Minimum viable for API-only |
+| **CX33** | 4 shared | 8 GB | 80 GB NVMe | $5.99 | **Best fit** — room for Ollama |
+| CX43 | 8 shared | 16 GB | 160 GB NVMe | ~$18 | Overkill unless running local LLMs |
 
-**Backup add-on:** +20% of instance cost (€1.36/mo for CX32)
+**EU Plans (Falkenstein/Nuremberg — if latency doesn't matter):**
+
+| Plan | vCPU | RAM | Storage | Price/mo | Notes |
+|------|------|-----|---------|----------|-------|
+| CX22 | 2 shared | 4 GB | 40 GB NVMe | €3.79 | EU only |
+| CX32 | 4 shared | 8 GB | 80 GB NVMe | €6.80 | EU only |
+| CAX11 | 2 ARM | 4 GB | 40 GB NVMe | €3.79 | ARM, EU only |
+| CAX21 | 4 ARM | 8 GB | 80 GB NVMe | €6.49 | ARM, EU only |
+
+**Backup add-on:** +20% of instance cost
+
+**Latency from San Diego, CA:**
+
+| Location | Expected RTT | Notes |
+|----------|-------------|-------|
+| **Hillsboro, OR** | ~20-30ms | Best choice for West Coast |
+| Ashburn, VA | ~60-80ms | Acceptable but unnecessary |
+| Falkenstein, DE | ~140-160ms | Noticeable on gateway access |
+
+Verify with live tests: [cloudpingtest.com/hetzner](https://cloudpingtest.com/hetzner) or [hetzner-latency.sliplane.io](https://hetzner-latency.sliplane.io/)
 
 #### NixOS Installation on Hetzner
 
@@ -85,37 +109,39 @@ Not competitive on price. The 1-Click deploy doesn't help since we want NixOS.
 
 ## Recommendation
 
-### Primary: Hetzner CX32 — €6.80/month (~$7.50)
+### Primary: Hetzner CX33 (Hillsboro, OR) — $5.99/month
 
 - 4 vCPU, 8 GB RAM, 80 GB NVMe SSD
+- **~20-30ms latency from San Diego** — snappy gateway and Tailscale access
 - Plenty of headroom for OpenClaw + Ollama + NixOS store
 - Best NixOS community support
 - nixos-anywhere proven workflow
 - Hourly billing (can test and destroy without full month charge)
-- 20 TB traffic included
-- With backups: €8.16/month (~$9.00)
+- 1 TB traffic included (more than enough)
+- With backups: ~$7.20/month
 
-### Budget Alternative: Hetzner CX22 — €3.79/month (~$4.20)
+### Budget Alternative: Hetzner CX23 (Hillsboro, OR) — $4.09/month
 
 - 2 vCPU, 4 GB RAM, 40 GB NVMe SSD
 - Sufficient for API-only OpenClaw without Ollama
-- Can upgrade to CX32 later with one click (no data loss)
+- Can upgrade to CX33 later with one click (no data loss)
 - Good starting point to validate the setup
 
-### ARM Alternative: Hetzner CAX21 — €6.49/month (~$7.15)
+### ARM Alternative: Hetzner CAX21 (EU only) — €6.49/month (~$7.15)
 
 - 4 ARM vCPU (Ampere Altra), 8 GB RAM, 80 GB NVMe
-- Slightly cheaper than CX32 for same specs
+- Slightly cheaper than CX33 for same specs
 - Better performance per euro for Docker workloads
-- **Caveat:** EU data centers only; NixOS aarch64-linux builds required
+- **Caveat:** EU data centers only — ~140-160ms from San Diego
 - **Caveat:** OpenClaw Docker images must support ARM (verify before choosing)
+- **Not recommended for San Diego** due to latency vs Hillsboro
 
 ## Provisioning Steps
 
 1. Sign up at [hetzner.com/cloud](https://www.hetzner.com/cloud)
 2. Create a project (e.g., "goodlab")
 3. Add SSH public key to project
-4. Create server: CX32, Falkenstein (DE) or Ashburn (US), Ubuntu 24.04 (temporary)
+4. Create server: **CX33, Hillsboro (US West)**, Ubuntu 24.04 (temporary)
 5. Note the public IPv4 address
 6. Run `nixos-anywhere` from local machine to install NixOS with custom disko config
 7. Verify SSH access to fresh NixOS install
@@ -126,10 +152,12 @@ Not competitive on price. The 1-Click deploy doesn't help since we want NixOS.
 ## Sources
 
 - [Hetzner Cloud Pricing](https://www.hetzner.com/cloud)
+- [Hetzner Cloud Locations](https://docs.hetzner.com/cloud/general/locations/)
 - [Hetzner CX Cost-Optimized Plans](https://www.bitdoze.com/hetzner-cloud-cost-optimized-plans/)
+- [Hetzner Hillsboro US West Announcement](https://www.hetzner.com/news/12-22-cloud-usa/)
+- [Hetzner Ping Test (Live)](https://cloudpingtest.com/hetzner)
+- [Hetzner Latency Test (Live)](https://hetzner-latency.sliplane.io/)
 - [Install NixOS on Hetzner Cloud — NixOS Wiki](https://wiki.nixos.org/wiki/Install_NixOS_on_Hetzner_Cloud)
 - [NixOS Friendly Hosters — NixOS Wiki](https://nixos.wiki/wiki/NixOS_friendly_hosters)
 - [Contabo vs Hetzner Comparison](https://hostadvice.com/tools/web-hosting-comparison/contabo-vs-hetzner/)
-- [OpenClaw Hardware Requirements](https://boostedhost.com/blog/en/openclaw-hardware-requirements/)
-- [OpenClaw Docker Deployment](https://docs.openclaw.ai/install/docker)
 - [nixos-anywhere](https://github.com/nix-community/nixos-anywhere)
