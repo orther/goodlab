@@ -2,17 +2,21 @@
 
 ## Overview
 
-Deploy OpenClaw (formerly Clawdbot/Moltbot) to a dedicated VPS managed by this goodlab Nix flake. This plan covers migrating the existing `noir`-hosted clawdbot service to a purpose-built VPS, implementing the token optimization strategies from the cost-reduction guide, and adding Ollama for local heartbeat routing.
+Deploy OpenClaw (formerly Clawdbot/Moltbot) to a dedicated VPS managed by this goodlab Nix flake. This plan covers migrating the existing `noir`-hosted clawdbot service to a purpose-built VPS, implementing token optimization strategies from the cost-reduction guide, and adding Ollama for local heartbeat routing.
 
 **Current state:** OpenClaw runs on `noir` (homelab x86_64 server) as `services.clawdbot` via `nix-clawdbot` flake input with Telegram, Anthropic, and Brave Search integrations.
 
-**Target state:** OpenClaw runs on a dedicated Hetzner Cloud VPS (`claw`) with token optimizations, Ollama heartbeat routing, model routing, and budget controls — all managed declaratively through this flake.
+**Target state:** OpenClaw runs on a dedicated Hetzner Cloud VPS (`claw`) with token optimizations, Ollama heartbeat routing, model routing, and budget controls, with strict isolation controls:
+- Dedicated SSH/admin keypair for `claw` (no personal key reuse)
+- Dedicated provider credentials for the bot (Telegram/Anthropic/Brave/Tailscale)
+- Dedicated SOPS file and recipient rule for `claw` secrets (no cross-host secret fanout)
+- Tailscale-only ingress for SSH and gateway (no public `80/443` by default)
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────┐
-│  Hetzner Cloud VPS "claw" (CX32 / CAX21)        │
+│  Hetzner Cloud VPS "claw" (CX33, Hillsboro)     │
 │  NixOS + Impermanence                           │
 │                                                  │
 │  ┌──────────────────────────────────────────┐   │
@@ -29,13 +33,8 @@ Deploy OpenClaw (formerly Clawdbot/Moltbot) to a dedicated VPS managed by this g
 │  └──────────────────────────────────────────┘   │
 │                                                  │
 │  ┌──────────────────────────────────────────┐   │
-│  │ Nginx reverse proxy + ACME               │   │
-│  │  └── Optional: web dashboard access       │   │
-│  └──────────────────────────────────────────┘   │
-│                                                  │
-│  ┌──────────────────────────────────────────┐   │
 │  │ Tailscale (mesh VPN)                      │   │
-│  │  └── Secure access from homelab network   │   │
+│  │  └── SSH + gateway ingress only on tailnet │  │
 │  └──────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────┘
 ```
@@ -47,18 +46,18 @@ Deploy OpenClaw (formerly Clawdbot/Moltbot) to a dedicated VPS managed by this g
 **Goal:** Provision a Hetzner Cloud VPS and install NixOS via `nixos-anywhere`.
 
 1. Create Hetzner Cloud account (if needed) and provision VPS
-   - **Recommended:** CX32 (4 vCPU, 8GB RAM, 80GB NVMe) at €6.80/month
-   - **Budget option:** CX22 (2 vCPU, 4GB RAM, 40GB NVMe) at €3.79/month
+   - **Recommended:** CX33 (4 vCPU, 8GB RAM, 80GB NVMe) at ~$5.99/month
+   - **Budget option:** CX23 (2 vCPU, 4GB RAM, 40GB NVMe) at ~$4.09/month
    - See [VPS-RESEARCH.md](./VPS-RESEARCH.md) for full comparison
 2. Install NixOS using `nixos-anywhere` (kexec + disko approach)
 3. Configure disk layout with impermanence (root on tmpfs, persistent `/nix`)
-4. Set up SSH keys and initial access
+4. Set up dedicated `claw` SSH/admin key and initial access
 
 **Deliverables:**
 - [ ] VPS provisioned on Hetzner Cloud
 - [ ] NixOS installed via nixos-anywhere
 - [ ] SSH access verified
-- [ ] Age key generated and added to `.sops.yaml`
+- [ ] Age key generated and added to isolated `claw` SOPS rule
 
 ### Phase 2: Flake Integration
 
@@ -66,15 +65,16 @@ Deploy OpenClaw (formerly Clawdbot/Moltbot) to a dedicated VPS managed by this g
 
 1. Create `hosts/claw/default.nix` and `hosts/claw/hardware-configuration.nix`
 2. Add `claw` to `flake.nix` nixosConfigurations
-3. Add `claw` age key to `.sops.yaml` creation rules
+3. Add `claw` age key to `.sops.yaml` with a dedicated `secrets/claw-secrets.yaml` creation rule (before catch-all rule)
 4. Add nixosEval smoke test for `claw` to flake checks
-5. Import base modules: `base`, `remote-unlock`, `auto-update`
-6. Import services: `tailscale`, `_acme`, `_nginx`
+5. Import base modules: `base`, `auto-update` (skip `remote-unlock`)
+6. Configure host-local Tailscale settings with no route advertisement
 
 **Deliverables:**
 - [ ] `hosts/claw/` directory with machine config
 - [ ] `flake.nix` updated with `claw` nixosConfiguration
-- [ ] `.sops.yaml` updated with `claw` age key
+- [ ] `.sops.yaml` updated with scoped `claw` recipient rule
+- [ ] `secrets/claw-secrets.yaml` created for bot-only secrets
 - [ ] `nix flake check` passes with `claw` eval test
 - [ ] `just deploy claw <ip>` works
 
@@ -83,9 +83,9 @@ Deploy OpenClaw (formerly Clawdbot/Moltbot) to a dedicated VPS managed by this g
 **Goal:** Move the clawdbot/OpenClaw service from `noir` to `claw`.
 
 1. Create `services/openclaw.nix` service module (refactored from noir's inline config)
-2. Configure SOPS secrets for `claw` (copy existing clawdbot secrets)
-3. Set up Telegram, Anthropic, Brave Search integrations
-4. Configure gateway with Tailscale-only firewall rules
+2. Configure `claw` secrets using dedicated bot credentials (do not reuse personal credentials)
+3. Set up Telegram, Anthropic, Brave Search integrations with dedicated keys/accounts
+4. Configure SSH and gateway with Tailscale-only firewall rules
 5. Verify service starts and Telegram bot responds
 6. Disable clawdbot service on `noir` once `claw` is confirmed working
 
@@ -149,8 +149,8 @@ See [TOKEN-OPTIMIZATION.md](./TOKEN-OPTIMIZATION.md) for detailed implementation
 | File | Change |
 |------|--------|
 | `flake.nix` | Add `claw` nixosConfiguration + eval check |
-| `.sops.yaml` | Add `claw` age key |
-| `secrets/secrets.yaml` | Re-encrypt with `claw` key |
+| `.sops.yaml` | Add `claw` age key + scoped creation rule for `claw` secrets |
+| `secrets/claw-secrets.yaml` | New isolated secrets file for `claw` credentials |
 | `justfile` | No changes needed (deploy already supports any NixOS host) |
 | `hosts/noir/default.nix` | Disable clawdbot service (Phase 3 completion) |
 | `clawdbot-documents/AGENTS.md` | Update for VPS context + model routing |
@@ -166,12 +166,12 @@ These steps require manual intervention:
 4. **nixos-anywhere execution** — Must be run from a machine with SSH access to the new VPS
 5. **Age key extraction** — Run `ssh-to-age` against the VPS's host key after NixOS install
 6. **SOPS re-encryption** — Run `just sopsupdate` after adding the new age key
-7. **Telegram bot token** — If creating a new bot, must interact with @BotFather on Telegram
-8. **Anthropic API key** — Must be created via Anthropic Console
-9. **Brave Search API key** — Must be created via Brave Search API dashboard
+7. **Telegram bot token** — Must be a dedicated bot token from @BotFather
+8. **Anthropic credential** — Must come from a dedicated non-personal workspace/account
+9. **Brave Search API key** — Must be a dedicated key for this bot/service
 10. **Ollama model pull** — First run requires downloading llama3.2:3b (~2GB)
-11. **DNS records** — If using a custom domain, A/AAAA records must be configured
-12. **Tailscale auth** — New device must be approved in Tailscale admin console
+11. **Tailscale auth** — New device must be approved in Tailscale admin console
+12. **Credential rotation** — Rotate/remove old `noir` bot secrets after migration
 
 ## Cost Estimate
 

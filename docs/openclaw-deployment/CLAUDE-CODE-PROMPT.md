@@ -25,7 +25,12 @@ with token optimizations and Ollama for heartbeat routing.
 - NixOS config templates are in `docs/openclaw-deployment/NIXOS-CONFIG.md`
 - Token optimization details are in `docs/openclaw-deployment/TOKEN-OPTIMIZATION.md`
 - The existing clawdbot config on `noir` is the reference: `hosts/noir/default.nix`
-- Existing patterns to follow: `modules/nixos/base.nix`, `services/tailscale.nix`
+- Existing patterns to follow: `modules/nixos/base.nix`
+- Isolation is mandatory:
+  - dedicated `claw` credentials only (no personal logins/tokens)
+  - dedicated `claw` SOPS file/rule
+  - Tailscale-only ingress for SSH and gateway
+  - no route advertisement from `claw`
 
 ### Step-by-step instructions
 
@@ -50,15 +55,22 @@ decision.
 3. Create `hosts/claw/default.nix` following the template in
    `docs/openclaw-deployment/NIXOS-CONFIG.md` but with these adjustments:
    - Import `base`, `auto-update` modules (skip `remote-unlock` — no LUKS on VPS)
-   - Import `services/tailscale.nix`, `services/_acme.nix`, `services/_nginx.nix`
    - Import `inputs.nix-clawdbot.nixosModules.clawdbot`
    - Use `server-base` home-manager module (not full `base`)
+   - Set `sops.defaultSopsFile = ./../../secrets/claw-secrets.yaml`
+   - Add `sops.secrets."tailscale-authkey"` in host config
    - Configure all SOPS secrets for clawdbot (telegram, anthropic, gateway, brave, openrouter)
+     using dedicated bot credentials only (not copied personal tokens)
    - Full clawdbot service config with token optimizations (model routing, session init,
      heartbeat to ollama, budget controls)
    - Brave key injection systemd service (copy pattern from noir)
+   - Configure `services.tailscale` locally in this host with:
+     - `openFirewall = false`
+     - `useRoutingFeatures = "client"` (no route advertisements)
+     - no `--advertise-routes` flags
    - Networking: hostname "claw", useDHCP true, useNetworkd true, disable NetworkManager
-   - Firewall: allow 80/443 globally, allow 18789 on tailscale0 only
+   - Set `services.openssh.openFirewall = lib.mkForce false`
+   - Firewall: allow no global inbound ports; allow `22` and `18789` on `tailscale0` only
 
 4. Create `services/ollama.nix`:
    - Enable `services.ollama` with host `127.0.0.1`, port `11434`
@@ -77,15 +89,22 @@ decision.
 
 7. Add a placeholder age key for `claw` to `.sops.yaml`:
    - Use `age1placeholder000000000000000000000000000000000000000000000000` as the key
-   - Add `*claw` to the creation_rules key_groups
+   - Add a dedicated creation_rule for `secrets/claw-secrets.yaml` with recipients `*stud` and `*claw`
+     and place it **before** the shared catch-all rule
+   - Do NOT add `*claw` to the shared `secrets/[^/]+...` rule
    - We'll replace the placeholder with the real key after nixos-anywhere
 
-8. Run `nix flake check` to verify the claw config evaluates cleanly.
+8. Create `secrets/claw-secrets.yaml` with only `claw`-specific secrets
+   (`tailscale-authkey`, `clawdbot/*`) and no unrelated machine secrets.
+
+9. Run `nix flake check` to verify the claw config evaluates cleanly.
    If there are errors, fix them before proceeding.
 
 #### Phase 3: Install NixOS via nixos-anywhere
 
-9. Run nixos-anywhere to install NixOS on the Hetzner VPS:
+10. Run nixos-anywhere to install NixOS on the Hetzner VPS:
+    Use the dedicated `~/.ssh/claw_admin_ed25519` key (for example via `~/.ssh/config`
+    host entry for `<SERVER_IP>`).
    ```bash
    nix run github:nix-community/nixos-anywhere -- \
      --flake .#claw \
@@ -94,45 +113,48 @@ decision.
    ```
    This will take 5-10 minutes. The server will reboot into NixOS automatically.
 
-10. After reboot, verify SSH access:
+11. After reboot, verify SSH access:
     ```bash
-    ssh orther@<SERVER_IP> "hostname && nixos-version"
+    ssh -i ~/.ssh/claw_admin_ed25519 orther@<SERVER_IP> "hostname && nixos-version"
     ```
 
 #### Phase 4: SOPS key setup
 
-11. Extract the real age key from the new server:
+12. Extract the real age key from the new server:
     ```bash
-    ssh orther@<SERVER_IP> "sudo cat /etc/ssh/ssh_host_ed25519_key.pub" | nix shell nixpkgs#ssh-to-age -c ssh-to-age
+    ssh -i ~/.ssh/claw_admin_ed25519 orther@<SERVER_IP> "sudo cat /etc/ssh/ssh_host_ed25519_key.pub" | nix shell nixpkgs#ssh-to-age -c ssh-to-age
     ```
 
-12. Replace the placeholder in `.sops.yaml` with the real age key.
+13. Replace the placeholder in `.sops.yaml` with the real age key.
 
-13. Tell me to run `just sopsupdate` manually (this requires my local SOPS age key).
+14. Tell me to run `just sopsupdate` manually (this requires my local SOPS age key).
 
 #### Phase 5: Final deploy and verification
 
-14. After I confirm SOPS is updated, deploy the full configuration:
+15. After I confirm SOPS is updated, deploy the full configuration:
     ```bash
     just deploy claw <SERVER_IP>
     ```
 
-15. Verify services are running:
+16. Verify services are running:
     ```bash
-    ssh orther@<SERVER_IP> "systemctl status clawdbot-gateway ollama"
+    ssh -i ~/.ssh/claw_admin_ed25519 orther@<SERVER_IP> "systemctl status clawdbot-gateway ollama"
     ```
 
-16. Create the new clawdbot workspace documents:
+17. Create the new clawdbot workspace documents:
     - `clawdbot-documents/USER.md` (user context, from TOKEN-OPTIMIZATION.md)
     - `clawdbot-documents/IDENTITY.md` (agent identity, from TOKEN-OPTIMIZATION.md)
     - Update `clawdbot-documents/AGENTS.md` to reference VPS "claw" instead of "noir"
 
-17. Commit all changes and push.
+18. Commit all changes and push.
 
 ### Important notes
 
 - Do NOT modify `hosts/noir/default.nix` yet — we'll disable clawdbot on noir
   only after confirming claw works
+- Do NOT reuse personal credentials — create dedicated bot/API credentials for `claw`
+- Do NOT expose public `80/443` unless we explicitly need a public web UI later
+- Do NOT use shared `services/tailscale.nix` for this host (it advertises routes)
 - Do NOT run `just sopsupdate` — tell me to do it manually since it needs my local key
 - If nixos-anywhere fails, check the Hetzner Console (browser VNC) for boot errors
 - The server's Tailscale will need manual approval — tell me when to do that
@@ -148,6 +170,9 @@ Once Claude Code finishes the prompt above, do these manual steps:
 
 - [ ] Run `just sopsupdate` when prompted
 - [ ] Approve `claw` in [Tailscale Admin](https://login.tailscale.com/admin/machines)
+- [ ] Verify SSH and gateway are reachable over Tailscale only
+- [ ] Remove temporary public SSH rule in Hetzner firewall
 - [ ] Send a test message to lildoofy_bot on Telegram
 - [ ] Check API costs at [console.anthropic.com](https://console.anthropic.com) after 24 hours
+- [ ] Rotate legacy `noir` bot credentials once `claw` is stable
 - [ ] Once confirmed working, have Claude Code disable clawdbot on noir

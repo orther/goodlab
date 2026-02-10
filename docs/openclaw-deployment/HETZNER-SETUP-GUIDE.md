@@ -5,7 +5,7 @@ Step-by-step guide to provision a Hetzner Cloud VPS for the OpenClaw deployment.
 ## Prerequisites
 
 - Credit card or PayPal for Hetzner billing
-- SSH key pair on your local machine (`~/.ssh/id_ed25519`)
+- A dedicated SSH key pair for this VPS (`~/.ssh/claw_admin_ed25519`)
 - Your goodlab repo cloned locally
 
 ## Step 1: Create Hetzner Cloud Account
@@ -23,16 +23,22 @@ Step-by-step guide to provision a Hetzner Cloud VPS for the OpenClaw deployment.
 3. Name it `goodlab`
 4. Click into the project
 
-## Step 3: Add Your SSH Key
+## Step 3: Create and Add a Dedicated SSH Key
+
+Before adding a key in Hetzner, generate a new keypair dedicated to `claw`:
+
+```bash
+ssh-keygen -t ed25519 -f ~/.ssh/claw_admin_ed25519 -C "claw-admin" -N ""
+```
 
 1. In the project, go to **Security** (left sidebar) > **SSH Keys**
 2. Click **"Add SSH Key"**
 3. Paste your public key:
    ```bash
    # Run this on your Mac to copy your public key
-   cat ~/.ssh/id_ed25519.pub | pbcopy
+   cat ~/.ssh/claw_admin_ed25519.pub | pbcopy
    ```
-4. Name it something recognizable (e.g., `stud-macbook`)
+4. Name it something recognizable (e.g., `claw-admin`)
 5. Click **"Add SSH key"**
 
 ## Step 4: Create the Server
@@ -48,7 +54,7 @@ Step-by-step guide to provision a Hetzner Cloud VPS for the OpenClaw deployment.
 | **Networking** | Public IPv4 + IPv6 (default) |
 | **SSH Keys** | Select the key you just added |
 | **Volumes** | None |
-| **Firewalls** | None (we'll use NixOS firewall) |
+| **Firewalls** | Temporary firewall allowing SSH (22) only from your current IP |
 | **Backups** | Enable (+20%, ~$1.20/month) |
 | **Name** | `claw` |
 
@@ -69,7 +75,7 @@ export CLAW_IP=<your-server-ip>
 
 ```bash
 # Test SSH to the Ubuntu instance
-ssh root@$CLAW_IP "hostname && uname -a"
+ssh -i ~/.ssh/claw_admin_ed25519 root@$CLAW_IP "hostname && uname -a"
 ```
 
 You should see the Ubuntu hostname and kernel info. If this works, you're ready for NixOS installation.
@@ -97,12 +103,13 @@ After the first deploy, the VPS will try to join your Tailscale network:
    # From your Mac
    ping claw  # Should resolve via Tailscale MagicDNS
    ```
+5. Remove the temporary Hetzner public SSH firewall rule after Tailscale SSH works
 
 ## Step 9: Verify Everything Works
 
 ```bash
 # SSH over Tailscale (once approved)
-ssh orther@claw
+ssh -i ~/.ssh/claw_admin_ed25519 orther@claw
 
 # Check services
 systemctl status clawdbot-gateway
@@ -137,7 +144,7 @@ Billing is hourly with a monthly cap. If you delete the server before month-end,
 
 **"Permission denied" on SSH:**
 - Ensure your SSH key was added in Step 3
-- Try: `ssh -i ~/.ssh/id_ed25519 root@$CLAW_IP`
+- Try: `ssh -i ~/.ssh/claw_admin_ed25519 root@$CLAW_IP`
 
 **Server not reachable after nixos-anywhere:**
 - Use Hetzner Console (browser VNC) to check boot status

@@ -4,6 +4,15 @@
 
 The OpenClaw token optimization guide targets reducing monthly API costs from $1,500+ to $30-50 through four strategies. This document details how to implement each within our NixOS/flake-managed deployment.
 
+## Isolation Prerequisite
+
+Before applying token optimizations, ensure the bot runtime is isolated:
+
+- Run on dedicated host `claw`
+- Use dedicated provider credentials (no personal login/session tokens)
+- Use dedicated `claw` SOPS secrets file/rule
+- Restrict ingress to Tailscale
+
 ## Strategy 1: Session Initialization Optimization
 
 ### Problem
@@ -201,7 +210,7 @@ configOverrides = {
 - **RAM:** ~2GB additional for llama3.2:3b loaded in memory
 - **Storage:** ~2GB for model weights in `/var/lib/ollama`
 - **CPU:** Minimal — heartbeat inference is trivial for a 3B model
-- **Why CX32 is recommended:** 8GB RAM comfortably fits OpenClaw (~2GB) + Ollama (~2GB) + NixOS overhead (~1-2GB) with headroom
+- **Why CX33 is recommended:** 8GB RAM comfortably fits OpenClaw (~2GB) + Ollama (~2GB) + NixOS overhead (~1-2GB) with headroom
 
 ---
 
@@ -265,7 +274,7 @@ configOverrides = {
 | Budget cap | Unbounded | $200/month max | Risk elimination |
 | **Total API costs** | **$1,500+** | **$30-50** | **$1,450+** |
 
-Add VPS hosting: ~$9/month (Hetzner CX32 + backups)
+Add VPS hosting: ~$7.20/month (Hetzner CX33 + backups)
 
 **Total monthly cost: ~$39-59/month** (down from $1,500+)
 
