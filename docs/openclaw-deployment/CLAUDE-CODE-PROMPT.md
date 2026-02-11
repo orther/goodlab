@@ -63,9 +63,9 @@ decision.
    - Add `sops.secrets."user-password" = {}` (required by base.nix for `hashedPasswordFile`)
    - Add `sops.secrets."tailscale-authkey"` in host config
    - Configure all SOPS secrets for clawdbot (telegram, anthropic, gateway, brave, openrouter)
+     using dedicated bot credentials only (not copied personal tokens)
    - Add the lildoofy admin pubkey to `users.users.orther.openssh.authorizedKeys.keys`
      (base.nix only has the personal key; the dedicated lildoofy admin key must be added too)
-     using dedicated bot credentials only (not copied personal tokens)
    - Full clawdbot service config with token optimizations (model routing, session init,
      heartbeat to ollama, budget controls)
    - Brave key injection systemd service (copy pattern from noir)
