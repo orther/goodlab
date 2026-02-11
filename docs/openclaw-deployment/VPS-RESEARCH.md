@@ -19,9 +19,9 @@ Adding Ollama (llama3.2:3b for heartbeats only) adds ~2GB RAM usage and ~2GB sto
 
 For this deployment, isolation is a design requirement, not an optional hardening step:
 
-- Use a dedicated SSH/admin keypair for `claw` (no reuse of personal keys)
+- Use a dedicated SSH/admin keypair for `lildoofy` (no reuse of personal keys)
 - Use dedicated service credentials for Telegram/Anthropic/Brave/Tailscale
-- Keep `claw` secrets in a dedicated SOPS file and recipient rule
+- Keep `lildoofy` secrets in a dedicated SOPS file and recipient rule
 - Keep ingress private: Tailscale-only for SSH and gateway, no public web exposure by default
 - Do not advertise homelab routes from this VPS
 
@@ -150,14 +150,14 @@ Not competitive on price. The 1-Click deploy doesn't help since we want NixOS.
 
 1. Sign up at [hetzner.com/cloud](https://www.hetzner.com/cloud)
 2. Create a project (e.g., "goodlab")
-3. Add dedicated `claw` SSH public key to project
+3. Add dedicated `lildoofy` SSH public key to project
 4. Create server: **CX33, Hillsboro (US West)**, Ubuntu 24.04 (temporary)
 5. Note the public IPv4 address
 6. Run `nixos-anywhere` from local machine to install NixOS with custom disko config
 7. Verify SSH access to fresh NixOS install
 8. Extract age key: `ssh orther@<ip> "sudo cat /etc/ssh/ssh_host_ed25519_key.pub" | ssh-to-age`
 9. Add key to `.sops.yaml`, run `just sopsupdate`
-10. Deploy: `just deploy claw <ip>`
+10. Deploy: `just deploy lildoofy <ip>`
 
 ## Sources
 

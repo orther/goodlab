@@ -6,17 +6,17 @@ Deploy OpenClaw (formerly Clawdbot/Moltbot) to a dedicated VPS managed by this g
 
 **Current state:** OpenClaw runs on `noir` (homelab x86_64 server) as `services.clawdbot` via `nix-clawdbot` flake input with Telegram, Anthropic, and Brave Search integrations.
 
-**Target state:** OpenClaw runs on a dedicated Hetzner Cloud VPS (`claw`) with token optimizations, Ollama heartbeat routing, model routing, and budget controls, with strict isolation controls:
-- Dedicated SSH/admin keypair for `claw` (no personal key reuse)
+**Target state:** OpenClaw runs on a dedicated Hetzner Cloud VPS (`lildoofy`) with token optimizations, Ollama heartbeat routing, model routing, and budget controls, with strict isolation controls:
+- Dedicated SSH/admin keypair for `lildoofy` (no personal key reuse)
 - Dedicated provider credentials for the bot (Telegram/Anthropic/Brave/Tailscale)
-- Dedicated SOPS file and recipient rule for `claw` secrets (no cross-host secret fanout)
+- Dedicated SOPS file and recipient rule for `lildoofy` secrets (no cross-host secret fanout)
 - Tailscale-only ingress for SSH and gateway (no public `80/443` by default)
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────┐
-│  Hetzner Cloud VPS "claw" (CX33, Hillsboro)     │
+│  Hetzner Cloud VPS "lildoofy" (CX33, Hillsboro)     │
 │  NixOS + Impermanence                           │
 │                                                  │
 │  ┌──────────────────────────────────────────┐   │
@@ -51,47 +51,47 @@ Deploy OpenClaw (formerly Clawdbot/Moltbot) to a dedicated VPS managed by this g
    - See [VPS-RESEARCH.md](./VPS-RESEARCH.md) for full comparison
 2. Install NixOS using `nixos-anywhere` (kexec + disko approach)
 3. Configure disk layout with impermanence (root on tmpfs, persistent `/nix`)
-4. Set up dedicated `claw` SSH/admin key and initial access
+4. Set up dedicated `lildoofy` SSH/admin key and initial access
 
 **Deliverables:**
 - [ ] VPS provisioned on Hetzner Cloud
 - [ ] NixOS installed via nixos-anywhere
 - [ ] SSH access verified
-- [ ] Age key generated and added to isolated `claw` SOPS rule
+- [ ] Age key generated and added to isolated `lildoofy` SOPS rule
 
 ### Phase 2: Flake Integration
 
-**Goal:** Add the new `claw` machine to the goodlab flake.
+**Goal:** Add the new `lildoofy` machine to the goodlab flake.
 
-1. Create `hosts/claw/default.nix` and `hosts/claw/hardware-configuration.nix`
-2. Add `claw` to `flake.nix` nixosConfigurations
-3. Add `claw` age key to `.sops.yaml` with a dedicated `secrets/claw-secrets.yaml` creation rule (before catch-all rule)
-4. Add nixosEval smoke test for `claw` to flake checks
+1. Create `hosts/lildoofy/default.nix` and `hosts/lildoofy/hardware-configuration.nix`
+2. Add `lildoofy` to `flake.nix` nixosConfigurations
+3. Add `lildoofy` age key to `.sops.yaml` with a dedicated `secrets/lildoofy-secrets.yaml` creation rule (before catch-all rule)
+4. Add nixosEval smoke test for `lildoofy` to flake checks
 5. Import base modules: `base`, `auto-update` (skip `remote-unlock`)
 6. Configure host-local Tailscale settings with no route advertisement
 
 **Deliverables:**
-- [ ] `hosts/claw/` directory with machine config
-- [ ] `flake.nix` updated with `claw` nixosConfiguration
-- [ ] `.sops.yaml` updated with scoped `claw` recipient rule
-- [ ] `secrets/claw-secrets.yaml` created for bot-only secrets
-- [ ] `nix flake check` passes with `claw` eval test
-- [ ] `just deploy claw <ip>` works
+- [ ] `hosts/lildoofy/` directory with machine config
+- [ ] `flake.nix` updated with `lildoofy` nixosConfiguration
+- [ ] `.sops.yaml` updated with scoped `lildoofy` recipient rule
+- [ ] `secrets/lildoofy-secrets.yaml` created for bot-only secrets
+- [ ] `nix flake check` passes with `lildoofy` eval test
+- [ ] `just deploy lildoofy <ip>` works
 
 ### Phase 3: OpenClaw Service Migration
 
-**Goal:** Move the clawdbot/OpenClaw service from `noir` to `claw`.
+**Goal:** Move the clawdbot/OpenClaw service from `noir` to `lildoofy`.
 
 1. Create `services/openclaw.nix` service module (refactored from noir's inline config)
-2. Configure `claw` secrets using dedicated bot credentials (do not reuse personal credentials)
+2. Configure `lildoofy` secrets using dedicated bot credentials (do not reuse personal credentials)
 3. Set up Telegram, Anthropic, Brave Search integrations with dedicated keys/accounts
 4. Configure SSH and gateway with Tailscale-only firewall rules
 5. Verify service starts and Telegram bot responds
-6. Disable clawdbot service on `noir` once `claw` is confirmed working
+6. Disable clawdbot service on `noir` once `lildoofy` is confirmed working
 
 **Deliverables:**
 - [ ] `services/openclaw.nix` — reusable service module
-- [ ] SOPS secrets configured for `claw`
+- [ ] SOPS secrets configured for `lildoofy`
 - [ ] Telegram bot responding from new VPS
 - [ ] Gateway accessible over Tailscale
 - [ ] `noir` clawdbot disabled
@@ -137,8 +137,8 @@ See [TOKEN-OPTIMIZATION.md](./TOKEN-OPTIMIZATION.md) for detailed implementation
 
 | File | Purpose |
 |------|---------|
-| `hosts/claw/default.nix` | Machine configuration |
-| `hosts/claw/hardware-configuration.nix` | Hardware/disk config (from nixos-anywhere) |
+| `hosts/lildoofy/default.nix` | Machine configuration |
+| `hosts/lildoofy/hardware-configuration.nix` | Hardware/disk config (from nixos-anywhere) |
 | `services/openclaw.nix` | Reusable OpenClaw service module |
 | `services/ollama.nix` | Ollama local LLM service module |
 | `clawdbot-documents/USER.md` | User context (new, for optimization) |
@@ -148,9 +148,9 @@ See [TOKEN-OPTIMIZATION.md](./TOKEN-OPTIMIZATION.md) for detailed implementation
 
 | File | Change |
 |------|--------|
-| `flake.nix` | Add `claw` nixosConfiguration + eval check |
-| `.sops.yaml` | Add `claw` age key + scoped creation rule for `claw` secrets |
-| `secrets/claw-secrets.yaml` | New isolated secrets file for `claw` credentials |
+| `flake.nix` | Add `lildoofy` nixosConfiguration + eval check |
+| `.sops.yaml` | Add `lildoofy` age key + scoped creation rule for `lildoofy` secrets |
+| `secrets/lildoofy-secrets.yaml` | New isolated secrets file for `lildoofy` credentials |
 | `justfile` | No changes needed (deploy already supports any NixOS host) |
 | `hosts/noir/default.nix` | Disable clawdbot service (Phase 3 completion) |
 | `clawdbot-documents/AGENTS.md` | Update for VPS context + model routing |

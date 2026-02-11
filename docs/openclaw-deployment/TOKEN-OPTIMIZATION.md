@@ -8,9 +8,9 @@ The OpenClaw token optimization guide targets reducing monthly API costs from $1
 
 Before applying token optimizations, ensure the bot runtime is isolated:
 
-- Run on dedicated host `claw`
+- Run on dedicated host `lildoofy`
 - Use dedicated provider credentials (no personal login/session tokens)
-- Use dedicated `claw` SOPS secrets file/rule
+- Use dedicated `lildoofy` SOPS secrets file/rule
 - Restrict ingress to Tailscale
 
 ## Strategy 1: Session Initialization Optimization
@@ -51,10 +51,10 @@ Configure OpenClaw to load only essential files at session start:
 ```markdown
 # Identity
 
-You are **lildoofy_bot**, Brandon's personal AI assistant.
+You are **Lil Doofy**, Brandon's personal AI assistant.
 
 ## Platform
-- Running on NixOS VPS (claw) managed by goodlab flake
+- Running on NixOS VPS (lildoofy) managed by goodlab flake
 - Accessible via Telegram
 - Using Anthropic Claude API with model routing
 

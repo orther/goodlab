@@ -5,7 +5,7 @@ Step-by-step guide to provision a Hetzner Cloud VPS for the OpenClaw deployment.
 ## Prerequisites
 
 - Credit card or PayPal for Hetzner billing
-- A dedicated SSH key pair for this VPS (`~/.ssh/claw_admin_ed25519`)
+- A dedicated SSH key pair for this VPS (`~/.ssh/lildoofy_admin_ed25519`)
 - Your goodlab repo cloned locally
 
 ## Step 1: Create Hetzner Cloud Account
@@ -25,10 +25,10 @@ Step-by-step guide to provision a Hetzner Cloud VPS for the OpenClaw deployment.
 
 ## Step 3: Create and Add a Dedicated SSH Key
 
-Before adding a key in Hetzner, generate a new keypair dedicated to `claw`:
+Before adding a key in Hetzner, generate a new keypair dedicated to `lildoofy`:
 
 ```bash
-ssh-keygen -t ed25519 -f ~/.ssh/claw_admin_ed25519 -C "claw-admin" -N ""
+ssh-keygen -t ed25519 -f ~/.ssh/lildoofy_admin_ed25519 -C "lildoofy-admin" -N ""
 ```
 
 1. In the project, go to **Security** (left sidebar) > **SSH Keys**
@@ -36,9 +36,9 @@ ssh-keygen -t ed25519 -f ~/.ssh/claw_admin_ed25519 -C "claw-admin" -N ""
 3. Paste your public key:
    ```bash
    # Run this on your Mac to copy your public key
-   cat ~/.ssh/claw_admin_ed25519.pub | pbcopy
+   cat ~/.ssh/lildoofy_admin_ed25519.pub | pbcopy
    ```
-4. Name it something recognizable (e.g., `claw-admin`)
+4. Name it something recognizable (e.g., `lildoofy-admin`)
 5. Click **"Add SSH key"**
 
 ## Step 4: Create the Server
@@ -56,7 +56,7 @@ ssh-keygen -t ed25519 -f ~/.ssh/claw_admin_ed25519 -C "claw-admin" -N ""
 | **Volumes** | None |
 | **Firewalls** | Temporary firewall allowing SSH (22) only from your current IP |
 | **Backups** | Enable (+20%, ~$1.20/month) |
-| **Name** | `claw` |
+| **Name** | `lildoofy` |
 
 3. Click **"Create & Buy now"**
 4. Wait ~30 seconds for the server to provision
@@ -68,14 +68,14 @@ ssh-keygen -t ed25519 -f ~/.ssh/claw_admin_ed25519 -C "claw-admin" -N ""
 
 ```bash
 # Example: export for convenience in this terminal session
-export CLAW_IP=<your-server-ip>
+export LILDOOFY_IP=<your-server-ip>
 ```
 
 ## Step 6: Verify SSH Access
 
 ```bash
 # Test SSH to the Ubuntu instance
-ssh -i ~/.ssh/claw_admin_ed25519 root@$CLAW_IP "hostname && uname -a"
+ssh -i ~/.ssh/lildoofy_admin_ed25519 root@$LILDOOFY_IP "hostname && uname -a"
 ```
 
 You should see the Ubuntu hostname and kernel info. If this works, you're ready for NixOS installation.
@@ -96,12 +96,12 @@ This is where the Claude Code orchestration prompt takes over. From your goodlab
 After the first deploy, the VPS will try to join your Tailscale network:
 
 1. Go to [Tailscale Admin Console](https://login.tailscale.com/admin/machines)
-2. Find the new `claw` device (it will show as pending)
+2. Find the new `lildoofy` device (it will show as pending)
 3. Click **"..."** > **"Approve"**
 4. Verify connectivity:
    ```bash
    # From your Mac
-   ping claw  # Should resolve via Tailscale MagicDNS
+   ping lildoofy  # Should resolve via Tailscale MagicDNS
    ```
 5. Remove the temporary Hetzner public SSH firewall rule after Tailscale SSH works
 
@@ -109,7 +109,7 @@ After the first deploy, the VPS will try to join your Tailscale network:
 
 ```bash
 # SSH over Tailscale (once approved)
-ssh -i ~/.ssh/claw_admin_ed25519 orther@claw
+ssh -i ~/.ssh/lildoofy_admin_ed25519 orther@lildoofy
 
 # Check services
 systemctl status clawdbot-gateway
@@ -133,18 +133,18 @@ Billing is hourly with a monthly cap. If you delete the server before month-end,
 
 | Action | How |
 |--------|-----|
-| **Resize server** | Servers > claw > Rescale (upgrade/downgrade anytime) |
-| **View console** | Servers > claw > Console (browser-based VNC) |
-| **Rebuild** | Servers > claw > Rebuild (reinstall OS — destructive) |
-| **Snapshots** | Servers > claw > Snapshots (manual point-in-time backup) |
-| **Power cycle** | Servers > claw > Power (restart/force off) |
-| **Delete** | Servers > claw > Delete (stops all billing) |
+| **Resize server** | Servers > lildoofy > Rescale (upgrade/downgrade anytime) |
+| **View console** | Servers > lildoofy > Console (browser-based VNC) |
+| **Rebuild** | Servers > lildoofy > Rebuild (reinstall OS — destructive) |
+| **Snapshots** | Servers > lildoofy > Snapshots (manual point-in-time backup) |
+| **Power cycle** | Servers > lildoofy > Power (restart/force off) |
+| **Delete** | Servers > lildoofy > Delete (stops all billing) |
 
 ## Troubleshooting
 
 **"Permission denied" on SSH:**
 - Ensure your SSH key was added in Step 3
-- Try: `ssh -i ~/.ssh/claw_admin_ed25519 root@$CLAW_IP`
+- Try: `ssh -i ~/.ssh/lildoofy_admin_ed25519 root@$LILDOOFY_IP`
 
 **Server not reachable after nixos-anywhere:**
 - Use Hetzner Console (browser VNC) to check boot status
