@@ -48,7 +48,7 @@ ssh-keygen -t ed25519 -f ~/.ssh/lildoofy_admin_ed25519 -C "lildoofy-admin" -N ""
 
 | Setting        | Value                                                          |
 | -------------- | -------------------------------------------------------------- |
-| **Location**   | Hillsboro (us-west)                                            |
+| **Location**   | Nuremberg (eu-central)                                         |
 | **Image**      | Ubuntu 24.04                                                   |
 | **Type**       | Shared vCPU > **CX33** (4 vCPU, 8 GB RAM, 80 GB NVMe)          |
 | **Networking** | Public IPv4 + IPv6 (default)                                   |
@@ -123,7 +123,7 @@ systemctl status ollama
 
 | Item                     | Cost             |
 | ------------------------ | ---------------- |
-| CX33 VPS (Hillsboro)     | $5.99/month      |
+| CX33 VPS (Nuremberg)     | $5.99/month      |
 | Backups (+20%)           | ~$1.20/month     |
 | **Total infrastructure** | **~$7.19/month** |
 
