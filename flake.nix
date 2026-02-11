@@ -458,11 +458,6 @@
             };
             modules = [
               ./hosts/noir/default.nix
-              {
-                nixpkgs.overlays = [
-                  inputs.nix-clawdbot.overlays.default
-                ];
-              }
             ];
           };
 
