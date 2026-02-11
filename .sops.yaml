@@ -4,7 +4,16 @@ keys:
   - &zinc age12pc2l7dyq0tlj0mm56vrwez6yr8nlve6vrucexf7x92dg7qlzcxskrf2tv
   - &vm age1aruj7g3pugj3knq2f5u02tzq6vu5edcjv25veudrsvtr2yzedpusssscpz
   - &pie age1kxs72nkpe55uc0zv9jrtme8nsr97r74vjrfs2sccwkfxe7lnzvrs6n2v87
+  # lildoofy VPS - Hetzner Cloud CX33 in Nuremberg
+  - &lildoofy age1c86t9dyw9r9a9h6evjhz2gejusjdghn0zup5kcudk53l97axn3cql2fzaj
 creation_rules:
+  # lildoofy-specific secrets (isolated from shared secrets)
+  - path_regex: secrets/lildoofy-secrets\.yaml$
+    key_groups:
+      - age:
+          - *stud
+          - *lildoofy
+  # Shared secrets for all other machines
   - path_regex: secrets/[^/]+(\.(yaml|json|env|ini|conf))?$
     key_groups:
       - age:
