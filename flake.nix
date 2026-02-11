@@ -5,6 +5,10 @@
     # Bootstrap with GitHub URLs first, will migrate to FlakeHub after CI is working
     nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-unstable";
     impermanence.url = "github:nix-community/impermanence";
+    disko = {
+      url = "github:nix-community/disko";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     # Modern flake orchestration
     flake-parts.url = "github:hercules-ci/flake-parts";
@@ -271,6 +275,25 @@
             };
           in
             pkgs.writeText "nixos-eval-pie.json" summary;
+
+          nixosEval-lildoofy = let
+            sys = inputs.nixpkgs.lib.nixosSystem {
+              system = "x86_64-linux";
+              specialArgs = {
+                inherit inputs;
+                inherit (self) outputs;
+              };
+              modules = [
+                inputs.disko.nixosModules.disko
+                ./hosts/lildoofy/default.nix
+              ];
+            };
+            summary = builtins.toJSON {
+              platform = sys.pkgs.stdenv.hostPlatform.system;
+              stateVersion = sys.config.system.stateVersion or null;
+            };
+          in
+            pkgs.writeText "nixos-eval-lildoofy.json" summary;
         };
 
         # Expose a convenient app alias for process-compose devservices
@@ -485,6 +508,36 @@
               inherit (self) outputs;
             };
             modules = [./hosts/pie/default.nix];
+          };
+
+          lildoofy = nixpkgs.lib.nixosSystem {
+            system = "x86_64-linux";
+            specialArgs = {
+              inherit inputs;
+              inherit (self) outputs;
+            };
+            modules = [
+              inputs.disko.nixosModules.disko
+              ./hosts/lildoofy/default.nix
+              {
+                nixpkgs.overlays = [
+                  inputs.nix-openclaw.overlays.default
+                ];
+              }
+            ];
+          };
+
+          # Minimal lildoofy for initial nixos-anywhere install (avoids OOM/ENOSPC)
+          lildoofy-minimal = nixpkgs.lib.nixosSystem {
+            system = "x86_64-linux";
+            specialArgs = {
+              inherit inputs;
+              inherit (self) outputs;
+            };
+            modules = [
+              inputs.disko.nixosModules.disko
+              ./hosts/lildoofy/minimal.nix
+            ];
           };
         };
       };
