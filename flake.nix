@@ -395,7 +395,6 @@
                 nixpkgs.config.allowUnfree = true;
                 nixpkgs.overlays = [
                   (import ./overlays/claude-code-nix.nix inputs)
-                  inputs.nix-clawdbot.overlays.default
                 ];
               }
             ];
