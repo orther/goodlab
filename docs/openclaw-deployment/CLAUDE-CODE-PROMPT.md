@@ -11,7 +11,7 @@ Before running this, complete Steps 1-6 of [HETZNER-SETUP-GUIDE.md](./HETZNER-SE
 ````markdown
 ## Task: Deploy OpenClaw to Hetzner Cloud VPS "lildoofy"
 
-I have a Hetzner Cloud CX33 VPS provisioned in Hillsboro, OR with Ubuntu 24.04.
+I have a Hetzner Cloud CX33 VPS provisioned in Nuremberg, Germany (EU) with Ubuntu 24.04.
 The server IP is: **<REPLACE_WITH_YOUR_SERVER_IP>**
 
 I need you to set up this server as a new NixOS machine called "lildoofy" in my goodlab

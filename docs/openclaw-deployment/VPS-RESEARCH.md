@@ -39,29 +39,33 @@ For this deployment, isolation is a design requirement, not an optional hardenin
 
 **Important: EU vs US Plan Differences**
 
-US locations (Ashburn VA, Hillsboro OR) have different plan names and traffic caps:
+US locations (Ashburn VA, Hillsboro OR) only offer **CPX** (dedicated vCPU) plans starting at ~$17.99/mo for 8GB RAM. The cheaper **CX** (shared vCPU) plans are only available in EU locations.
 
-- US traffic allowance: **1 TB/month** (vs 20 TB in EU)
+- EU traffic allowance: **20 TB/month** (vs 1 TB in US)
 - Overage: $1.20/TB (same in both regions)
-- 1 TB is more than enough for OpenClaw (~10 GB/month typical usage)
-- US plans use CX23/CX33/CX43/CX53 naming (not CX22/CX32/CX42/CX52)
+- 20 TB is more than enough for OpenClaw (~10 GB/month typical usage)
 
-**US Plans (Hillsboro, OR — recommended for West Coast):**
+**EU Plans (Nuremberg — recommended for best value):**
 
-| Plan     | vCPU     | RAM   | Storage     | Price/mo | Notes                              |
-| -------- | -------- | ----- | ----------- | -------- | ---------------------------------- |
-| **CX23** | 2 shared | 4 GB  | 40 GB NVMe  | $4.09    | Minimum viable for API-only        |
-| **CX33** | 4 shared | 8 GB  | 80 GB NVMe  | $5.99    | **Best fit** — room for Ollama     |
-| CX43     | 8 shared | 16 GB | 160 GB NVMe | ~$18     | Overkill unless running local LLMs |
+| Plan     | vCPU     | RAM   | Storage     | Price/mo | Notes                          |
+| -------- | -------- | ----- | ----------- | -------- | ------------------------------ |
+| CX23     | 2 shared | 4 GB  | 40 GB NVMe  | $4.09    | Minimum viable for API-only    |
+| **CX33** | 4 shared | 8 GB  | 80 GB NVMe  | $5.99    | **Best fit** — room for Ollama |
+| CX43     | 8 shared | 16 GB | 160 GB NVMe | ~$18     | Overkill                       |
 
-**EU Plans (Falkenstein/Nuremberg — if latency doesn't matter):**
+**US Plans (Hillsboro, OR — low latency, higher cost):**
 
-| Plan  | vCPU     | RAM  | Storage    | Price/mo | Notes        |
-| ----- | -------- | ---- | ---------- | -------- | ------------ |
-| CX22  | 2 shared | 4 GB | 40 GB NVMe | €3.79    | EU only      |
-| CX32  | 4 shared | 8 GB | 80 GB NVMe | €6.80    | EU only      |
-| CAX11 | 2 ARM    | 4 GB | 40 GB NVMe | €3.79    | ARM, EU only |
-| CAX21 | 4 ARM    | 8 GB | 80 GB NVMe | €6.49    | ARM, EU only |
+| Plan  | vCPU        | RAM  | Storage     | Price/mo | Notes                       |
+| ----- | ----------- | ---- | ----------- | -------- | --------------------------- |
+| CPX21 | 3 dedicated | 4 GB | 80 GB NVMe  | $8.49    | Tight for OpenClaw + Ollama |
+| CPX31 | 4 dedicated | 8 GB | 160 GB NVMe | $17.99   | 3x cost of EU CX33          |
+
+**ARM Alternative (EU only):**
+
+| Plan  | vCPU  | RAM  | Storage    | Price/mo | Notes                           |
+| ----- | ----- | ---- | ---------- | -------- | ------------------------------- |
+| CAX11 | 2 ARM | 4 GB | 40 GB NVMe | €3.79    | Verify Docker image ARM support |
+| CAX21 | 4 ARM | 8 GB | 80 GB NVMe | €6.49    | Cheapest 8GB option             |
 
 **Backup add-on:** +20% of instance cost
 

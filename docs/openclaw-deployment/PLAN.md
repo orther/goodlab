@@ -17,7 +17,7 @@ Deploy OpenClaw (formerly Clawdbot/Moltbot) to a dedicated VPS managed by this g
 
 ```
 ┌──────────────────────────────────────────────────────┐
-│  Hetzner Cloud VPS "lildoofy" (CX33, Hillsboro)     │
+│  Hetzner Cloud VPS "lildoofy" (CX33, Nuremberg)     │
 │  NixOS + Impermanence                                │
 │                                                      │
 │  ┌──────────────────────────────────────────────┐   │
@@ -184,14 +184,14 @@ These steps require manual intervention:
 
 | Item                             | Monthly Cost      |
 | -------------------------------- | ----------------- |
-| Hetzner CX33 VPS (Hillsboro, OR) | $5.99             |
+| Hetzner CX33 VPS (Nuremberg, DE) | $5.99             |
 | Hetzner backups (+20%)           | ~$1.20            |
 | API costs (optimized)            | $30-50            |
 | **Total**                        | **~$37-57/month** |
 
 vs. current estimated cost of $1,500+/month without optimization.
 
-**Location:** Hillsboro, OR — ~20-30ms latency from San Diego, CA.
+**Location:** Nuremberg, Germany — ~140-160ms latency from San Diego, CA (acceptable for Telegram bot interactions).
 
 ## Timeline
 
