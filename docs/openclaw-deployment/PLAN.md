@@ -7,6 +7,7 @@ Deploy OpenClaw (formerly Clawdbot/Moltbot) to a dedicated VPS managed by this g
 **Current state:** Clawdbot has been removed from `noir`. The `nix-openclaw` flake input is ready for the new `lildoofy` host.
 
 **Target state:** OpenClaw runs on a dedicated Hetzner Cloud VPS (`lildoofy`) with token optimizations, Ollama heartbeat routing, model routing, and budget controls, with strict isolation controls:
+
 - Dedicated SSH/admin keypair for `lildoofy` (no personal key reuse)
 - Dedicated provider credentials for the bot (Telegram/Anthropic/Brave/Tailscale)
 - Dedicated SOPS file and recipient rule for `lildoofy` secrets (no cross-host secret fanout)
@@ -54,6 +55,7 @@ Deploy OpenClaw (formerly Clawdbot/Moltbot) to a dedicated VPS managed by this g
 4. Set up dedicated `lildoofy` SSH/admin key and initial access
 
 **Deliverables:**
+
 - [ ] VPS provisioned on Hetzner Cloud
 - [ ] NixOS installed via nixos-anywhere
 - [ ] SSH access verified
@@ -71,6 +73,7 @@ Deploy OpenClaw (formerly Clawdbot/Moltbot) to a dedicated VPS managed by this g
 6. Configure host-local Tailscale settings with no route advertisement
 
 **Deliverables:**
+
 - [ ] `hosts/lildoofy/` directory with machine config
 - [ ] `flake.nix` updated with `lildoofy` nixosConfiguration
 - [ ] `.sops.yaml` updated with scoped `lildoofy` recipient rule
@@ -91,6 +94,7 @@ Deploy OpenClaw (formerly Clawdbot/Moltbot) to a dedicated VPS managed by this g
 Note: Clawdbot was already removed from `noir` in a prior commit.
 
 **Deliverables:**
+
 - [ ] `services/openclaw.nix` — reusable service module
 - [ ] SOPS secrets configured for `lildoofy`
 - [ ] Telegram bot responding from new VPS
@@ -109,6 +113,7 @@ See [TOKEN-OPTIMIZATION.md](./TOKEN-OPTIMIZATION.md) for detailed implementation
 4. **Rate limits & budget controls** — System prompt rules + budget caps
 
 **Deliverables:**
+
 - [ ] `services/ollama.nix` — Ollama service module for local LLM
 - [ ] Updated `clawdbot-documents/` with optimized workspace files
 - [ ] `openclaw.json` configuration with model routing
@@ -126,6 +131,7 @@ See [TOKEN-OPTIMIZATION.md](./TOKEN-OPTIMIZATION.md) for detailed implementation
 5. Document recovery procedures
 
 **Deliverables:**
+
 - [ ] Auto-update configured and tested
 - [ ] Backup schedule for `/var/lib/clawdbot` and `/var/lib/ollama`
 - [ ] Firewall hardening applied
@@ -136,26 +142,26 @@ See [TOKEN-OPTIMIZATION.md](./TOKEN-OPTIMIZATION.md) for detailed implementation
 
 ### New Files
 
-| File | Purpose |
-|------|---------|
-| `hosts/lildoofy/default.nix` | Machine configuration |
+| File                                        | Purpose                                    |
+| ------------------------------------------- | ------------------------------------------ |
+| `hosts/lildoofy/default.nix`                | Machine configuration                      |
 | `hosts/lildoofy/hardware-configuration.nix` | Hardware/disk config (from nixos-anywhere) |
-| `services/openclaw.nix` | Reusable OpenClaw service module |
-| `services/ollama.nix` | Ollama local LLM service module |
-| `clawdbot-documents/USER.md` | User context (new, for optimization) |
-| `clawdbot-documents/IDENTITY.md` | Agent identity (new, for optimization) |
+| `services/openclaw.nix`                     | Reusable OpenClaw service module           |
+| `services/ollama.nix`                       | Ollama local LLM service module            |
+| `clawdbot-documents/USER.md`                | User context (new, for optimization)       |
+| `clawdbot-documents/IDENTITY.md`            | Agent identity (new, for optimization)     |
 
 ### Modified Files
 
-| File | Change |
-|------|--------|
-| `flake.nix` | Add `lildoofy` nixosConfiguration + eval check |
-| `.sops.yaml` | Add `lildoofy` age key + scoped creation rule for `lildoofy` secrets |
-| `secrets/lildoofy-secrets.yaml` | New isolated secrets file for `lildoofy` credentials |
-| `justfile` | No changes needed (deploy already supports any NixOS host) |
-| ~~`hosts/noir/default.nix`~~ | ~~Disable clawdbot service~~ (done) |
-| ~~`clawdbot-documents/AGENTS.md`~~ | ~~Update for VPS context~~ (done — references lildoofy) |
-| `clawdbot-documents/SOUL.md` | Add budget/rate-limit rules |
+| File                               | Change                                                               |
+| ---------------------------------- | -------------------------------------------------------------------- |
+| `flake.nix`                        | Add `lildoofy` nixosConfiguration + eval check                       |
+| `.sops.yaml`                       | Add `lildoofy` age key + scoped creation rule for `lildoofy` secrets |
+| `secrets/lildoofy-secrets.yaml`    | New isolated secrets file for `lildoofy` credentials                 |
+| `justfile`                         | No changes needed (deploy already supports any NixOS host)           |
+| ~~`hosts/noir/default.nix`~~       | ~~Disable clawdbot service~~ (done)                                  |
+| ~~`clawdbot-documents/AGENTS.md`~~ | ~~Update for VPS context~~ (done — references lildoofy)              |
+| `clawdbot-documents/SOUL.md`       | Add budget/rate-limit rules                                          |
 
 ## What Can't Be Done Automatically
 
@@ -176,12 +182,12 @@ These steps require manual intervention:
 
 ## Cost Estimate
 
-| Item | Monthly Cost |
-|------|-------------|
-| Hetzner CX33 VPS (Hillsboro, OR) | $5.99 |
-| Hetzner backups (+20%) | ~$1.20 |
-| API costs (optimized) | $30-50 |
-| **Total** | **~$37-57/month** |
+| Item                             | Monthly Cost      |
+| -------------------------------- | ----------------- |
+| Hetzner CX33 VPS (Hillsboro, OR) | $5.99             |
+| Hetzner backups (+20%)           | ~$1.20            |
+| API costs (optimized)            | $30-50            |
+| **Total**                        | **~$37-57/month** |
 
 vs. current estimated cost of $1,500+/month without optimization.
 

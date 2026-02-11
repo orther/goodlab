@@ -5,6 +5,7 @@
 This document details the NixOS configuration for the new `lildoofy` VPS, following established patterns from `noir`, `zinc`, and `pie` in this repository.
 
 Isolation baseline for this host:
+
 - No reuse of personal auth/session credentials
 - No shared secret recipient fanout across unrelated hosts
 - No public ingress except what is explicitly required
@@ -407,6 +408,7 @@ creation_rules:
 ```
 
 The actual age key is derived from the VPS SSH host key after installation:
+
 ```bash
 ssh orther@<lildoofy-ip> "sudo cat /etc/ssh/ssh_host_ed25519_key.pub" | ssh-to-age
 ```

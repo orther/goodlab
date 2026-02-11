@@ -22,6 +22,7 @@ OpenClaw's default behavior loads all workspace files at session start, includin
 ### Solution
 
 Configure OpenClaw to load only essential files at session start:
+
 - `SOUL.md` — Core principles and values
 - `USER.md` — User context and goals (new file)
 - `IDENTITY.md` — Agent identity (new file)
@@ -32,33 +33,39 @@ Configure OpenClaw to load only essential files at session start:
 #### 1. Create new workspace files
 
 **`clawdbot-documents/USER.md`** (new):
+
 ```markdown
 # User Context
 
 ## Brandon Orther
+
 - Software engineer working with Nix/NixOS, Go, TypeScript, Rust
 - Manages homelab infrastructure as code (goodlab flake repository)
 - Primary interests: systems programming, infrastructure automation, AI tooling
 - Communication style: direct, technical, no fluff
 
 ## Goals
+
 - Reliable personal AI assistant accessible via Telegram
 - Cost-effective API usage ($30-50/month target)
 - Privacy-preserving — no data sharing, local-first where possible
 ```
 
 **`clawdbot-documents/IDENTITY.md`** (new):
+
 ```markdown
 # Identity
 
 You are **Lil Doofy**, Brandon's personal AI assistant.
 
 ## Platform
+
 - Running on NixOS VPS (lildoofy) managed by goodlab flake
 - Accessible via Telegram
 - Using Anthropic Claude API with model routing
 
 ## Operating Rules
+
 - Default to Claude Haiku for routine tasks
 - Escalate to Claude Sonnet only for complex reasoning
 - Heartbeat checks route to local Ollama (free)
@@ -89,6 +96,7 @@ configOverrides = {
 #### 3. Verification
 
 After deployment, verify context size:
+
 - Send `session_status` command via Telegram
 - Target: 2-8KB initial context (down from ~50KB)
 - Expected per-session cost: ~$0.05 (down from ~$0.40)
@@ -131,10 +139,12 @@ Append to `clawdbot-documents/SOUL.md`:
 ## Model Selection
 
 Use the cheapest model that can handle the task:
+
 - **Haiku** (default): Quick answers, lookups, status checks, simple code, translations
 - **Sonnet** (escalate): Multi-step reasoning, complex code generation, analysis, debugging
 
 Never use Sonnet for:
+
 - Greetings or small talk
 - Simple factual lookups
 - Weather/time/status queries
@@ -234,6 +244,7 @@ Append to `clawdbot-documents/SOUL.md`:
 ## Rate Limits
 
 Follow these pacing rules strictly:
+
 - **5 seconds minimum** between API calls
 - **10 seconds minimum** between web searches
 - **Max 5 searches** per conversation batch
@@ -266,13 +277,13 @@ configOverrides = {
 
 ## Combined Cost Projection
 
-| Category | Before | After | Savings |
-|----------|--------|-------|---------|
-| Session initialization | $12/month | $1.50/month | $10.50 |
-| Model costs (Sonnet→Haiku) | $50-70/month | $5-10/month | $40-60 |
-| Heartbeat API calls | $2-5/month | $0 (local) | $2-5 |
-| Budget cap | Unbounded | $200/month max | Risk elimination |
-| **Total API costs** | **$1,500+** | **$30-50** | **$1,450+** |
+| Category                   | Before       | After          | Savings          |
+| -------------------------- | ------------ | -------------- | ---------------- |
+| Session initialization     | $12/month    | $1.50/month    | $10.50           |
+| Model costs (Sonnet→Haiku) | $50-70/month | $5-10/month    | $40-60           |
+| Heartbeat API calls        | $2-5/month   | $0 (local)     | $2-5             |
+| Budget cap                 | Unbounded    | $200/month max | Risk elimination |
+| **Total API costs**        | **$1,500+**  | **$30-50**     | **$1,450+**      |
 
 Add VPS hosting: ~$7.20/month (Hetzner CX33 + backups)
 

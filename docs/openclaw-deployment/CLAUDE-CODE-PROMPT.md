@@ -110,13 +110,15 @@ decision.
 10. Run nixos-anywhere to install NixOS on the Hetzner VPS:
     Use the dedicated `~/.ssh/lildoofy_admin_ed25519` key (for example via `~/.ssh/config`
     host entry for `<SERVER_IP>`).
-   ```bash
-   nix run github:nix-community/nixos-anywhere -- \
-     --flake .#lildoofy \
-     --disko-mode disko \
-     root@<SERVER_IP>
-   ```
-   This will take 5-10 minutes. The server will reboot into NixOS automatically.
+
+```bash
+nix run github:nix-community/nixos-anywhere -- \
+  --flake .#lildoofy \
+  --disko-mode disko \
+  root@<SERVER_IP>
+```
+
+This will take 5-10 minutes. The server will reboot into NixOS automatically.
 
 11. After reboot, verify SSH access:
     ```bash
@@ -126,6 +128,7 @@ decision.
 #### Phase 4: SOPS key setup
 
 12. Extract the real age key from the new server:
+
     ```bash
     ssh -i ~/.ssh/lildoofy_admin_ed25519 orther@<SERVER_IP> "sudo cat /etc/ssh/ssh_host_ed25519_key.pub" | nix shell nixpkgs#ssh-to-age -c ssh-to-age
     ```
@@ -137,11 +140,13 @@ decision.
 #### Phase 5: Final deploy and verification
 
 15. After I confirm SOPS is updated, deploy the full configuration:
+
     ```bash
     just deploy lildoofy <SERVER_IP>
     ```
 
 16. Verify services are running:
+
     ```bash
     ssh -i ~/.ssh/lildoofy_admin_ed25519 orther@<SERVER_IP> "systemctl status clawdbot-gateway ollama"
     ```

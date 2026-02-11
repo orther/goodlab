@@ -46,17 +46,17 @@ ssh-keygen -t ed25519 -f ~/.ssh/lildoofy_admin_ed25519 -C "lildoofy-admin" -N ""
 1. Go to **Servers** (left sidebar) > **"Add Server"**
 2. Configure as follows:
 
-| Setting | Value |
-|---------|-------|
-| **Location** | Hillsboro (us-west) |
-| **Image** | Ubuntu 24.04 |
-| **Type** | Shared vCPU > **CX33** (4 vCPU, 8 GB RAM, 80 GB NVMe) |
-| **Networking** | Public IPv4 + IPv6 (default) |
-| **SSH Keys** | Select the key you just added |
-| **Volumes** | None |
-| **Firewalls** | Temporary firewall allowing SSH (22) only from your current IP |
-| **Backups** | Enable (+20%, ~$1.20/month) |
-| **Name** | `lildoofy` |
+| Setting        | Value                                                          |
+| -------------- | -------------------------------------------------------------- |
+| **Location**   | Hillsboro (us-west)                                            |
+| **Image**      | Ubuntu 24.04                                                   |
+| **Type**       | Shared vCPU > **CX33** (4 vCPU, 8 GB RAM, 80 GB NVMe)          |
+| **Networking** | Public IPv4 + IPv6 (default)                                   |
+| **SSH Keys**   | Select the key you just added                                  |
+| **Volumes**    | None                                                           |
+| **Firewalls**  | Temporary firewall allowing SSH (22) only from your current IP |
+| **Backups**    | Enable (+20%, ~$1.20/month)                                    |
+| **Name**       | `lildoofy`                                                     |
 
 3. Click **"Create & Buy now"**
 4. Wait ~30 seconds for the server to provision
@@ -121,41 +121,45 @@ systemctl status ollama
 
 ## Monthly Cost Summary
 
-| Item | Cost |
-|------|------|
-| CX33 VPS (Hillsboro) | $5.99/month |
-| Backups (+20%) | ~$1.20/month |
+| Item                     | Cost             |
+| ------------------------ | ---------------- |
+| CX33 VPS (Hillsboro)     | $5.99/month      |
+| Backups (+20%)           | ~$1.20/month     |
 | **Total infrastructure** | **~$7.19/month** |
 
 Billing is hourly with a monthly cap. If you delete the server before month-end, you only pay for hours used.
 
 ## Useful Hetzner Console Actions
 
-| Action | How |
-|--------|-----|
-| **Resize server** | Servers > lildoofy > Rescale (upgrade/downgrade anytime) |
-| **View console** | Servers > lildoofy > Console (browser-based VNC) |
-| **Rebuild** | Servers > lildoofy > Rebuild (reinstall OS — destructive) |
-| **Snapshots** | Servers > lildoofy > Snapshots (manual point-in-time backup) |
-| **Power cycle** | Servers > lildoofy > Power (restart/force off) |
-| **Delete** | Servers > lildoofy > Delete (stops all billing) |
+| Action            | How                                                          |
+| ----------------- | ------------------------------------------------------------ |
+| **Resize server** | Servers > lildoofy > Rescale (upgrade/downgrade anytime)     |
+| **View console**  | Servers > lildoofy > Console (browser-based VNC)             |
+| **Rebuild**       | Servers > lildoofy > Rebuild (reinstall OS — destructive)    |
+| **Snapshots**     | Servers > lildoofy > Snapshots (manual point-in-time backup) |
+| **Power cycle**   | Servers > lildoofy > Power (restart/force off)               |
+| **Delete**        | Servers > lildoofy > Delete (stops all billing)              |
 
 ## Troubleshooting
 
 **"Permission denied" on SSH:**
+
 - Ensure your SSH key was added in Step 3
 - Try: `ssh -i ~/.ssh/lildoofy_admin_ed25519 root@$LILDOOFY_IP`
 
 **Server not reachable after nixos-anywhere:**
+
 - Use Hetzner Console (browser VNC) to check boot status
 - nixos-anywhere can take 5-10 minutes to complete
 - The server will reboot automatically after installation
 
 **Tailscale not connecting:**
+
 - Check that `tailscale-authkey` secret is properly configured in SOPS
 - The auth key may be expired — generate a new one at [Tailscale Keys](https://login.tailscale.com/admin/settings/keys)
 
 **Billing concerns:**
+
 - Servers bill per hour up to the monthly cap
 - Even powered-off servers still bill (you must **delete** to stop billing)
 - Test with hourly billing, delete if something goes wrong, try again
