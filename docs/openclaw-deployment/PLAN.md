@@ -4,7 +4,7 @@
 
 Deploy OpenClaw (formerly Clawdbot/Moltbot) to a dedicated VPS managed by this goodlab Nix flake. This plan covers deploying the clawdbot service to a purpose-built VPS, implementing token optimization strategies from the cost-reduction guide, and adding Ollama for local heartbeat routing.
 
-**Current state:** Clawdbot has been removed from `noir`. The `nix-clawdbot` flake input is ready for the new `lildoofy` host.
+**Current state:** Clawdbot has been removed from `noir`. The `nix-openclaw` flake input is ready for the new `lildoofy` host.
 
 **Target state:** OpenClaw runs on a dedicated Hetzner Cloud VPS (`lildoofy`) with token optimizations, Ollama heartbeat routing, model routing, and budget controls, with strict isolation controls:
 - Dedicated SSH/admin keypair for `lildoofy` (no personal key reuse)

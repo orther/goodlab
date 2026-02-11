@@ -26,7 +26,7 @@ Isolation baseline for this host:
   imports = [
     inputs.impermanence.nixosModules.impermanence
     inputs.home-manager.nixosModules.home-manager
-    inputs.nix-clawdbot.nixosModules.clawdbot
+    inputs.nix-openclaw.nixosModules.clawdbot
 
     ./hardware-configuration.nix
 
@@ -306,7 +306,7 @@ If we want a reusable service module (rather than inline config in the host), ex
 
 ```nix
 # Reusable OpenClaw/Clawdbot service configuration helpers.
-# The actual nix-clawdbot NixOS module is imported via flake input.
+# The actual nix-openclaw NixOS module is imported via flake input.
 # This file provides shared patterns for configuring it.
 {config, pkgs, lib, ...}: {
   # Ensure Docker is available for OpenClaw's sandbox
@@ -349,7 +349,7 @@ lildoofy = nixpkgs.lib.nixosSystem {
     ./hosts/lildoofy/default.nix
     {
       nixpkgs.overlays = [
-        inputs.nix-clawdbot.overlays.default
+        inputs.nix-openclaw.overlays.default
       ];
     }
   ];

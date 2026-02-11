@@ -55,7 +55,7 @@ decision.
 3. Create `hosts/lildoofy/default.nix` following the template in
    `docs/openclaw-deployment/NIXOS-CONFIG.md` but with these adjustments:
    - Import `base`, `auto-update` modules (skip `remote-unlock` — no LUKS on VPS)
-   - Import `inputs.nix-clawdbot.nixosModules.clawdbot`
+   - Import `inputs.nix-openclaw.nixosModules.clawdbot`
    - Use `server-base` home-manager module (not full `base`)
    - Override `sops.age.sshKeyPaths = ["/etc/ssh/ssh_host_ed25519_key"]` (base.nix
      hardcodes a LUKS initrd path that won't exist on a VPS without LUKS)
@@ -89,7 +89,7 @@ decision.
 #### Phase 2: Update flake and SOPS config
 
 6. Add `lildoofy` to `flake.nix`:
-   - Add `nixosConfigurations.lildoofy` (x86_64-linux, with nix-clawdbot overlay)
+   - Add `nixosConfigurations.lildoofy` (x86_64-linux, with nix-openclaw overlay)
    - Add `nixosEval-lildoofy` smoke test to `checks` (same pattern as noir/zinc/pie)
 
 7. Add a placeholder age key for `lildoofy` to `.sops.yaml`:

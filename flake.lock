@@ -222,7 +222,7 @@
     "home-manager_2": {
       "inputs": {
         "nixpkgs": [
-          "nix-clawdbot",
+          "nix-openclaw",
           "nixpkgs"
         ]
       },
@@ -347,7 +347,7 @@
         "type": "github"
       }
     },
-    "nix-clawdbot": {
+    "nix-openclaw": {
       "inputs": {
         "flake-utils": "flake-utils_2",
         "home-manager": "home-manager_2",
@@ -359,15 +359,15 @@
       "locked": {
         "lastModified": 1769467234,
         "narHash": "sha256-4kE4L0eohKyJBuBbqt4pYz+bCjbUd8nJfvmAHFpfg8o=",
-        "owner": "moltbot",
-        "repo": "nix-moltbot",
+        "owner": "openclaw",
+        "repo": "nix-openclaw",
         "rev": "78e3a2aed81cdfd03b97df3752a3503af2f05a80",
         "type": "github"
       },
       "original": {
-        "owner": "moltbot",
+        "owner": "openclaw",
         "ref": "refs/pull/24/head",
-        "repo": "nix-moltbot",
+        "repo": "nix-openclaw",
         "type": "github"
       }
     },
@@ -676,7 +676,7 @@
         "homebrew-cask": "homebrew-cask",
         "homebrew-core": "homebrew-core",
         "impermanence": "impermanence",
-        "nix-clawdbot": "nix-clawdbot",
+        "nix-openclaw": "nix-openclaw",
         "nix-darwin": "nix-darwin",
         "nix-homebrew": "nix-homebrew",
         "nixarr": "nixarr",

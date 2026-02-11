@@ -95,9 +95,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # OpenClaw (nix-moltbot) - NixOS module for clawdbot service (used by planned lildoofy host)
-    nix-clawdbot = {
-      url = "github:moltbot/nix-moltbot?ref=refs/pull/24/head";
+    # OpenClaw - NixOS hardened service module (PR #24, still draft/unmerged)
+    nix-openclaw = {
+      url = "github:openclaw/nix-openclaw?ref=refs/pull/24/head";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
