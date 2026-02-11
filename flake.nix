@@ -95,9 +95,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Clawdbot (Moltbot) - use PR #24 (includes #10) for NixOS hardened service + schema fixes
-    nix-clawdbot = {
-      url = "github:moltbot/nix-moltbot?ref=refs/pull/24/head";
+    # OpenClaw - NixOS hardened service module (PR #24, still draft/unmerged)
+    nix-openclaw = {
+      url = "github:openclaw/nix-openclaw?ref=refs/pull/24/head";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
@@ -395,7 +395,6 @@
                 nixpkgs.config.allowUnfree = true;
                 nixpkgs.overlays = [
                   (import ./overlays/claude-code-nix.nix inputs)
-                  inputs.nix-clawdbot.overlays.default
                 ];
               }
             ];
@@ -458,11 +457,6 @@
             };
             modules = [
               ./hosts/noir/default.nix
-              {
-                nixpkgs.overlays = [
-                  inputs.nix-clawdbot.overlays.default
-                ];
-              }
             ];
           };
 
