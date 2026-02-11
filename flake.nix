@@ -95,7 +95,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Clawdbot (Moltbot) - use PR #24 (includes #10) for NixOS hardened service + schema fixes
+    # OpenClaw (nix-moltbot) - NixOS module for clawdbot service (used by planned lildoofy host)
     nix-clawdbot = {
       url = "github:moltbot/nix-moltbot?ref=refs/pull/24/head";
       inputs.nixpkgs.follows = "nixpkgs";

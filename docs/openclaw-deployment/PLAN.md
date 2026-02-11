@@ -2,9 +2,9 @@
 
 ## Overview
 
-Deploy OpenClaw (formerly Clawdbot/Moltbot) to a dedicated VPS managed by this goodlab Nix flake. This plan covers migrating the existing `noir`-hosted clawdbot service to a purpose-built VPS, implementing token optimization strategies from the cost-reduction guide, and adding Ollama for local heartbeat routing.
+Deploy OpenClaw (formerly Clawdbot/Moltbot) to a dedicated VPS managed by this goodlab Nix flake. This plan covers deploying the clawdbot service to a purpose-built VPS, implementing token optimization strategies from the cost-reduction guide, and adding Ollama for local heartbeat routing.
 
-**Current state:** OpenClaw runs on `noir` (homelab x86_64 server) as `services.clawdbot` via `nix-clawdbot` flake input with Telegram, Anthropic, and Brave Search integrations.
+**Current state:** Clawdbot has been removed from `noir`. The `nix-clawdbot` flake input is ready for the new `lildoofy` host.
 
 **Target state:** OpenClaw runs on a dedicated Hetzner Cloud VPS (`lildoofy`) with token optimizations, Ollama heartbeat routing, model routing, and budget controls, with strict isolation controls:
 - Dedicated SSH/admin keypair for `lildoofy` (no personal key reuse)
@@ -15,28 +15,28 @@ Deploy OpenClaw (formerly Clawdbot/Moltbot) to a dedicated VPS managed by this g
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────┐
 │  Hetzner Cloud VPS "lildoofy" (CX33, Hillsboro)     │
-│  NixOS + Impermanence                           │
-│                                                  │
-│  ┌──────────────────────────────────────────┐   │
-│  │ OpenClaw (Docker sandbox)                 │   │
-│  │  ├── Gateway (port 18789)                 │   │
-│  │  ├── Brain (Claude Haiku default)         │   │
-│  │  ├── Telegram Provider                    │   │
-│  │  └── Tools (Brave Search, Web Fetch)      │   │
-│  └──────────────────────────────────────────┘   │
-│                                                  │
-│  ┌──────────────────────────────────────────┐   │
-│  │ Ollama (llama3.2:3b)                      │   │
-│  │  └── Heartbeat endpoint (localhost:11434) │   │
-│  └──────────────────────────────────────────┘   │
-│                                                  │
-│  ┌──────────────────────────────────────────┐   │
-│  │ Tailscale (mesh VPN)                      │   │
-│  │  └── SSH + gateway ingress only on tailnet │  │
-│  └──────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────┘
+│  NixOS + Impermanence                                │
+│                                                      │
+│  ┌──────────────────────────────────────────────┐   │
+│  │ OpenClaw (Docker sandbox)                     │   │
+│  │  ├── Gateway (port 18789)                     │   │
+│  │  ├── Brain (Claude Haiku default)             │   │
+│  │  ├── Telegram Provider                        │   │
+│  │  └── Tools (Brave Search, Web Fetch)          │   │
+│  └──────────────────────────────────────────────┘   │
+│                                                      │
+│  ┌──────────────────────────────────────────────┐   │
+│  │ Ollama (llama3.2:3b)                          │   │
+│  │  └── Heartbeat endpoint (localhost:11434)     │   │
+│  └──────────────────────────────────────────────┘   │
+│                                                      │
+│  ┌──────────────────────────────────────────────┐   │
+│  │ Tailscale (mesh VPN)                          │   │
+│  │  └── SSH + gateway ingress only on tailnet    │   │
+│  └──────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────┘
 ```
 
 ## Implementation Phases
@@ -80,21 +80,22 @@ Deploy OpenClaw (formerly Clawdbot/Moltbot) to a dedicated VPS managed by this g
 
 ### Phase 3: OpenClaw Service Migration
 
-**Goal:** Move the clawdbot/OpenClaw service from `noir` to `lildoofy`.
+**Goal:** Deploy the clawdbot/OpenClaw service on `lildoofy`.
 
-1. Create `services/openclaw.nix` service module (refactored from noir's inline config)
+1. Create `services/openclaw.nix` service module (using NIXOS-CONFIG.md template)
 2. Configure `lildoofy` secrets using dedicated bot credentials (do not reuse personal credentials)
 3. Set up Telegram, Anthropic, Brave Search integrations with dedicated keys/accounts
 4. Configure SSH and gateway with Tailscale-only firewall rules
 5. Verify service starts and Telegram bot responds
-6. Disable clawdbot service on `noir` once `lildoofy` is confirmed working
+
+Note: Clawdbot was already removed from `noir` in a prior commit.
 
 **Deliverables:**
 - [ ] `services/openclaw.nix` — reusable service module
 - [ ] SOPS secrets configured for `lildoofy`
 - [ ] Telegram bot responding from new VPS
 - [ ] Gateway accessible over Tailscale
-- [ ] `noir` clawdbot disabled
+- [x] ~~`noir` clawdbot disabled~~ (done)
 
 ### Phase 4: Token Optimization
 
@@ -152,8 +153,8 @@ See [TOKEN-OPTIMIZATION.md](./TOKEN-OPTIMIZATION.md) for detailed implementation
 | `.sops.yaml` | Add `lildoofy` age key + scoped creation rule for `lildoofy` secrets |
 | `secrets/lildoofy-secrets.yaml` | New isolated secrets file for `lildoofy` credentials |
 | `justfile` | No changes needed (deploy already supports any NixOS host) |
-| `hosts/noir/default.nix` | Disable clawdbot service (Phase 3 completion) |
-| `clawdbot-documents/AGENTS.md` | Update for VPS context + model routing |
+| ~~`hosts/noir/default.nix`~~ | ~~Disable clawdbot service~~ (done) |
+| ~~`clawdbot-documents/AGENTS.md`~~ | ~~Update for VPS context~~ (done — references lildoofy) |
 | `clawdbot-documents/SOUL.md` | Add budget/rate-limit rules |
 
 ## What Can't Be Done Automatically
@@ -171,7 +172,7 @@ These steps require manual intervention:
 9. **Brave Search API key** — Must be a dedicated key for this bot/service
 10. **Ollama model pull** — First run requires downloading llama3.2:3b (~2GB)
 11. **Tailscale auth** — New device must be approved in Tailscale admin console
-12. **Credential rotation** — Rotate/remove old `noir` bot secrets after migration
+12. **Credential rotation** — Rotate/remove old bot secrets from `secrets/secrets.yaml` (clawdbot keys are still in the shared file)
 
 ## Cost Estimate
 

@@ -288,7 +288,7 @@ Add VPS hosting: ~$7.20/month (Hetzner CX33 + backups)
 4. Set up heartbeat routing to Ollama (requires Ollama to be running)
 5. Add budget controls (safety net)
 6. Verify all optimizations via `session_status`
-7. Monitor for 1 week before disabling `noir` clawdbot
+7. Monitor for 1 week, then rotate old bot credentials from `secrets/secrets.yaml`
 
 ## What Can't Be Automated
 

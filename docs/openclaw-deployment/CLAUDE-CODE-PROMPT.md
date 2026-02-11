@@ -24,7 +24,7 @@ with token optimizations and Ollama for heartbeat routing.
 - The deployment plan is in `docs/openclaw-deployment/PLAN.md`
 - NixOS config templates are in `docs/openclaw-deployment/NIXOS-CONFIG.md`
 - Token optimization details are in `docs/openclaw-deployment/TOKEN-OPTIMIZATION.md`
-- The existing clawdbot config on `noir` is the reference: `hosts/noir/default.nix`
+- Reference config template: `docs/openclaw-deployment/NIXOS-CONFIG.md` (clawdbot was already removed from noir)
 - Existing patterns to follow: `modules/nixos/base.nix`
 - Isolation is mandatory:
   - dedicated `lildoofy` credentials only (no personal logins/tokens)
@@ -57,9 +57,14 @@ decision.
    - Import `base`, `auto-update` modules (skip `remote-unlock` — no LUKS on VPS)
    - Import `inputs.nix-clawdbot.nixosModules.clawdbot`
    - Use `server-base` home-manager module (not full `base`)
+   - Override `sops.age.sshKeyPaths = ["/etc/ssh/ssh_host_ed25519_key"]` (base.nix
+     hardcodes a LUKS initrd path that won't exist on a VPS without LUKS)
    - Set `sops.defaultSopsFile = ./../../secrets/lildoofy-secrets.yaml`
+   - Add `sops.secrets."user-password" = {}` (required by base.nix for `hashedPasswordFile`)
    - Add `sops.secrets."tailscale-authkey"` in host config
    - Configure all SOPS secrets for clawdbot (telegram, anthropic, gateway, brave, openrouter)
+   - Add the lildoofy admin pubkey to `users.users.orther.openssh.authorizedKeys.keys`
+     (base.nix only has the personal key; the dedicated lildoofy admin key must be added too)
      using dedicated bot credentials only (not copied personal tokens)
    - Full clawdbot service config with token optimizations (model routing, session init,
      heartbeat to ollama, budget controls)
@@ -95,7 +100,7 @@ decision.
    - We'll replace the placeholder with the real key after nixos-anywhere
 
 8. Create `secrets/lildoofy-secrets.yaml` with only `lildoofy`-specific secrets
-   (`tailscale-authkey`, `clawdbot/*`) and no unrelated machine secrets.
+   (`user-password`, `tailscale-authkey`, `clawdbot/*`) and no unrelated machine secrets.
 
 9. Run `nix flake check` to verify the lildoofy config evaluates cleanly.
    If there are errors, fix them before proceeding.
@@ -144,14 +149,13 @@ decision.
 17. Create the new clawdbot workspace documents:
     - `clawdbot-documents/USER.md` (user context, from TOKEN-OPTIMIZATION.md)
     - `clawdbot-documents/IDENTITY.md` (agent identity, from TOKEN-OPTIMIZATION.md)
-    - Update `clawdbot-documents/AGENTS.md` to reference VPS "lildoofy" instead of "noir"
+    - Note: `clawdbot-documents/AGENTS.md` is already updated to reference "lildoofy"
 
 18. Commit all changes and push.
 
 ### Important notes
 
-- Do NOT modify `hosts/noir/default.nix` yet — we'll disable clawdbot on noir
-  only after confirming lildoofy works
+- Clawdbot was already removed from `hosts/noir/default.nix` — no changes needed there
 - Do NOT reuse personal credentials — create dedicated bot/API credentials for `lildoofy`
 - Do NOT expose public `80/443` unless we explicitly need a public web UI later
 - Do NOT use shared `services/tailscale.nix` for this host (it advertises routes)
@@ -174,5 +178,4 @@ Once Claude Code finishes the prompt above, do these manual steps:
 - [ ] Remove temporary public SSH rule in Hetzner firewall
 - [ ] Send a test message to Lil Doofy on Telegram
 - [ ] Check API costs at [console.anthropic.com](https://console.anthropic.com) after 24 hours
-- [ ] Rotate legacy `noir` bot credentials once `lildoofy` is stable
-- [ ] Once confirmed working, have Claude Code disable clawdbot on noir
+- [ ] Rotate legacy `noir` bot credentials (Telegram, Anthropic, Brave, OpenRouter)

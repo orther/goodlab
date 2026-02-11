@@ -37,6 +37,13 @@ Isolation baseline for this host:
     ./../../services/ollama.nix
   ];
 
+  # --- SSH Access ---
+  # Add the dedicated lildoofy admin key alongside the personal key from base.nix.
+  users.users.orther.openssh.authorizedKeys.keys = [
+    # lildoofy_admin_ed25519.pub — dedicated admin key for this VPS
+    "ssh-ed25519 <REPLACE_WITH_LILDOOFY_ADMIN_PUBKEY> lildoofy-admin"
+  ];
+
   home-manager = {
     extraSpecialArgs = {inherit inputs outputs;};
     useGlobalPkgs = true;
@@ -60,10 +67,16 @@ Isolation baseline for this host:
     };
   };
 
-  # --- SOPS Secrets ---
+  # --- SOPS Override ---
+  # base.nix sets sops.age.sshKeyPaths to the LUKS initrd key path.
+  # lildoofy has no LUKS, so override to the standard SSH host key.
+  sops.age.sshKeyPaths = ["/etc/ssh/ssh_host_ed25519_key"];
+
   # Keep lildoofy isolated from shared repo secrets.
   sops.defaultSopsFile = ./../../secrets/lildoofy-secrets.yaml;
 
+  # user-password is required by base.nix for hashedPasswordFile
+  sops.secrets."user-password" = {};
   sops.secrets."tailscale-authkey" = {};
   sops.secrets."clawdbot/telegram-bot-token" = {
     owner = "clawdbot";
@@ -507,6 +520,6 @@ You are **Lil Doofy**, a personal AI assistant for Brandon running on a NixOS VP
 14. [ ] Add new clawdbot-documents (USER.md, IDENTITY.md)
 15. [ ] Enable token optimizations in configOverrides
 16. [ ] Monitor API costs for 1 week
-17. [ ] Disable clawdbot on `noir`
-18. [ ] Rotate old `noir` bot credentials after cutover
+17. [x] ~~Disable clawdbot on `noir`~~ (done — removed in prior commit)
+18. [ ] Rotate old `noir` bot credentials (Telegram, Anthropic, Brave, OpenRouter)
 19. [ ] Set up backups for `/var/lib/clawdbot` and `/var/lib/ollama`
