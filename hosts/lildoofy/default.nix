@@ -110,10 +110,9 @@
     enable = true;
     port = 18789;
 
-    # Secrets loaded via environment files
+    # Secrets loaded via environment files (must be in KEY=value format)
     environmentFiles = [
       config.sops.secrets."openclaw/anthropic-oauth-token".path
-      config.sops.secrets."openclaw/gateway-token".path
       config.sops.secrets."openclaw/brave-search-api-key".path
     ];
 
@@ -121,8 +120,8 @@
       gateway = {
         bind = "lan";
         mode = "local";
-        auth.mode = "token";
-        # Token loaded from OPENCLAW_GATEWAY_TOKEN env var
+        # Auth disabled - gateway only accessible via Tailscale VPN
+        auth.mode = "none";
       };
 
       # Telegram channel
