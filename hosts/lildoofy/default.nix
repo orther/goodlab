@@ -132,7 +132,7 @@
         groups."*".requireMention = true;
       };
 
-      # Token optimization: model routing (Haiku default, Sonnet fallback)
+      # Model routing: Haiku default (cheap), Sonnet fallback (complex tasks)
       agents.defaults = {
         model = {
           primary = "anthropic/claude-3-5-haiku-latest";
@@ -140,24 +140,11 @@
         };
         workspace = "/var/lib/openclaw-gateway/workspace";
         maxConcurrent = 4;
-        heartbeat.every = "1h";
       };
 
-      # Heartbeat to local Ollama (free)
-      heartbeat.model = "ollama/llama3.2:3b";
-
-      # Token optimization: context pruning
-      contextPruning = {
-        mode = "cache-ttl";
-        ttl = "6h";
-        keepLastAssistants = 3;
-      };
-
-      # Token optimization: memory flush
-      compaction.memoryFlush = {
-        enabled = true;
-        softThresholdTokens = 40000;
-      };
+      # Note: contextPruning, compaction, and heartbeat.model are not supported
+      # by this OpenClaw version. Token optimization is handled by model routing
+      # (Haiku default) and the workspace documents (SOUL.md rules).
 
       # Web tools
       tools.web = {
