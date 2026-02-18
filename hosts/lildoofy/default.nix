@@ -22,6 +22,16 @@
     ./../../services/ollama.nix
   ];
 
+  # --- OpenClaw User/Group (created early for impermanence/SOPS) ---
+  # Must be defined here so the user exists before impermanence and SOPS run
+  users.users.openclaw-gateway = {
+    isSystemUser = true;
+    group = "openclaw-gateway";
+    home = "/var/lib/openclaw-gateway";
+    createHome = true;
+  };
+  users.groups.openclaw-gateway = {};
+
   # --- SSH Access ---
   # Add the dedicated lildoofy admin key alongside the personal key from base.nix
   users.users.orther.openssh.authorizedKeys.keys = [
