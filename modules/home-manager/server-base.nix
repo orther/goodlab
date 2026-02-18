@@ -34,6 +34,7 @@
     # Minimal packages for server administration
     packages = with pkgs; [
       # Core utilities
+      bat
       curl
       wget
       htop
