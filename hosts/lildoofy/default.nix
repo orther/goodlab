@@ -124,34 +124,10 @@
         gateway.bind = "lan";
 
         # Token optimization: model routing (Haiku default, Sonnet fallback)
-        agents.defaults = {
-          model = {
-            primary = "anthropic/claude-3-5-haiku-latest";
-            fallbacks = ["anthropic/claude-sonnet-4-20250514"];
-          };
-          # Rate limiting to prevent runaway tasks
-          maxConcurrent = 4;
-          subagents.maxConcurrent = 8;
-          # Heartbeat every hour using local Ollama
-          heartbeat = {
-            every = "1h";
-          };
-        };
-
-        # Route heartbeat checks to free local Ollama
-        heartbeat.model = "ollama/llama3.2:3b";
-
-        # Token optimization: context pruning (cache-like behavior)
-        contextPruning = {
-          mode = "cache-ttl";
-          ttl = "6h";
-          keepLastAssistants = 3;
-        };
-
-        # Token optimization: memory flush when context gets large
-        compaction.memoryFlush = {
-          enabled = true;
-          softThresholdTokens = 40000;
+        # Note: agents.defaults.model structure supported by current OpenClaw version
+        agents.defaults.model = {
+          primary = "anthropic/claude-3-5-haiku-latest";
+          fallbacks = ["anthropic/claude-sonnet-4-20250514"];
         };
 
         # Web tools
@@ -162,6 +138,10 @@
           };
           fetch.enabled = true;
         };
+
+        # Note: heartbeat, contextPruning, compaction keys are NOT supported
+        # by the current nix-openclaw PR#24 version. Token optimization rules
+        # in SOUL.md guide agent behavior instead.
       };
 
       plugins = [];
