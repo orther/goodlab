@@ -153,6 +153,9 @@
         };
         fetch.enabled = true;
       };
+
+      # Enable Telegram plugin
+      plugins.entries.telegram.enabled = true;
     };
   };
 
