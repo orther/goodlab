@@ -120,8 +120,7 @@
       gateway = {
         bind = "lan";
         mode = "local";
-        # Auth disabled - gateway only accessible via Tailscale VPN
-        auth.mode = "none";
+        # No auth config - gateway only accessible via Tailscale VPN
       };
 
       # Telegram channel
