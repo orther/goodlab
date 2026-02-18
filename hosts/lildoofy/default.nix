@@ -110,11 +110,8 @@
     enable = true;
     port = 18789;
 
-    # Secrets loaded via environment files (must be in KEY=value format)
-    environmentFiles = [
-      config.sops.secrets."openclaw/anthropic-oauth-token".path
-      config.sops.secrets."openclaw/brave-search-api-key".path
-    ];
+    # Environment file created by openclaw-gateway-auth service
+    environmentFiles = ["/run/openclaw-env"];
 
     config = {
       gateway = {
@@ -177,7 +174,7 @@
   };
 
   # Set up Anthropic auth from SOPS secret
-  # OpenClaw looks for auth in ~/.openclaw/agents/main/agent/ (home = /var/lib/openclaw)
+  # Creates ~/.openclaw/.env with ANTHROPIC_API_KEY for the gateway service
   systemd.services.openclaw-gateway-auth = {
     description = "Configure OpenClaw Anthropic auth";
     before = ["openclaw-gateway.service"];
@@ -188,14 +185,19 @@
       RemainAfterExit = true;
       ExecStart = pkgs.writeShellScript "setup-auth" ''
         set -euo pipefail
-        mkdir -p /var/lib/openclaw/.openclaw/agents/main/agent
-        TOKEN=$(cat ${config.sops.secrets."openclaw/anthropic-oauth-token".path})
-        ${pkgs.jq}/bin/jq -n \
-          --arg token "$TOKEN" \
-          '{anthropic: {type: "api_key", value: $token}}' \
-          > /var/lib/openclaw/.openclaw/agents/main/agent/auth-profiles.json
-        chown -R openclaw:openclaw /var/lib/openclaw/.openclaw
-        chmod 600 /var/lib/openclaw/.openclaw/agents/main/agent/auth-profiles.json
+        mkdir -p /var/lib/openclaw/.openclaw
+
+        # Create .env file with API keys for the gateway
+        cat > /run/openclaw-env <<ENVEOF
+        ANTHROPIC_API_KEY=$(cat ${config.sops.secrets."openclaw/anthropic-oauth-token".path})
+        BRAVE_SEARCH_API_KEY=$(cat ${config.sops.secrets."openclaw/brave-search-api-key".path})
+        ENVEOF
+
+        # Also create ~/.openclaw/.env for CLI tools
+        cp /run/openclaw-env /var/lib/openclaw/.openclaw/.env
+
+        chown openclaw:openclaw /var/lib/openclaw/.openclaw/.env /run/openclaw-env
+        chmod 600 /var/lib/openclaw/.openclaw/.env /run/openclaw-env
       '';
     };
   };
