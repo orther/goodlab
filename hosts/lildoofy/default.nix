@@ -118,9 +118,9 @@
 
     config = {
       gateway = {
-        bind = "lan";
+        bind = "localhost";
         mode = "local";
-        # No auth config - gateway only accessible via Tailscale VPN
+        # Localhost binding + Telegram channel - no gateway auth needed
       };
 
       # Telegram channel
