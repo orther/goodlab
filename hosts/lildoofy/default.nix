@@ -177,6 +177,7 @@
   };
 
   # Set up Anthropic auth from SOPS secret
+  # OpenClaw looks for auth in ~/.openclaw/agents/main/agent/ (home = /var/lib/openclaw)
   systemd.services.openclaw-gateway-auth = {
     description = "Configure OpenClaw Anthropic auth";
     before = ["openclaw-gateway.service"];
@@ -187,14 +188,14 @@
       RemainAfterExit = true;
       ExecStart = pkgs.writeShellScript "setup-auth" ''
         set -euo pipefail
-        mkdir -p /var/lib/openclaw/agents/main/agent
+        mkdir -p /var/lib/openclaw/.openclaw/agents/main/agent
         TOKEN=$(cat ${config.sops.secrets."openclaw/anthropic-oauth-token".path})
         ${pkgs.jq}/bin/jq -n \
           --arg token "$TOKEN" \
           '{anthropic: {type: "api_key", value: $token}}' \
-          > /var/lib/openclaw/agents/main/agent/auth-profiles.json
-        chown -R openclaw:openclaw /var/lib/openclaw/agents
-        chmod 600 /var/lib/openclaw/agents/main/agent/auth-profiles.json
+          > /var/lib/openclaw/.openclaw/agents/main/agent/auth-profiles.json
+        chown -R openclaw:openclaw /var/lib/openclaw/.openclaw
+        chmod 600 /var/lib/openclaw/.openclaw/agents/main/agent/auth-profiles.json
       '';
     };
   };
