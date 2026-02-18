@@ -123,42 +123,35 @@
       configOverrides = {
         gateway.bind = "lan";
 
-        # Token optimization: model routing
-        models = {
-          default = "haiku";
-          aliases = {
-            haiku = "claude-3-5-haiku-latest";
-            sonnet = "claude-sonnet-4-20250514";
+        # Token optimization: model routing (Haiku default, Sonnet fallback)
+        agents.defaults = {
+          model = {
+            primary = "anthropic/claude-3-5-haiku-latest";
+            fallbacks = ["anthropic/claude-sonnet-4-20250514"];
+          };
+          # Rate limiting to prevent runaway tasks
+          maxConcurrent = 4;
+          subagents.maxConcurrent = 8;
+          # Heartbeat every hour using local Ollama
+          heartbeat = {
+            every = "1h";
           };
         };
 
-        # Token optimization: prompt caching (90% savings on reused content)
-        cache = {
+        # Route heartbeat checks to free local Ollama
+        heartbeat.model = "ollama/llama3.2:3b";
+
+        # Token optimization: context pruning (cache-like behavior)
+        contextPruning = {
+          mode = "cache-ttl";
+          ttl = "6h";
+          keepLastAssistants = 3;
+        };
+
+        # Token optimization: memory flush when context gets large
+        compaction.memoryFlush = {
           enabled = true;
-          ttl = "5m";
-          priority = "high";
-        };
-
-        # Token optimization: session initialization
-        session = {
-          initialFiles = ["SOUL.md" "USER.md" "IDENTITY.md"];
-          dailyMemory = true;
-          autoLoadHistory = false;
-        };
-
-        # Token optimization: heartbeat to local Ollama (1 hour interval)
-        heartbeat = {
-          provider = "ollama";
-          endpoint = "http://127.0.0.1:11434";
-          model = "llama3.2:3b";
-          interval = 3600;
-        };
-
-        # Token optimization: budget controls
-        budget = {
-          daily = 5;
-          monthly = 200;
-          warnAt = 0.75;
+          softThresholdTokens = 40000;
         };
 
         # Web tools
