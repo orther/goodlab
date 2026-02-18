@@ -132,6 +132,13 @@
           };
         };
 
+        # Token optimization: prompt caching (90% savings on reused content)
+        cache = {
+          enabled = true;
+          ttl = "5m";
+          priority = "high";
+        };
+
         # Token optimization: session initialization
         session = {
           initialFiles = ["SOUL.md" "USER.md" "IDENTITY.md"];
@@ -139,12 +146,12 @@
           autoLoadHistory = false;
         };
 
-        # Token optimization: heartbeat to local Ollama
+        # Token optimization: heartbeat to local Ollama (1 hour interval)
         heartbeat = {
           provider = "ollama";
           endpoint = "http://127.0.0.1:11434";
           model = "llama3.2:3b";
-          interval = 60;
+          interval = 3600;
         };
 
         # Token optimization: budget controls

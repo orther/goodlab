@@ -29,3 +29,21 @@ These tools are NOT available (yet):
 - Calendar integration
 - Home automation
 - Screenshot/camera tools
+
+---
+
+## Caching Strategy
+
+These files are **stable** (cached for 90% token savings):
+
+- SOUL.md
+- USER.md
+- IDENTITY.md
+- TOOLS.md
+
+These files are **dynamic** (not cached):
+
+- memory/YYYY-MM-DD.md (daily notes)
+- Recent conversation history
+
+Keep stable files... stable. Batch system prompt updates during maintenance windows, not mid-session.
