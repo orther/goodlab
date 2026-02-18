@@ -176,6 +176,29 @@
     };
   };
 
+  # Set up Anthropic auth from SOPS secret
+  systemd.services.openclaw-gateway-auth = {
+    description = "Configure OpenClaw Anthropic auth";
+    before = ["openclaw-gateway.service"];
+    after = ["sops-install-secrets.service"];
+    requiredBy = ["openclaw-gateway.service"];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      ExecStart = pkgs.writeShellScript "setup-auth" ''
+        set -euo pipefail
+        mkdir -p /var/lib/openclaw/agents/main/agent
+        TOKEN=$(cat ${config.sops.secrets."openclaw/anthropic-oauth-token".path})
+        ${pkgs.jq}/bin/jq -n \
+          --arg token "$TOKEN" \
+          '{anthropic: {type: "api_key", value: $token}}' \
+          > /var/lib/openclaw/agents/main/agent/auth-profiles.json
+        chown -R openclaw:openclaw /var/lib/openclaw/agents
+        chmod 600 /var/lib/openclaw/agents/main/agent/auth-profiles.json
+      '';
+    };
+  };
+
   # --- Networking ---
   # IMPORTANT: Keep public SSH until Tailscale is working with real authkey
   # Once Tailscale is verified working, set openFirewall = false and remove port 22 below
