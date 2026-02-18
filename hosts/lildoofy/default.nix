@@ -23,14 +23,15 @@
   ];
 
   # --- OpenClaw User/Group (created early for impermanence/SOPS) ---
-  # Must be defined here so the user exists before impermanence and SOPS run
-  users.users.openclaw-gateway = {
+  # The module creates 'openclaw' user, but we declare it here so it exists
+  # before impermanence and SOPS activation scripts run
+  users.users.openclaw = {
     isSystemUser = true;
-    group = "openclaw-gateway";
-    home = "/var/lib/openclaw-gateway";
+    group = "openclaw";
+    home = "/var/lib/openclaw";
     createHome = true;
   };
-  users.groups.openclaw-gateway = {};
+  users.groups.openclaw = {};
 
   # --- SSH Access ---
   # Add the dedicated lildoofy admin key alongside the personal key from base.nix
@@ -79,28 +80,28 @@
   sops.secrets."user-password" = {};
   sops.secrets."tailscale-authkey" = {};
   sops.secrets."openclaw/telegram-bot-token" = {
-    owner = "openclaw-gateway";
-    group = "openclaw-gateway";
+    owner = "openclaw";
+    group = "openclaw";
     mode = "0400";
   };
   sops.secrets."openclaw/openrouter-api-key" = {
-    owner = "openclaw-gateway";
-    group = "openclaw-gateway";
+    owner = "openclaw";
+    group = "openclaw";
     mode = "0400";
   };
   sops.secrets."openclaw/anthropic-oauth-token" = {
-    owner = "openclaw-gateway";
-    group = "openclaw-gateway";
+    owner = "openclaw";
+    group = "openclaw";
     mode = "0400";
   };
   sops.secrets."openclaw/gateway-token" = {
-    owner = "openclaw-gateway";
-    group = "openclaw-gateway";
+    owner = "openclaw";
+    group = "openclaw";
     mode = "0400";
   };
   sops.secrets."openclaw/brave-search-api-key" = {
-    owner = "openclaw-gateway";
-    group = "openclaw-gateway";
+    owner = "openclaw";
+    group = "openclaw";
     mode = "0400";
   };
 
@@ -138,7 +139,7 @@
           primary = "anthropic/claude-3-5-haiku-latest";
           fallbacks = ["anthropic/claude-sonnet-4-20250514"];
         };
-        workspace = "/var/lib/openclaw-gateway/workspace";
+        workspace = "/var/lib/openclaw/workspace";
         maxConcurrent = 4;
       };
 
@@ -168,9 +169,9 @@
       RemainAfterExit = true;
       ExecStart = pkgs.writeShellScript "copy-workspace" ''
         set -euo pipefail
-        mkdir -p /var/lib/openclaw-gateway/workspace
-        cp -r ${./../../clawdbot-documents}/* /var/lib/openclaw-gateway/workspace/
-        chown -R openclaw-gateway:openclaw-gateway /var/lib/openclaw-gateway/workspace
+        mkdir -p /var/lib/openclaw/workspace
+        cp -r ${./../../clawdbot-documents}/* /var/lib/openclaw/workspace/
+        chown -R openclaw:openclaw /var/lib/openclaw/workspace
       '';
     };
   };
