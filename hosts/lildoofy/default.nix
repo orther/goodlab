@@ -1,4 +1,4 @@
-# lildoofy - Hetzner Cloud VPS for OpenClaw (Lil Doofy bot)
+# lildoofy - Hetzner Cloud VPS for OpenClaw (Alexandra Morgan bot)
 # Isolation: dedicated credentials, Tailscale-only ingress, no route advertisement
 {
   inputs,
@@ -11,7 +11,7 @@
   imports = [
     inputs.impermanence.nixosModules.impermanence
     inputs.home-manager.nixosModules.home-manager
-    inputs.nix-openclaw.nixosModules.openclaw
+    inputs.nix-openclaw.nixosModules.openclaw-gateway
 
     ./hardware-configuration.nix
 
@@ -69,106 +69,111 @@
   sops.secrets."user-password" = {};
   sops.secrets."tailscale-authkey" = {};
   sops.secrets."openclaw/telegram-bot-token" = {
-    owner = "openclaw";
-    group = "openclaw";
+    owner = "openclaw-gateway";
+    group = "openclaw-gateway";
     mode = "0400";
   };
   sops.secrets."openclaw/openrouter-api-key" = {
-    owner = "openclaw";
-    group = "openclaw";
+    owner = "openclaw-gateway";
+    group = "openclaw-gateway";
     mode = "0400";
   };
   sops.secrets."openclaw/anthropic-oauth-token" = {
-    owner = "openclaw";
-    group = "openclaw";
+    owner = "openclaw-gateway";
+    group = "openclaw-gateway";
     mode = "0400";
   };
   sops.secrets."openclaw/gateway-token" = {
-    owner = "openclaw";
-    group = "openclaw";
+    owner = "openclaw-gateway";
+    group = "openclaw-gateway";
     mode = "0400";
   };
   sops.secrets."openclaw/brave-search-api-key" = {
-    owner = "openclaw";
-    group = "openclaw";
+    owner = "openclaw-gateway";
+    group = "openclaw-gateway";
     mode = "0400";
   };
 
-  # --- OpenClaw Service ---
-  services.openclaw = {
+  # --- OpenClaw Service (main branch module) ---
+  services.openclaw-gateway = {
     enable = true;
-    workspaceDir = ./../../clawdbot-documents;
+    port = 18789;
 
-    instances.default = {
-      enable = true;
+    # Secrets loaded via environment files
+    environmentFiles = [
+      config.sops.secrets."openclaw/anthropic-oauth-token".path
+      config.sops.secrets."openclaw/gateway-token".path
+      config.sops.secrets."openclaw/brave-search-api-key".path
+    ];
 
-      providers.telegram = {
-        enable = true;
-        botTokenFile = config.sops.secrets."openclaw/telegram-bot-token".path;
+    config = {
+      gateway = {
+        bind = "lan";
+        mode = "local";
+        auth.mode = "token";
+        # Token loaded from OPENCLAW_GATEWAY_TOKEN env var
+      };
+
+      # Telegram channel
+      channels.telegram = {
+        enabled = true;
+        tokenFile = config.sops.secrets."openclaw/telegram-bot-token".path;
         allowFrom = [5875599249];
-        groups = {
-          "*" = {requireMention = true;};
-        };
+        groups."*".requireMention = true;
       };
 
-      providers.anthropic = {
-        oauthTokenFile = config.sops.secrets."openclaw/anthropic-oauth-token".path;
-      };
-
-      gateway.auth = {
-        mode = "token";
-        tokenFile = config.sops.secrets."openclaw/gateway-token".path;
-      };
-
-      configOverrides = {
-        gateway.bind = "lan";
-
-        # Token optimization: model routing (Haiku default, Sonnet fallback)
-        # Note: agents.defaults.model structure supported by current OpenClaw version
-        agents.defaults.model = {
+      # Token optimization: model routing (Haiku default, Sonnet fallback)
+      agents.defaults = {
+        model = {
           primary = "anthropic/claude-3-5-haiku-latest";
           fallbacks = ["anthropic/claude-sonnet-4-20250514"];
         };
-
-        # Web tools
-        tools.web = {
-          search = {
-            enabled = true;
-            provider = "brave";
-          };
-          fetch.enabled = true;
-        };
-
-        # Note: heartbeat, contextPruning, compaction keys are NOT supported
-        # by the current nix-openclaw PR#24 version. Token optimization rules
-        # in SOUL.md guide agent behavior instead.
+        workspace = "/var/lib/openclaw-gateway/workspace";
+        maxConcurrent = 4;
+        heartbeat.every = "1h";
       };
 
-      plugins = [];
+      # Heartbeat to local Ollama (free)
+      heartbeat.model = "ollama/llama3.2:3b";
+
+      # Token optimization: context pruning
+      contextPruning = {
+        mode = "cache-ttl";
+        ttl = "6h";
+        keepLastAssistants = 3;
+      };
+
+      # Token optimization: memory flush
+      compaction.memoryFlush = {
+        enabled = true;
+        softThresholdTokens = 40000;
+      };
+
+      # Web tools
+      tools.web = {
+        search = {
+          enabled = true;
+          provider = "brave";
+          # API key loaded from BRAVE_SEARCH_API_KEY env var
+        };
+        fetch.enabled = true;
+      };
     };
   };
 
-  # --- Brave Search API key injection ---
-  systemd.services.openclaw-brave-env = {
-    description = "Inject Brave Search API key into OpenClaw config";
+  # Copy workspace documents to state directory
+  systemd.services.openclaw-gateway-workspace = {
+    description = "Copy OpenClaw workspace documents";
     before = ["openclaw-gateway.service"];
     requiredBy = ["openclaw-gateway.service"];
-    after = ["sops-nix.service"];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
-      ExecStart = pkgs.writeShellScript "inject-brave-key" ''
+      ExecStart = pkgs.writeShellScript "copy-workspace" ''
         set -euo pipefail
-        key_file="${config.sops.secrets."openclaw/brave-search-api-key".path}"
-        config_file="/var/lib/openclaw/openclaw.json"
-
-        if [ -f "$key_file" ] && [ -f "$config_file" ]; then
-          api_key="$(cat "$key_file")"
-          ${pkgs.gnused}/bin/sed -i \
-            -e 's|,"apiKey":"[^"]*"||g' \
-            -e "s|\"provider\":\"brave\"|\"provider\":\"brave\",\"apiKey\":\"$api_key\"|" \
-            "$config_file"
-        fi
+        mkdir -p /var/lib/openclaw-gateway/workspace
+        cp -r ${./../../clawdbot-documents}/* /var/lib/openclaw-gateway/workspace/
+        chown -R openclaw-gateway:openclaw-gateway /var/lib/openclaw-gateway/workspace
       '';
     };
   };

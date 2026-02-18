@@ -99,9 +99,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # OpenClaw - NixOS hardened service module (PR #24, still draft/unmerged)
+    # OpenClaw - NixOS hardened service module (main branch, tracks latest releases)
     nix-openclaw = {
-      url = "github:openclaw/nix-openclaw?ref=refs/pull/24/head";
+      url = "github:openclaw/nix-openclaw";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 

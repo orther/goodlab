@@ -11,12 +11,13 @@
   };
 
   # Persist openclaw state across reboots (impermanence)
+  # Note: main branch module uses /var/lib/openclaw-gateway
   environment.persistence."/nix/persist" = {
     directories = [
       {
-        directory = "/var/lib/openclaw";
-        user = "openclaw";
-        group = "openclaw";
+        directory = "/var/lib/openclaw-gateway";
+        user = "openclaw-gateway";
+        group = "openclaw-gateway";
         mode = "0750";
       }
     ];
