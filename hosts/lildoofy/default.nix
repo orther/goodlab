@@ -118,9 +118,8 @@
 
     config = {
       gateway = {
-        bind = "localhost";
         mode = "local";
-        # Localhost binding + Telegram channel - no gateway auth needed
+        # Default binding - Telegram channel is primary access method
       };
 
       # Telegram channel
