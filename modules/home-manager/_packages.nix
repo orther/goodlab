@@ -62,7 +62,8 @@
         zola
       ]
       ++ lib.optionals pkgs.stdenv.isLinux [
-        nixos-rebuild
+        # nixos-rebuild is provided system-wide on NixOS; adding it here
+        # conflicts with nix-zsh-completions (both ship _nixos-rebuild)
       ]
     else []
   );

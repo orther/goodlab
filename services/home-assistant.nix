@@ -58,7 +58,9 @@
       homeassistant = {
         name = "Home";
         time_zone = "America/Los_Angeles";
-        unit_system = "imperial";
+        unit_system = "us_customary";
+        external_url = "https://hass.ryatt.app";
+        internal_url = "http://10.4.0.26:8123";
       };
 
       # Allow reverse proxy (Cloudflare Tunnel)
@@ -97,7 +99,6 @@
   # Without them, startup logs show warnings.
 
   systemd.tmpfiles.rules = [
-    "d /var/lib/hass 0750 hass hass"
     "f /var/lib/hass/automations.yaml 0644 hass hass"
     "f /var/lib/hass/scenes.yaml 0644 hass hass"
     "f /var/lib/hass/scripts.yaml 0644 hass hass"
@@ -118,7 +119,12 @@
 
   environment.persistence."/nix/persist" = {
     directories = [
-      "/var/lib/hass"
+      {
+        directory = "/var/lib/hass";
+        user = "hass";
+        group = "hass";
+        mode = "0750";
+      }
     ];
   };
 }
