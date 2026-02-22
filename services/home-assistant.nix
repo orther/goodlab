@@ -26,6 +26,7 @@
       # Onboarding essentials
       "analytics"
       "default_config"
+      "google_translate"
       "met"
       "radio_browser"
       "shopping_list"
@@ -48,6 +49,14 @@
       "yale"
       "nest"
       "unifiprotect"
+      "homekit_controller"
+      "apple_tv"
+      "lutron_caseta"
+
+      # Network devices (auto-discovered on LAN)
+      "synology_dsm"
+      "brother"
+      "ipp"
 
       # Media
       "jellyfin"
