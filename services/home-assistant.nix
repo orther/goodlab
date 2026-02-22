@@ -44,6 +44,15 @@
       # Mobile app support
       "mobile_app"
 
+      # Smart home devices
+      "yale"
+      "nest"
+      "unifiprotect"
+
+      # Media
+      "jellyfin"
+      "plex"
+
       # Useful basics
       "sun"
       "automation"
