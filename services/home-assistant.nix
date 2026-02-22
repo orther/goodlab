@@ -1,0 +1,124 @@
+# ==============================================================================
+# Home Assistant - Smart Home Automation Platform
+# ==============================================================================
+#
+# Native NixOS module for Home Assistant with ESPHome integration.
+# Used for ESPectre Wi-Fi presence detection and future home automation.
+#
+# Access via Cloudflare Tunnel: hass.ryatt.app → http://localhost:8123
+# (configured in services/cloudflare-tunnel-noir.nix)
+#
+# ESPectre integration:
+#   - ESP32-S3 devices run ESPectre firmware (flashed separately)
+#   - Home Assistant discovers them via ESPHome Native API + mDNS
+#   - Each device exposes: binary motion sensor, movement score, threshold control
+#
+# ==============================================================================
+{...}: {
+  # ==========================================================================
+  # Home Assistant Service
+  # ==========================================================================
+
+  services.home-assistant = {
+    enable = true;
+
+    extraComponents = [
+      # Onboarding essentials
+      "analytics"
+      "default_config"
+      "met"
+      "radio_browser"
+      "shopping_list"
+
+      # Performance
+      "isal"
+
+      # ESPectre / ESPHome presence detection
+      "esphome"
+
+      # Network discovery
+      "zeroconf"
+      "ssdp"
+      "dhcp"
+
+      # Mobile app support
+      "mobile_app"
+
+      # Useful basics
+      "sun"
+      "automation"
+      "scene"
+      "script"
+      "tag"
+    ];
+
+    config = {
+      default_config = {};
+
+      homeassistant = {
+        name = "Home";
+        time_zone = "America/Los_Angeles";
+        unit_system = "imperial";
+      };
+
+      # Allow reverse proxy (Cloudflare Tunnel)
+      http = {
+        use_x_forwarded_for = true;
+        trusted_proxies = [
+          "127.0.0.1"
+          "::1"
+        ];
+      };
+
+      # Ensure automations.yaml etc. exist for UI-based editing
+      automation = "!include automations.yaml";
+      scene = "!include scenes.yaml";
+      script = "!include scripts.yaml";
+    };
+  };
+
+  # ==========================================================================
+  # mDNS / Avahi - Required for ESPHome device discovery
+  # ==========================================================================
+  # ESPHome devices announce themselves via mDNS. Avahi enables the NixOS
+  # host to participate in mDNS so Home Assistant can discover ESP32 devices
+  # on the local network.
+
+  services.avahi = {
+    enable = true;
+    nssmdns4 = true;
+    openFirewall = true;
+  };
+
+  # ==========================================================================
+  # Placeholder files for UI-based configuration
+  # ==========================================================================
+  # Home Assistant expects these YAML files to exist for the UI editors.
+  # Without them, startup logs show warnings.
+
+  systemd.tmpfiles.rules = [
+    "d /var/lib/hass 0750 hass hass"
+    "f /var/lib/hass/automations.yaml 0644 hass hass"
+    "f /var/lib/hass/scenes.yaml 0644 hass hass"
+    "f /var/lib/hass/scripts.yaml 0644 hass hass"
+  ];
+
+  # ==========================================================================
+  # Firewall
+  # ==========================================================================
+  # Open HA port on local network for direct access / Cloudflare Tunnel.
+  # ESPHome Native API (port 6053) traffic comes from ESP devices on LAN.
+
+  networking.firewall.allowedTCPPorts = [8123];
+
+  # ==========================================================================
+  # Persistence (Impermanence)
+  # ==========================================================================
+  # Home Assistant state, database, and configuration must survive reboots.
+
+  environment.persistence."/nix/persist" = {
+    directories = [
+      "/var/lib/hass"
+    ];
+  };
+}

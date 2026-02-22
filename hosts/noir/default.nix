@@ -19,6 +19,8 @@
     ./../../services/tailscale.nix
     ./../../services/_acme.nix
     ./../../services/_nginx.nix
+    ./../../services/home-assistant.nix
+    ./../../services/cloudflare-tunnel-noir.nix
     #./../../services/netdata.nix
     #./../../services/nextcloud.nix
     #./../../services/nixarr.nix
