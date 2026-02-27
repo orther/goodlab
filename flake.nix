@@ -183,6 +183,7 @@
         # treefmt configuration (nix fmt)
         treefmt = {
           projectRootFile = "flake.nix";
+          settings.excludes = ["secrets/*"];
           programs = {
             alejandra.enable = true;
             shfmt.enable = true;
