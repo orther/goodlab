@@ -7,8 +7,7 @@
 # - NFS media mount from NAS
 # - Nixflix for declarative media server configuration
 #
-# NOTE: *arr services (Sonarr, Radarr, Prowlarr) currently run on another server.
-# To enable them here later, just add: sonarr.enable = true; radarr.enable = true; etc.
+# Media server with Jellyfin + *arr stack for automated media management
 #
 # NOTE: Plex is included TEMPORARILY (2-4 weeks) for migration purposes.
 # Family members currently use Plex clients. Once migrated to Jellyfin,
@@ -183,11 +182,8 @@
   # Nixflix - Declarative Media Server Configuration
   # ==========================================================================
   # Nixflix provides declarative configuration for media services.
-  # Currently only Jellyfin is enabled. To add *arr services later:
-  #   sonarr.enable = true;
-  #   radarr.enable = true;
-  #   prowlarr.enable = true;
-  #   jellyseerr.enable = true;
+  # Jellyfin serves media, *arr services handle automated acquisition,
+  # and Jellyseerr provides a request interface for users.
 
   nixflix = {
     enable = true;
@@ -221,15 +217,36 @@
     };
 
     # ========================================================================
-    # *arr Services - Disabled (running on separate server)
+    # Sonarr - TV Series Management
     # ========================================================================
-    # Uncomment these when ready to move *arr services to this server:
-    #
-    # sonarr.enable = true;
-    # radarr.enable = true;
-    # prowlarr.enable = true;
-    # jellyseerr.enable = true;
-    # postgres.enable = true;  # Shared database for *arr services
+    sonarr = {
+      enable = true;
+      openFirewall = true;
+    };
+
+    # ========================================================================
+    # Radarr - Movie Management
+    # ========================================================================
+    radarr = {
+      enable = true;
+      openFirewall = true;
+    };
+
+    # ========================================================================
+    # Prowlarr - Indexer Manager
+    # ========================================================================
+    prowlarr = {
+      enable = true;
+      openFirewall = true;
+    };
+
+    # ========================================================================
+    # Jellyseerr - Media Request Manager
+    # ========================================================================
+    jellyseerr = {
+      enable = true;
+      openFirewall = true;
+    };
   };
 
   # ==========================================================================
