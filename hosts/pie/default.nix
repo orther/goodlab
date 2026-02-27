@@ -264,6 +264,18 @@
   };
 
   # ==========================================================================
+  # Workaround: Nixflix wait-for-api script bug
+  # ==========================================================================
+  # Nixflix unconditionally sets ExecStartPost to a wait-for-api script that
+  # tries to read apiKeyPath, which is null on first boot (API keys are
+  # generated at runtime). Override ExecStartPost to a no-op until API keys
+  # are configured via SOPS secrets.
+  # Remove these overrides after setting nixflix.{prowlarr,radarr,sonarr}.config.apiKeyPath
+  systemd.services.prowlarr.serviceConfig.ExecStartPost = lib.mkForce "";
+  systemd.services.radarr.serviceConfig.ExecStartPost = lib.mkForce "";
+  systemd.services.sonarr.serviceConfig.ExecStartPost = lib.mkForce "";
+
+  # ==========================================================================
   # User Configuration
   # ==========================================================================
 
