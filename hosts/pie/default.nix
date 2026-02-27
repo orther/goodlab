@@ -249,6 +249,7 @@
     jellyseerr = {
       enable = true;
       openFirewall = true;
+      vpn.enable = false;
     };
   };
 
