@@ -250,6 +250,16 @@
       enable = true;
       openFirewall = true;
       vpn.enable = false;
+
+      # Disable Radarr/Sonarr integration until API keys are available.
+      # Nixflix auto-populates these from radarr/sonarr configs, but the
+      # arr services generate API keys on first boot. Once running:
+      # 1. Extract API keys from Radarr/Sonarr (Settings > General)
+      # 2. Add them as SOPS secrets
+      # 3. Set nixflix.radarr.config.apiKeyPath / nixflix.sonarr.config.apiKeyPath
+      # 4. Remove these overrides to re-enable automatic integration
+      radarr = [];
+      sonarr = [];
     };
   };
 
