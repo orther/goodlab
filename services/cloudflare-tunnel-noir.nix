@@ -71,4 +71,15 @@
       ProtectControlGroups = true;
     };
   };
+
+  # ==========================================================================
+  # Persistence (for impermanence systems)
+  # ==========================================================================
+  # Cloudflared may store some state, but for token-based tunnels it's minimal
+
+  environment.persistence."/nix/persist" = {
+    directories = [
+      "/var/lib/cloudflared"
+    ];
+  };
 }

@@ -23,8 +23,7 @@
     enable = true;
 
     extraComponents = [
-      # Onboarding essentials
-      "analytics"
+      # Default config bundle (includes zeroconf, ssdp, dhcp, mobile_app, etc.)
       "default_config"
       "google_translate"
       "met"
@@ -36,14 +35,6 @@
 
       # ESPectre / ESPHome presence detection
       "esphome"
-
-      # Network discovery
-      "zeroconf"
-      "ssdp"
-      "dhcp"
-
-      # Mobile app support
-      "mobile_app"
 
       # Smart home devices
       "yale"
@@ -61,13 +52,6 @@
       # Media
       "jellyfin"
       "plex"
-
-      # Useful basics
-      "sun"
-      "automation"
-      "scene"
-      "script"
-      "tag"
     ];
 
     config = {
@@ -78,6 +62,8 @@
         time_zone = "America/Los_Angeles";
         unit_system = "us_customary";
         external_url = "https://hass.ryatt.app";
+        # noir's LAN IP — used by HA companion app for local access
+        # Update if noir's DHCP reservation changes
         internal_url = "http://10.4.0.26:8123";
       };
 
