@@ -85,6 +85,7 @@
   #};
 
   programs.zsh.enable = true;
+  programs.fish.enable = true;
   security.sudo.wheelNeedsPassword = false;
   time.timeZone = "America/Los_Angeles";
   zramSwap.enable = true;

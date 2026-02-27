@@ -1,14 +1,14 @@
 {pkgs, ...}: {
   programs.ghostty = {
     enable = true;
-    enableZshIntegration = true;
+    enableFishIntegration = true;
     package =
       if pkgs.stdenv.isDarwin
       then null
       else pkgs.ghostty;
     settings = {
       # Auto-start tmux; if it exits, fall back to an interactive shell.
-      command = "${pkgs.zsh}/bin/zsh -lc '${pkgs.tmux}/bin/tmux attach || ${pkgs.tmux}/bin/tmux; exec ${pkgs.zsh}/bin/zsh'";
+      command = "${pkgs.fish}/bin/fish -l -c '${pkgs.tmux}/bin/tmux attach; or ${pkgs.tmux}/bin/tmux; or exec ${pkgs.fish}/bin/fish'";
 
       "font-family" = "MesloLGS Nerd Font";
       "font-size" =

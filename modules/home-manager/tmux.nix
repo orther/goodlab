@@ -10,7 +10,7 @@
       fi
       if [ ! -d "$root" ]; then
         echo "cd-to-project: missing directory: $root" >&2
-        exec "''${SHELL:-${pkgs.zsh}/bin/zsh}"
+        exec "''${SHELL:-${pkgs.fish}/bin/fish}"
       fi
 
       if command -v fd >/dev/null 2>&1; then
@@ -21,17 +21,17 @@
 
       if ! command -v fzf >/dev/null 2>&1; then
         echo "cd-to-project: fzf not found on PATH" >&2
-        exec "${pkgs.zsh}/bin/zsh" -l
+        exec "${pkgs.fish}/bin/fish" -l
       fi
 
       selected="$(printf '%s\n' "$dirs" | sed "s|^$root/||" | fzf --prompt='Project> ' --height=40% --layout=reverse --border)"
       status=$?
       if [ $status -ne 0 ] || [ -z "${selected:-}" ]; then
-        exec "${pkgs.zsh}/bin/zsh" -l
+        exec "${pkgs.fish}/bin/fish" -l
       fi
 
       cd "$root/$selected"
-      exec "${pkgs.zsh}/bin/zsh" -l
+      exec "${pkgs.fish}/bin/fish" -l
     '')
   ];
 
@@ -104,7 +104,7 @@
             bind C-l send-keys 'C-l'
 
             # Open a project in a separate window
-            bind-key -n C-f run-shell "tmux new-window -n project-selector -c '$HOME/code' ${pkgs.zsh}/bin/zsh -lc 'cd-to-project'"
+            bind-key -n C-f run-shell "tmux new-window -n project-selector -c '$HOME/code' ${pkgs.fish}/bin/fish -c 'cd-to-project'"
 
             # Apply Tc
             set -ga terminal-overrides ",xterm-256color:RGB:smcup@:rmcup@"

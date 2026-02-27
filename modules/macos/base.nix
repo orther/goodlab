@@ -23,6 +23,7 @@
   };
 
   programs.zsh.enable = true;
+  programs.fish.enable = true;
   security.pam.services.sudo_local = {
     touchIdAuth = true;
     reattach = true;
