@@ -41,6 +41,9 @@
     ./../../services/nas.nix # Mounts /mnt/docker-data from NAS
     ./../../services/cloudflare-tunnel-pie.nix # Subdomain routing via Cloudflare Tunnel
 
+    # Wizarr - User invitation management for media servers
+    ./../../services/wizarr.nix
+
     # TEMPORARY: Plex for migration period (remove after family migrates to Jellyfin)
     ./../../services/plex.nix
   ];
