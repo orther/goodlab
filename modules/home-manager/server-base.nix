@@ -12,7 +12,8 @@
 }: {
   imports = [
     inputs.catppuccin.homeModules.catppuccin
-    ./_zsh.nix
+    ./_fish.nix
+    ./_starship.nix
     ./tmux.nix
     ./neovim.nix
   ];
@@ -24,7 +25,7 @@
     ];
     stateVersion = "23.11";
     sessionVariables = {
-      SHELL = "${pkgs.zsh}/bin/zsh";
+      SHELL = "${pkgs.fish}/bin/fish";
       XDG_CACHE_HOME = "$HOME/.cache";
       XDG_DATA_HOME = "$HOME/.local/share";
       XDG_STATE_HOME = "$HOME/.local/state";
@@ -64,15 +65,15 @@
     git.enable = true;
     fzf = {
       enable = true;
-      enableZshIntegration = true;
+      enableFishIntegration = true;
     };
     lsd = {
       enable = true;
-      enableZshIntegration = true;
+      enableFishIntegration = true;
     };
     direnv = {
       enable = true;
-      enableZshIntegration = true;
+      enableFishIntegration = true;
       nix-direnv.enable = true;
     };
     fastfetch.enable = true;

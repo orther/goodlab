@@ -337,8 +337,6 @@
         # Export reusable module sets for downstream reuse and internal imports
         darwinModules = {
           base = import ./modules/macos/base.nix;
-          work = import ./modules/macos/work.nix;
-          zscaler = import ./modules/macos/zscaler.nix;
         };
 
         nixosModules = {
@@ -362,7 +360,6 @@
             doom = import ./modules/home-manager/doom.nix;
             "1password" = import ./modules/home-manager/1password.nix;
             desktop = import ./modules/home-manager/desktop.nix;
-            aws-ssm = import ./modules/home-manager/aws-ssm.nix;
             claude-code = import ./modules/home-manager/claude-code.nix;
           };
         };
@@ -395,25 +392,6 @@
               {
                 nixpkgs.config.allowUnfree = true;
                 nixpkgs.overlays = [
-                  (import ./overlays/claude-code-nix.nix inputs)
-                ];
-              }
-            ];
-          };
-          nblap = nix-darwin.lib.darwinSystem {
-            system = "aarch64-darwin"; # Apple Silicon MacBook (work)
-            specialArgs = {
-              inherit inputs;
-              inherit (self) outputs;
-            };
-            modules = [
-              ./hosts/nblap/default.nix
-              {
-                nixpkgs.config.allowUnfree = true;
-                nixpkgs.overlays = [
-                  # Fix sops-nix Go builds in corporate proxy environments
-                  (import ./overlays/sops-nix-goproxy.nix)
-                  # Add claude-code-nix (filtered out by corporateNetwork check)
                   (import ./overlays/claude-code-nix.nix inputs)
                 ];
               }
