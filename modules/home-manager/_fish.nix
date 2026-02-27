@@ -5,7 +5,7 @@
       ".." = "cd ..";
       cat = "bat --style=plain --theme=base16 --paging=never";
       neofetch = "fastfetch";
-      sudo = "sudo ";
+      sudo = "sudo";
       v = "vim";
     };
     interactiveShellInit = ''

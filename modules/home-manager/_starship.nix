@@ -64,9 +64,10 @@
       };
 
       kubernetes = {
-        disabled = false;
+        disabled = true;
         style = "bold blue";
         format = "[$symbol$context(\\($namespace\\))]($style) ";
+        detect_files = ["k8s" "kubernetes" "helmfile.yaml"];
       };
 
       terraform = {
