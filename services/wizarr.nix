@@ -8,7 +8,7 @@
 #   1. Access Wizarr at http://pie:5690
 #   2. Complete the setup wizard (select Jellyfin, enter server URL)
 #   3. Create invitation links to share with family/friends
-{...}: {
+{config, ...}: {
   # ==========================================================================
   # Podman Container Runtime
   # ==========================================================================
@@ -30,16 +30,13 @@
   virtualisation.oci-containers = {
     backend = "podman";
     containers.wizarr = {
-      image = "ghcr.io/wizarrrr/wizarr:latest";
+      image = "ghcr.io/wizarrrr/wizarr:v2026.2.1";
       ports = ["5690:5690"];
       volumes = [
         "/var/lib/wizarr:/data:rw"
       ];
       environment = {
-        TZ = "America/Los_Angeles";
-      };
-      labels = {
-        "io.containers.autoupdate" = "registry";
+        TZ = config.time.timeZone;
       };
       log-driver = "journald";
     };
@@ -56,14 +53,6 @@
   # ==========================================================================
 
   systemd.tmpfiles.rules = ["d /var/lib/wizarr 0755 root root"];
-
-  systemd.timers."podman-auto-update" = {
-    wantedBy = ["timers.target"];
-    timerConfig = {
-      OnCalendar = "*-*-* 7:00:00";
-      RandomizedDelaySec = "1h";
-    };
-  };
 
   # ==========================================================================
   # Persistence (for impermanence systems)
