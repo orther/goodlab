@@ -338,6 +338,9 @@
   systemd.services.jellyseerr-user-settings.serviceConfig.ExecStart = lib.mkForce (pkgs.writeShellScript "jellyseerr-user-settings-noop" ''
     echo "Jellyseerr user settings configured manually via web UI — skipping"
   '');
+  systemd.services.jellyseerr-libraries.serviceConfig.ExecStart = lib.mkForce (pkgs.writeShellScript "jellyseerr-libraries-noop" ''
+    echo "Jellyseerr libraries configured manually via web UI — skipping"
+  '');
 
   # ==========================================================================
   # User Configuration
