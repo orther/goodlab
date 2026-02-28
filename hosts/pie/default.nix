@@ -11,6 +11,7 @@
 # Family members currently use Plex clients. Once migrated to Jellyfin,
 # remove the plex.nix import and users.users.plex.extraGroups line.
 {
+  config,
   inputs,
   outputs,
   lib,
@@ -180,6 +181,25 @@
   ];
 
   # ==========================================================================
+  # SOPS Secrets for Media Services
+  # ==========================================================================
+  # API keys extracted from running *arr services and stored encrypted.
+  # These are read at runtime by nixflix to configure service integration.
+
+  sops.secrets."nixflix/radarr-api-key" = {
+    owner = "radarr";
+    mode = "0400";
+  };
+  sops.secrets."nixflix/sonarr-api-key" = {
+    owner = "sonarr";
+    mode = "0400";
+  };
+  sops.secrets."nixflix/prowlarr-api-key" = {
+    owner = "prowlarr";
+    mode = "0400";
+  };
+
+  # ==========================================================================
   # Nixflix - Declarative Media Server Configuration
   # ==========================================================================
   # Nixflix provides declarative configuration for media services.
@@ -223,6 +243,7 @@
     sonarr = {
       enable = true;
       openFirewall = true;
+      config.apiKeyPath = config.sops.secrets."nixflix/sonarr-api-key".path;
     };
 
     # ========================================================================
@@ -231,6 +252,7 @@
     radarr = {
       enable = true;
       openFirewall = true;
+      config.apiKeyPath = config.sops.secrets."nixflix/radarr-api-key".path;
     };
 
     # ========================================================================
@@ -239,6 +261,7 @@
     prowlarr = {
       enable = true;
       openFirewall = true;
+      config.apiKeyPath = config.sops.secrets."nixflix/prowlarr-api-key".path;
     };
 
     # ========================================================================
@@ -248,30 +271,8 @@
       enable = true;
       openFirewall = true;
       vpn.enable = false;
-
-      # Disable Radarr/Sonarr integration until API keys are available.
-      # Nixflix auto-populates these from radarr/sonarr configs, but the
-      # arr services generate API keys on first boot. Once running:
-      # 1. Extract API keys from Radarr/Sonarr (Settings > General)
-      # 2. Add them as SOPS secrets
-      # 3. Set nixflix.radarr.config.apiKeyPath / nixflix.sonarr.config.apiKeyPath
-      # 4. Remove these overrides to re-enable automatic integration
-      radarr = [];
-      sonarr = [];
     };
   };
-
-  # ==========================================================================
-  # Workaround: Nixflix wait-for-api script bug
-  # ==========================================================================
-  # Nixflix unconditionally sets ExecStartPost to a wait-for-api script that
-  # tries to read apiKeyPath, which is null on first boot (API keys are
-  # generated at runtime). Override ExecStartPost to a no-op until API keys
-  # are configured via SOPS secrets.
-  # TODO(#46): Remove these overrides after setting nixflix.{prowlarr,radarr,sonarr}.config.apiKeyPath
-  systemd.services.prowlarr.serviceConfig.ExecStartPost = lib.mkForce "";
-  systemd.services.radarr.serviceConfig.ExecStartPost = lib.mkForce "";
-  systemd.services.sonarr.serviceConfig.ExecStartPost = lib.mkForce "";
 
   # ==========================================================================
   # User Configuration
