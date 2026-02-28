@@ -16,7 +16,6 @@
   virtualisation.podman = {
     enable = true;
     autoPrune.enable = true;
-    dockerCompat = true;
     defaultNetwork.settings = {
       # Required for container networking to be able to use names.
       dns_enabled = true;
@@ -30,6 +29,7 @@
   virtualisation.oci-containers = {
     backend = "podman";
     containers.wizarr = {
+      # To update: check https://github.com/wizarrrr/wizarr/releases for new tags
       image = "ghcr.io/wizarrrr/wizarr:v2026.2.1";
       ports = ["5690:5690"];
       volumes = [
@@ -63,7 +63,10 @@
   environment.persistence."/nix/persist" = {
     directories = [
       "/var/lib/wizarr"
-      "/var/lib/containers"
+      {
+        directory = "/var/lib/containers";
+        mode = "0700";
+      }
     ];
   };
 }

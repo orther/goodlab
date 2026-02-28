@@ -7,8 +7,6 @@
 # - NFS media mount from NAS
 # - Nixflix for declarative media server configuration
 #
-# Media server with Jellyfin + *arr stack for automated media management
-#
 # NOTE: Plex is included TEMPORARILY (2-4 weeks) for migration purposes.
 # Family members currently use Plex clients. Once migrated to Jellyfin,
 # remove the plex.nix import and users.users.plex.extraGroups line.
@@ -270,7 +268,7 @@
   # tries to read apiKeyPath, which is null on first boot (API keys are
   # generated at runtime). Override ExecStartPost to a no-op until API keys
   # are configured via SOPS secrets.
-  # Remove these overrides after setting nixflix.{prowlarr,radarr,sonarr}.config.apiKeyPath
+  # TODO(#46): Remove these overrides after setting nixflix.{prowlarr,radarr,sonarr}.config.apiKeyPath
   systemd.services.prowlarr.serviceConfig.ExecStartPost = lib.mkForce "";
   systemd.services.radarr.serviceConfig.ExecStartPost = lib.mkForce "";
   systemd.services.sonarr.serviceConfig.ExecStartPost = lib.mkForce "";
