@@ -42,10 +42,6 @@
         "io.containers.autoupdate" = "registry";
       };
       log-driver = "journald";
-      extraOptions = [
-        "--log-opt=max-file=10"
-        "--log-opt=max-size=10m"
-      ];
     };
   };
 
@@ -60,6 +56,14 @@
   # ==========================================================================
 
   systemd.tmpfiles.rules = ["d /var/lib/wizarr 0755 root root"];
+
+  systemd.timers."podman-auto-update" = {
+    wantedBy = ["timers.target"];
+    timerConfig = {
+      OnCalendar = "*-*-* 7:00:00";
+      RandomizedDelaySec = "1h";
+    };
+  };
 
   # ==========================================================================
   # Persistence (for impermanence systems)

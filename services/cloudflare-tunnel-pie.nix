@@ -10,11 +10,11 @@
 #
 # Subdomains configured in Cloudflare Dashboard:
 #   - jellyfin.ryatt.app    → http://localhost:8096
-#   - plex.ryatt.app        → http://localhost:32400
+#   - plex.ryatt.app        → http://localhost:32400  [temporary]
 #   - sonarr.ryatt.app      → http://localhost:8989
 #   - radarr.ryatt.app      → http://localhost:7878
 #   - prowlarr.ryatt.app    → http://localhost:9696
-#   - jellyseerr.ryatt.app  → http://localhost:5055
+#   - seerr.ryatt.app       → http://localhost:5055
 #   - wizarr.ryatt.app      → http://localhost:5690
 #
 # Setup requirements:
