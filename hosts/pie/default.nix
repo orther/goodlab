@@ -275,6 +275,47 @@
   };
 
   # ==========================================================================
+  # Workaround: Nixflix double-slash URL bug
+  # ==========================================================================
+  # Nixflix constructs BASE_URL with a trailing slash when baseUrl is empty,
+  # producing "http://127.0.0.1:8096//System/Info/Public" (double slash).
+  # Jellyfin's Kestrel server returns 404 for double-slash paths, causing
+  # silent timeouts in initialization and setup wizard services.
+  # TODO: Report upstream to kiriwalawren/nixflix and remove when fixed.
+
+  # Fix jellyfin-initialization: replace script with corrected URL
+  systemd.services.jellyfin-initialization.serviceConfig.ExecStart = let
+    script = pkgs.writeShellScript "jellyfin-initialization-fixed" ''
+      BASE_URL="http://127.0.0.1:8096"
+      echo "Waiting for Jellyfin to finish loading..."
+      for i in $(seq 1 180); do
+        HTTP_CODE=$(${pkgs.curl}/bin/curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/System/Info/Public" 2>/dev/null || echo "000")
+        if [ "$HTTP_CODE" = "200" ]; then
+          echo "Jellyfin is ready (HTTP $HTTP_CODE)"
+          exit 0
+        elif [ "$HTTP_CODE" = "503" ]; then
+          echo "Jellyfin is still loading (HTTP 503)... attempt $i/180"
+        fi
+        sleep 1
+      done
+      echo "Jellyfin did not finish loading after 180 seconds (last HTTP code: $HTTP_CODE)" >&2
+      exit 1
+    '';
+  in
+    lib.mkForce script;
+
+  # Fix jellyfin-setup-wizard: the same double-slash bug affects the auth
+  # helper script, and the wizard was completed manually (password set via
+  # web UI, not by nixflix). No-op this service so downstream jellyseerr
+  # integration services can start. Jellyseerr setup is done via its web UI.
+  systemd.services.jellyfin-setup-wizard.serviceConfig.ExecStart = let
+    script = pkgs.writeShellScript "jellyfin-setup-wizard-noop" ''
+      echo "Jellyfin setup wizard was completed manually — skipping automation"
+    '';
+  in
+    lib.mkForce script;
+
+  # ==========================================================================
   # User Configuration
   # ==========================================================================
 
