@@ -8,20 +8,19 @@
 # This uses a REMOTELY-MANAGED tunnel - ingress rules are configured in the
 # Cloudflare Zero Trust dashboard, not here. This config just connects.
 #
-# Subdomains to configure in Cloudflare Dashboard:
-#   - jellyfin.ryatt.app → http://localhost:8096
-#   - plex.ryatt.app     → http://localhost:32400 [temporary]
+# Subdomains configured in Cloudflare Dashboard:
+#   - jellyfin.ryatt.app    → http://localhost:8096
+#   - plex.ryatt.app        → http://localhost:32400  [temporary]
+#   - sonarr.ryatt.app      → http://localhost:8989
+#   - radarr.ryatt.app      → http://localhost:7878
+#   - prowlarr.ryatt.app    → http://localhost:9696
+#   - seerr.ryatt.app       → http://localhost:5055
+#   - wizarr.ryatt.app      → http://localhost:5690
 #
 # Setup requirements:
 #   1. Create tunnel in Cloudflare Zero Trust Dashboard
 #   2. Add tunnel token to secrets/secrets.yaml as "cloudflare-tunnel-pie-token"
 #   3. Configure public hostnames (ingress) in Cloudflare Dashboard
-#
-# To add more services later, add them in Cloudflare Dashboard:
-#   - sonarr.ryatt.app → http://localhost:8989
-#   - radarr.ryatt.app → http://localhost:7878
-#   - prowlarr.ryatt.app → http://localhost:9696
-#   - jellyseerr.ryatt.app → http://localhost:5055
 # ==============================================================================
 {
   config,

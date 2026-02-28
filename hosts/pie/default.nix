@@ -7,9 +7,6 @@
 # - NFS media mount from NAS
 # - Nixflix for declarative media server configuration
 #
-# NOTE: *arr services (Sonarr, Radarr, Prowlarr) currently run on another server.
-# To enable them here later, just add: sonarr.enable = true; radarr.enable = true; etc.
-#
 # NOTE: Plex is included TEMPORARILY (2-4 weeks) for migration purposes.
 # Family members currently use Plex clients. Once migrated to Jellyfin,
 # remove the plex.nix import and users.users.plex.extraGroups line.
@@ -41,6 +38,9 @@
     ./../../services/tailscale.nix
     ./../../services/nas.nix # Mounts /mnt/docker-data from NAS
     ./../../services/cloudflare-tunnel-pie.nix # Subdomain routing via Cloudflare Tunnel
+
+    # Wizarr - User invitation management for media servers
+    ./../../services/wizarr.nix
 
     # TEMPORARY: Plex for migration period (remove after family migrates to Jellyfin)
     ./../../services/plex.nix
@@ -183,11 +183,8 @@
   # Nixflix - Declarative Media Server Configuration
   # ==========================================================================
   # Nixflix provides declarative configuration for media services.
-  # Currently only Jellyfin is enabled. To add *arr services later:
-  #   sonarr.enable = true;
-  #   radarr.enable = true;
-  #   prowlarr.enable = true;
-  #   jellyseerr.enable = true;
+  # Jellyfin serves media, *arr services handle automated acquisition,
+  # and Jellyseerr provides a request interface for users.
 
   nixflix = {
     enable = true;
@@ -221,16 +218,60 @@
     };
 
     # ========================================================================
-    # *arr Services - Disabled (running on separate server)
+    # Sonarr - TV Series Management
     # ========================================================================
-    # Uncomment these when ready to move *arr services to this server:
-    #
-    # sonarr.enable = true;
-    # radarr.enable = true;
-    # prowlarr.enable = true;
-    # jellyseerr.enable = true;
-    # postgres.enable = true;  # Shared database for *arr services
+    sonarr = {
+      enable = true;
+      openFirewall = true;
+    };
+
+    # ========================================================================
+    # Radarr - Movie Management
+    # ========================================================================
+    radarr = {
+      enable = true;
+      openFirewall = true;
+    };
+
+    # ========================================================================
+    # Prowlarr - Indexer Manager
+    # ========================================================================
+    prowlarr = {
+      enable = true;
+      openFirewall = true;
+    };
+
+    # ========================================================================
+    # Jellyseerr - Media Request Manager
+    # ========================================================================
+    jellyseerr = {
+      enable = true;
+      openFirewall = true;
+      vpn.enable = false;
+
+      # Disable Radarr/Sonarr integration until API keys are available.
+      # Nixflix auto-populates these from radarr/sonarr configs, but the
+      # arr services generate API keys on first boot. Once running:
+      # 1. Extract API keys from Radarr/Sonarr (Settings > General)
+      # 2. Add them as SOPS secrets
+      # 3. Set nixflix.radarr.config.apiKeyPath / nixflix.sonarr.config.apiKeyPath
+      # 4. Remove these overrides to re-enable automatic integration
+      radarr = [];
+      sonarr = [];
+    };
   };
+
+  # ==========================================================================
+  # Workaround: Nixflix wait-for-api script bug
+  # ==========================================================================
+  # Nixflix unconditionally sets ExecStartPost to a wait-for-api script that
+  # tries to read apiKeyPath, which is null on first boot (API keys are
+  # generated at runtime). Override ExecStartPost to a no-op until API keys
+  # are configured via SOPS secrets.
+  # TODO(#46): Remove these overrides after setting nixflix.{prowlarr,radarr,sonarr}.config.apiKeyPath
+  systemd.services.prowlarr.serviceConfig.ExecStartPost = lib.mkForce "";
+  systemd.services.radarr.serviceConfig.ExecStartPost = lib.mkForce "";
+  systemd.services.sonarr.serviceConfig.ExecStartPost = lib.mkForce "";
 
   # ==========================================================================
   # User Configuration
