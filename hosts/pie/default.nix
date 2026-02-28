@@ -304,16 +304,31 @@
   in
     lib.mkForce script;
 
-  # Fix jellyfin-setup-wizard: the same double-slash bug affects the auth
-  # helper script, and the wizard was completed manually (password set via
-  # web UI, not by nixflix). No-op this service so downstream jellyseerr
-  # integration services can start. Jellyseerr setup is done via its web UI.
-  systemd.services.jellyfin-setup-wizard.serviceConfig.ExecStart = let
-    script = pkgs.writeShellScript "jellyfin-setup-wizard-noop" ''
-      echo "Jellyfin setup wizard was completed manually — skipping automation"
-    '';
-  in
-    lib.mkForce script;
+  # No-op all nixflix Jellyfin configuration services. They all source the
+  # same jellyfin-auth helper which has the double-slash bug, AND the admin
+  # password was set manually via the web UI (nixflix assumes empty password).
+  # Jellyfin and Jellyseerr configuration is managed through their web UIs.
+  systemd.services.jellyfin-setup-wizard.serviceConfig.ExecStart = lib.mkForce (pkgs.writeShellScript "jellyfin-setup-wizard-noop" ''
+    echo "Jellyfin setup wizard was completed manually — skipping"
+  '');
+  systemd.services.jellyfin-branding-config.serviceConfig.ExecStart = lib.mkForce (pkgs.writeShellScript "jellyfin-branding-noop" ''
+    echo "Jellyfin branding configured manually — skipping"
+  '');
+  systemd.services.jellyfin-encoding-config.serviceConfig.ExecStart = lib.mkForce (pkgs.writeShellScript "jellyfin-encoding-noop" ''
+    echo "Jellyfin encoding configured manually — skipping"
+  '');
+  systemd.services.jellyfin-libraries.serviceConfig.ExecStart = lib.mkForce (pkgs.writeShellScript "jellyfin-libraries-noop" ''
+    echo "Jellyfin libraries configured manually — skipping"
+  '');
+  systemd.services.jellyfin-system-config.serviceConfig.ExecStart = lib.mkForce (pkgs.writeShellScript "jellyfin-system-config-noop" ''
+    echo "Jellyfin system config managed manually — skipping"
+  '');
+  systemd.services.jellyfin-users-config.serviceConfig.ExecStart = lib.mkForce (pkgs.writeShellScript "jellyfin-users-noop" ''
+    echo "Jellyfin users configured manually — skipping"
+  '');
+  systemd.services.jellyseerr-setup.serviceConfig.ExecStart = lib.mkForce (pkgs.writeShellScript "jellyseerr-setup-noop" ''
+    echo "Jellyseerr setup configured manually via web UI — skipping"
+  '');
 
   # ==========================================================================
   # User Configuration
