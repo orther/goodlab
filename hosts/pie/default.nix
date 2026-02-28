@@ -329,6 +329,15 @@
   systemd.services.jellyseerr-setup.serviceConfig.ExecStart = lib.mkForce (pkgs.writeShellScript "jellyseerr-setup-noop" ''
     echo "Jellyseerr setup configured manually via web UI — skipping"
   '');
+  systemd.services.jellyseerr-radarr.serviceConfig.ExecStart = lib.mkForce (pkgs.writeShellScript "jellyseerr-radarr-noop" ''
+    echo "Jellyseerr Radarr integration configured manually via web UI — skipping"
+  '');
+  systemd.services.jellyseerr-sonarr.serviceConfig.ExecStart = lib.mkForce (pkgs.writeShellScript "jellyseerr-sonarr-noop" ''
+    echo "Jellyseerr Sonarr integration configured manually via web UI — skipping"
+  '');
+  systemd.services.jellyseerr-user-settings.serviceConfig.ExecStart = lib.mkForce (pkgs.writeShellScript "jellyseerr-user-settings-noop" ''
+    echo "Jellyseerr user settings configured manually via web UI — skipping"
+  '');
 
   # ==========================================================================
   # User Configuration
