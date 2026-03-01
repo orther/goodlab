@@ -16,6 +16,7 @@
 #   - prowlarr.ryatt.app    → http://localhost:9696
 #   - seerr.ryatt.app       → http://localhost:5055
 #   - wizarr.ryatt.app      → http://localhost:5690
+#   - nzbget.ryatt.app      → http://localhost:6789
 #
 # Setup requirements:
 #   1. Create tunnel in Cloudflare Zero Trust Dashboard

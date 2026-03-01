@@ -4,3 +4,4 @@ result/
 .claude/
 # Ignore AGENTS.md at repo root (Claude Code artifact), but allow in subdirectories
 /AGENTS.md
+.worktrees/
