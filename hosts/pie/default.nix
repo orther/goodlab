@@ -43,6 +43,9 @@
     # Wizarr - User invitation management for media servers
     ./../../services/wizarr.nix
 
+    # NZBGet - Usenet downloader
+    ./../../services/nzbget.nix
+
     # TEMPORARY: Plex for migration period (remove after family migrates to Jellyfin)
     ./../../services/plex.nix
   ];
@@ -214,7 +217,7 @@
     stateDir = "/var/lib/nixflix";
 
     # Users that need access to media files
-    mediaUsers = ["orther" "plex"];
+    mediaUsers = ["orther" "plex" "nzbget"];
 
     # Wait for NAS mount before starting services
     serviceDependencies = ["mnt-docker\\x2ddata.mount"];
