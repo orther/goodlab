@@ -89,9 +89,12 @@
   # ==========================================================================
   # Network Configuration
   # ==========================================================================
-  # Using systemd-networkd with match rules for robust network configuration.
-  # This automatically configures any Ethernet interface, avoiding hardcoded
-  # interface names that may vary between boots or hardware configurations.
+  # Using systemd-networkd with explicit interface matching. The primary NIC
+  # (enp1s0, Aquantia AQC107) is stable on this Mac Mini 2018 hardware.
+  #
+  # IMPORTANT: Do NOT use matchConfig.Type = "ether" — it matches podman veth
+  # interfaces and T2/USB adapters, causing systemd-networkd to fight with
+  # netavark over container networking and breaking podman bridge connectivity.
 
   networking = {
     hostName = "pie";
@@ -105,15 +108,14 @@
     wireless.enable = false;
   };
 
-  # Configure any Ethernet interface for DHCP via systemd-networkd
-  # This is more robust than hardcoding interface names like enp0s31f6
   systemd.network = {
     enable = true;
+
+    # Primary network interface (Aquantia 10G NIC on PCI slot 1)
     networks."10-ethernet" = {
-      matchConfig.Type = "ether";
+      matchConfig.Name = "enp1s0";
       networkConfig = {
         DHCP = "yes";
-        # Wait for link to be configured before network-online.target
         LinkLocalAddressing = "no";
       };
       dhcpV4Config = {
@@ -121,10 +123,19 @@
         UseRoutes = true;
       };
     };
+
+    # Prevent systemd-networkd from managing container and virtual interfaces.
+    # Without this, veth pairs, bridges, and T2 USB adapters get matched by
+    # fallback rules, causing DHCP timeouts and podman networking failures.
+    networks."90-unmanaged" = {
+      # enp2s0f1u1 = Apple T2 iBridge USB, enp0s20f0u11i1 = HomePod USB
+      matchConfig.Name = "veth* podman* enp2s0f1u1 enp0s20f0u11i1";
+      linkConfig.Unmanaged = true;
+    };
   };
 
-  # Disable NetworkManager wait service (not using NetworkManager)
-  # Keep systemd-networkd-wait-online enabled for proper network-online.target
+  # Disable NetworkManager wait service (not using NetworkManager).
+  # systemd-networkd-wait-online is intentionally kept enabled for network-online.target.
   systemd.services."NetworkManager-wait-online".enable = lib.mkForce false;
 
   # ==========================================================================
