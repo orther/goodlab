@@ -38,7 +38,6 @@
     interfaces.enp1s0.useDHCP = true;
     useNetworkd = true;
     networkmanager.enable = lib.mkForce false;
-    firewall.allowedTCPPorts = [];
   };
 
   # Override Tailscale route for condo network (192.168.1.x)

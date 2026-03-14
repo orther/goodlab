@@ -23,11 +23,27 @@
   ...
 }: {
   # ==========================================================================
+  # Static system user for cloudflared
+  # ==========================================================================
+  # A static user (not DynamicUser) ensures stable UID ownership on the
+  # persisted /var/lib/cloudflared directory across reboots.
+
+  users.users.cloudflared = {
+    isSystemUser = true;
+    group = "cloudflared";
+  };
+  users.groups.cloudflared = {};
+
+  # ==========================================================================
   # SOPS Secret for Tunnel Token
   # ==========================================================================
+  # mode 0400 + explicit owner so only the cloudflared service user can read
+  # the token. A Cloudflare tunnel token grants full tunnel control.
 
   sops.secrets."cloudflare-tunnel-zinc-token" = {
-    mode = "0444";
+    mode = "0400";
+    owner = "cloudflared";
+    group = "cloudflared";
   };
 
   # ==========================================================================
@@ -45,8 +61,8 @@
       Restart = "always";
       RestartSec = "5s";
 
-      DynamicUser = true;
       User = "cloudflared";
+      Group = "cloudflared";
 
       ExecStart = pkgs.writeShellScript "cloudflared-tunnel-zinc" ''
         exec ${pkgs.cloudflared}/bin/cloudflared tunnel run --token "$(cat ${config.sops.secrets."cloudflare-tunnel-zinc-token".path})"
@@ -67,10 +83,16 @@
   # ==========================================================================
   # Persistence (for impermanence systems)
   # ==========================================================================
+  # Static user ensures ownership is stable across reboots.
 
   environment.persistence."/nix/persist" = {
     directories = [
-      "/var/lib/cloudflared"
+      {
+        directory = "/var/lib/cloudflared";
+        user = "cloudflared";
+        group = "cloudflared";
+        mode = "0750";
+      }
     ];
   };
 }

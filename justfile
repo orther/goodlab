@@ -10,7 +10,7 @@ deploy machine ip="":
       ;;
     *)
       if [ -z "{{ip}}" ]; then
-        sudo nixos-rebuild switch --no-reexec --flake ".#{{machine}}"
+        nixos-rebuild switch --no-reexec --sudo --flake ".#{{machine}}"
       elif command -v nixos-rebuild >/dev/null 2>&1; then
         nixos-rebuild switch --no-reexec --flake ".#{{machine}}" --sudo --target-host "orther@{{ip}}" --build-host "orther@{{ip}}"
       else
