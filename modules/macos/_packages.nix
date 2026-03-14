@@ -45,6 +45,7 @@ in {
       ];
       casks = [
         "1password"
+        "cmux"
         "ghostty"
         # "betterdisplay"
         # "caffeine"
