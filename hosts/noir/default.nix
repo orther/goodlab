@@ -20,6 +20,7 @@
     ./../../services/_acme.nix
     ./../../services/_nginx.nix
     ./../../services/home-assistant.nix
+    ./../../services/stash.nix
     ./../../services/cloudflare-tunnel-noir.nix
     #./../../services/netdata.nix
     #./../../services/nextcloud.nix

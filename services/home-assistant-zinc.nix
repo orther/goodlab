@@ -1,12 +1,12 @@
 # ==============================================================================
-# Home Assistant - Smart Home Automation Platform
+# Home Assistant - Zinc (Condo)
 # ==============================================================================
 #
-# Native NixOS module for Home Assistant with ESPHome integration.
-# Used for ESPectre Wi-Fi presence detection and future home automation.
+# Home Assistant instance for the condo, running on zinc mini PC.
+# Network: 192.168.1.x (router DHCP)
 #
-# Access via Cloudflare Tunnel: hass.ryatt.app → http://localhost:8123
-# (configured in services/cloudflare-tunnel-noir.nix)
+# Access via Cloudflare Tunnel: condo.ryatt.app -> http://localhost:8123
+# (configured in services/cloudflare-tunnel-zinc.nix)
 #
 # ESPectre integration:
 #   - ESP32-S3 devices run ESPectre firmware (flashed separately)
@@ -39,32 +39,26 @@
       # Smart home devices
       "yale"
       "nest"
-      "unifiprotect"
       "homekit_controller"
       "apple_tv"
       "lutron_caseta"
 
       # Network devices (auto-discovered on LAN)
-      "synology_dsm"
       "brother"
       "ipp"
-
-      # Media
-      "jellyfin"
-      "plex"
     ];
 
     config = {
       default_config = {};
 
       homeassistant = {
-        name = "Home";
+        name = "Condo";
         time_zone = "America/Los_Angeles";
         unit_system = "us_customary";
-        external_url = "https://hass.ryatt.app";
-        # noir's LAN IP — used by HA companion app for local access
-        # Update if noir's DHCP reservation changes
-        internal_url = "http://10.4.0.26:8123";
+        external_url = "https://condo.ryatt.app";
+        # Requires a static DHCP reservation for zinc at 192.168.1.158.
+        # If the lease changes this will silently break companion app local access.
+        internal_url = "http://192.168.1.158:8123";
       };
 
       # Allow reverse proxy (Cloudflare Tunnel)
@@ -86,9 +80,6 @@
   # ==========================================================================
   # mDNS / Avahi - Required for ESPHome device discovery
   # ==========================================================================
-  # ESPHome devices announce themselves via mDNS. Avahi enables the NixOS
-  # host to participate in mDNS so Home Assistant can discover ESP32 devices
-  # on the local network.
 
   services.avahi = {
     enable = true;
@@ -99,8 +90,6 @@
   # ==========================================================================
   # Placeholder files for UI-based configuration
   # ==========================================================================
-  # Home Assistant expects these YAML files to exist for the UI editors.
-  # Without them, startup logs show warnings.
 
   # Write placeholder files to the persist layer directly.
   # Writing to /var/lib/hass/ would be hidden by the impermanence bind-mount.
@@ -113,15 +102,12 @@
   # ==========================================================================
   # Firewall
   # ==========================================================================
-  # Open HA port on local network for direct access / Cloudflare Tunnel.
-  # ESPHome Native API (port 6053) traffic comes from ESP devices on LAN.
 
   networking.firewall.allowedTCPPorts = [8123];
 
   # ==========================================================================
   # Persistence (Impermanence)
   # ==========================================================================
-  # Home Assistant state, database, and configuration must survive reboots.
 
   environment.persistence."/nix/persist" = {
     directories = [
