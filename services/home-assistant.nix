@@ -102,10 +102,12 @@
   # Home Assistant expects these YAML files to exist for the UI editors.
   # Without them, startup logs show warnings.
 
+  # Write placeholder files to the persist layer directly.
+  # Writing to /var/lib/hass/ would be hidden by the impermanence bind-mount.
   systemd.tmpfiles.rules = [
-    "f /var/lib/hass/automations.yaml 0644 hass hass"
-    "f /var/lib/hass/scenes.yaml 0644 hass hass"
-    "f /var/lib/hass/scripts.yaml 0644 hass hass"
+    "f /nix/persist/var/lib/hass/automations.yaml 0644 hass hass"
+    "f /nix/persist/var/lib/hass/scenes.yaml 0644 hass hass"
+    "f /nix/persist/var/lib/hass/scripts.yaml 0644 hass hass"
   ];
 
   # ==========================================================================
