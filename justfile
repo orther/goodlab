@@ -19,6 +19,44 @@ deploy machine ip="":
       ;;
   esac
 
+# Use for: firewall, routing, network interface, NAT changes.
+# Arms a 10-minute auto-rollback to exact pre-deploy generation.
+deploy-safe machine ip:
+  #!/usr/bin/env sh
+  set -euo pipefail
+  PREV_GEN="$(ssh "orther@{{ip}}" 'readlink -f /nix/var/nix/profiles/system')"
+  echo "Pre-deploy generation: $PREV_GEN"
+  echo "Arming 10-min rollback timer..."
+  ssh "orther@{{ip}}" "sudo systemd-run \
+    --unit=nixos-auto-rollback \
+    --on-active=10m \
+    --property=Type=oneshot \
+    $PREV_GEN/bin/switch-to-configuration switch"
+  if ! just deploy {{machine}} {{ip}}; then
+    echo "Deploy failed — cancelling rollback timer"
+    ssh "orther@{{ip}}" "sudo systemctl stop nixos-auto-rollback.timer \
+      nixos-auto-rollback.service; \
+      sudo systemctl reset-failed nixos-auto-rollback.timer \
+      nixos-auto-rollback.service || true"
+    exit 1
+  fi
+  echo "--- Health check before confirming deploy ---"
+  ssh "orther@{{ip}}" 'hostname && ip -brief addr && ip route && systemctl is-system-running'
+  echo "--- Cancelling rollback timer ---"
+  ssh "orther@{{ip}}" "sudo systemctl stop nixos-auto-rollback.timer \
+    nixos-auto-rollback.service; \
+    sudo systemctl reset-failed nixos-auto-rollback.timer \
+    nixos-auto-rollback.service || true"
+  echo "Deploy confirmed. Rollback timer cancelled."
+
+# Use for: manually cancelling the rollback timer when you need >10 min to verify.
+cancel-rollback ip:
+  ssh "orther@{{ip}}" "sudo systemctl stop nixos-auto-rollback.timer \
+    nixos-auto-rollback.service; \
+    sudo systemctl reset-failed nixos-auto-rollback.timer \
+    nixos-auto-rollback.service || true"
+  echo "Rollback timer cancelled for {{ip}}."
+
 up:
   nix flake update
 
