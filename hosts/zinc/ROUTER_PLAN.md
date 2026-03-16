@@ -3,25 +3,39 @@
 Preparing zinc to replace the Spectrum router. Work is split into sequential phases —
 check off items as they are completed.
 
+> **Cross-checked against:** NixOS 24.11 option docs, nixpkgs source (stage-1.nix,
+> luksroot.nix, initrd-ssh.nix), systemd manpages, cryptsetup docs.
+
 ---
 
 ## Phase 1: Pre-Router Prep (this PR — `feat/zinc-pre-router-prep`)
 
-### Step 1.1 — LUKS Auto-Unlock via Keyfile in Initrd
+### Step 1.1a — Add LUKS Keyfile (keep remote-unlock enabled for now)
 
-**Why keyfile instead of TPM2:** TPM2 requires `boot.initrd.systemd.enable = true` which
-conflicts with the existing `remote-unlock.nix` (classic busybox initrd). Keyfile approach:
-- Works with existing classic initrd — no initrd type change needed
-- Passphrase always works as fallback — cannot brick the machine
+Deploy keyfile unlock in two sub-steps to preserve recovery path:
+- **1.1a** (this step): add keyfile + NixOS config, keep remote-unlock module enabled
+- **1.1b** (after 2–3 successful unattended reboots confirmed): remove remote-unlock
+
+> **Note:** `allowDiscards = true` enables TRIM/discard on the encrypted volume.
+> Tradeoff: leaks filesystem metadata (used space, fs type) to physical layer.
+> For a homelab condo this is acceptable, but it is a documented security tradeoff.
+> Omit if you prefer strict metadata opacity. *(Confirmed by cryptsetup man page)*
 
 **Imperative step (run once on zinc before deploying):**
 
 ```bash
-ssh zinc "sudo mkdir -p /nix/persist/etc/secrets && \
-  sudo dd if=/dev/urandom of=/nix/persist/etc/secrets/luks-keyfile bs=4096 count=1 && \
-  sudo chmod 000 /nix/persist/etc/secrets/luks-keyfile && \
-  sudo cryptsetup luksAddKey /dev/sda2 /nix/persist/etc/secrets/luks-keyfile"
-# Will prompt for existing LUKS passphrase to authorize the new key slot
+# Create secrets dir with strict permissions
+ssh zinc "sudo install -d -m 0700 /nix/persist/etc/secrets"
+
+# Generate random keyfile
+ssh zinc "sudo dd if=/dev/urandom of=/nix/persist/etc/secrets/luks-keyfile bs=4096 count=1"
+ssh zinc "sudo chmod 000 /nix/persist/etc/secrets/luks-keyfile"
+
+# Add keyfile as second LUKS keyslot (prompts for existing passphrase)
+ssh zinc "sudo cryptsetup luksAddKey /dev/sda2 /nix/persist/etc/secrets/luks-keyfile"
+
+# Verify the keyslot was added (look for 2 occupied KeySlots)
+ssh zinc "sudo cryptsetup luksDump /dev/sda2 | grep -E 'KeySlot|Keyslot'"
 ```
 
 **NixOS config changes:**
@@ -31,61 +45,104 @@ ssh zinc "sudo mkdir -p /nix/persist/etc/secrets && \
   secrets = {
     "/crypto_keyfile.bin" = "/nix/persist/etc/secrets/luks-keyfile";
   };
-  luks.devices."cryptroot".keyFile = "/crypto_keyfile.bin";
+  luks.devices."cryptroot" = {
+    # device already set; add:
+    keyFile = "/crypto_keyfile.bin";
+    allowDiscards = true; # see security note above
+  };
   ```
-- [ ] `hosts/zinc/default.nix` — remove `inputs.self.nixosModules."remote-unlock"` import
-- [ ] Verify no other host imports `remote-unlock` before removing/leaving the module
+  > `boot.initrd.secrets` copies files into initrd at `nixos-rebuild switch` time
+  > (bootloader update stage). Build fails if source file is missing. *(Confirmed)*
+
+- [ ] **Leave `remote-unlock` import in place for now** — remove in Step 1.1b
 
 **Verification:**
-- [ ] Run imperative step above (ssh to zinc)
+- [ ] Run imperative step above
 - [ ] `just deploy zinc 192.168.1.158`
 - [ ] `ssh zinc "sudo reboot"`
-- [ ] After ~30s: `ssh zinc "uptime"` — confirms auto-unlock worked (no manual password typed)
+- [ ] After ~30s: `ssh zinc "uptime"` — confirms auto-unlock worked, no password prompt
+
+---
+
+### Step 1.1b — Remove remote-unlock (after unattended boot is proven)
+
+Only proceed after **2–3 successful unattended reboots** in Step 1.1a are confirmed.
+
+- [ ] `hosts/zinc/default.nix` — remove `inputs.self.nixosModules."remote-unlock"` import
+  > Note: `initrd-ssh.nix` in nixpkgs 24.11 supports both classic and systemd initrd
+  > paths (it has conditional branches for each). Removing remote-unlock is a policy
+  > choice, not a technical requirement. *(Confirmed — initial plan claim was incorrect)*
+- [ ] Verify no other host imports `modules/nixos/remote-unlock.nix` before leaving the file
+- [ ] `just deploy zinc 192.168.1.158`
+- [ ] `ssh zinc "sudo reboot"` — one final verification of clean unattended boot
 
 ---
 
 ### Step 1.2 — Safe Deploy Recipes for Networking Changes
 
-Add to `justfile`:
+Add to `justfile`. The critical fix vs. original plan: cancel **both** `.timer` and
+`.service` units, plus `reset-failed`. Stopping only the service leaves the timer armed
+and able to re-fire. *(Confirmed by systemd.timer man page)*
 
-- [ ] `deploy-safe machine ip` — arms a 10-min auto-rollback timer, then deploys
-- [ ] `cancel-rollback ip` — manually cancels rollback timer when you need >10 min to verify
+Uses deterministic rollback: captures the pre-deploy generation path, schedules
+`${PREV_GEN}/bin/switch-to-configuration switch` (a valid NixOS action). *(Confirmed)*
+
+- [ ] Add `deploy-safe` recipe to `justfile`:
 
 ```just
 # Use for: firewall, routing, network interface, NAT changes.
-# Arms a 10-minute auto-rollback. If SSH breaks, previous generation auto-restores.
+# Arms a 10-minute auto-rollback to the exact pre-deploy generation.
+# If SSH breaks, previous generation auto-restores.
 deploy-safe machine ip:
   #!/usr/bin/env sh
   set -euo pipefail
+  PREV_GEN="$(ssh "orther@{{ip}}" 'readlink -f /nix/var/nix/profiles/system')"
+  echo "Pre-deploy generation: $PREV_GEN"
   echo "Arming 10-min rollback timer..."
-  ssh "orther@{{ip}}" "sudo systemd-run --on-active=600 --unit=nixos-rollback \
-    /run/current-system/sw/bin/nixos-rebuild switch --rollback"
-  just deploy {{machine}} {{ip}} || {
+  ssh "orther@{{ip}}" "sudo systemd-run \
+    --unit=nixos-auto-rollback \
+    --on-active=10m \
+    --property=Type=oneshot \
+    $PREV_GEN/bin/switch-to-configuration switch"
+  if ! just deploy {{machine}} {{ip}}; then
     echo "Deploy failed — cancelling rollback timer"
-    ssh "orther@{{ip}}" "sudo systemctl stop nixos-rollback.service 2>/dev/null; true"
+    ssh "orther@{{ip}}" "sudo systemctl stop nixos-auto-rollback.timer \
+      nixos-auto-rollback.service; \
+      sudo systemctl reset-failed nixos-auto-rollback.timer \
+      nixos-auto-rollback.service || true"
     exit 1
-  }
-  ssh "orther@{{ip}}" "sudo systemctl stop nixos-rollback.service 2>/dev/null; true"
+  fi
+  echo "--- Health check before confirming deploy ---"
+  ssh "orther@{{ip}}" 'hostname && ip -brief addr && ip route && systemctl is-system-running'
+  echo "--- Cancelling rollback timer ---"
+  ssh "orther@{{ip}}" "sudo systemctl stop nixos-auto-rollback.timer \
+    nixos-auto-rollback.service; \
+    sudo systemctl reset-failed nixos-auto-rollback.timer \
+    nixos-auto-rollback.service || true"
   echo "Deploy confirmed. Rollback timer cancelled."
+```
 
-# Use for: manually cancelling the rollback timer when you need >10 min to verify.
+- [ ] Add `cancel-rollback` recipe to `justfile`:
+
+```just
+# Use when: you need >10 min to verify after deploy-safe, or to manually disarm.
 cancel-rollback ip:
-  ssh "orther@{{ip}}" "sudo systemctl stop nixos-rollback.service 2>/dev/null; \
-    sudo systemctl stop nixos-rollback.timer 2>/dev/null; true"
+  ssh "orther@{{ip}}" "sudo systemctl stop nixos-auto-rollback.timer \
+    nixos-auto-rollback.service; \
+    sudo systemctl reset-failed nixos-auto-rollback.timer \
+    nixos-auto-rollback.service || true"
   echo "Rollback timer cancelled for {{ip}}."
 ```
 
 **Verification:**
 - [ ] `just --list` shows new recipes
-- [ ] `just cancel-rollback 192.168.1.158` runs without error (timer not running = harmless)
+- [ ] `just cancel-rollback 192.168.1.158` runs without error (harmless when timer not running)
 
 ---
 
 ### Step 1.3 — Document Deploy Commands in CLAUDE.md
 
-Add under "Essential Commands > Deployment" in `goodlab/CLAUDE.md`:
-
-- [ ] Add deploy command decision table:
+- [ ] Add under "Essential Commands > Deployment" in `goodlab/CLAUDE.md`:
 
 ```markdown
 #### Choosing the Right Deploy Command
@@ -93,8 +150,27 @@ Add under "Essential Commands > Deployment" in `goodlab/CLAUDE.md`:
 | Command | When to Use |
 |---------|-------------|
 | `just deploy <host> [ip]` | All normal changes: services, config, packages. **Default choice.** |
-| `just deploy-safe <host> <ip>` | **Required** for: firewall rules, routing config, network interfaces, NAT. Arms a 10-minute auto-rollback that restores the previous generation if SSH is lost. |
+| `just deploy-safe <host> <ip>` | **Required** for: firewall rules, routing config, NAT, interface renames, bridge changes. Arms a 10-minute auto-rollback that restores the exact pre-deploy generation if SSH is lost. |
 | `just cancel-rollback <ip>` | Use after `deploy-safe` if you need more than 10 minutes to verify before the timer fires. |
+
+**Preconditions for `deploy-safe`:**
+- Confirm SSH access works before starting
+- Know your out-of-band recovery path (Tailscale, physical console)
+- Never bundle LUKS/initrd changes with routing/firewall changes in one deploy
+
+**Mandatory health checks before canceling rollback** (built into `deploy-safe`):
+```bash
+ssh orther@<ip> 'hostname && ip -brief addr && ip route && systemctl is-system-running'
+```
+
+**Exact cancel command** (stops timer + service, clears failed state):
+```bash
+ssh orther@<ip> "sudo systemctl stop nixos-auto-rollback.timer nixos-auto-rollback.service; \
+  sudo systemctl reset-failed nixos-auto-rollback.timer nixos-auto-rollback.service || true"
+```
+
+**If SSH drops mid-deploy:** wait up to 10 minutes — previous generation auto-restores.
+Then reconnect on previous IP/Tailscale address.
 ```
 
 ---
@@ -126,6 +202,13 @@ UniFi devices will be auto-redirected once controller config is updated.
 
 ## Phase 3: Router Config (separate PR — `feat/zinc-router`)
 
+> **Caution:** Run this with `deploy-safe`, never plain `deploy`.
+> Test with Podman containers running — Podman mutates nftables rules and can conflict
+> with host NAT/firewall rule ordering. Validate during cutover. *(Best-practice)*
+>
+> Kea handles DHCP; dnsmasq handles DNS forwarding only — do not enable dnsmasq DHCP.
+> *(Mixed DHCP servers on same subnet = undefined behavior)*
+
 ### Interface Assignment
 
 | Port | Interface | MAC suffix | Role |
@@ -138,9 +221,10 @@ UniFi devices will be auto-redirected once controller config is updated.
 - [ ] `systemd.network.links` — pin interface names to MACs
 - [ ] `networking.nat` — NAT for LAN → WAN
 - [ ] `services.kea.dhcp4` — DHCP server for 10.0.0.0/24
-- [ ] `services.dnsmasq` — DNS resolver
+- [ ] `services.dnsmasq` — DNS forwarding only (no DHCP)
+- [ ] `networking.useNetworkd = true` already set — keep consistent, do not mix backends
 - [ ] Firewall: nftables, locked down (only allow services we want)
-- [ ] No IPv6 (not needed)
+- [ ] No IPv6 — explicitly disable and audit all firewall/NAT assumptions
 - [ ] Update `home-assistant-zinc.nix`:
   ```nix
   internal_url = "http://10.0.0.1:8123";  # was 192.168.1.158:8123
@@ -150,7 +234,7 @@ UniFi devices will be auto-redirected once controller config is updated.
 ### Modem Swap
 - [ ] Replace Spectrum modem with Netgear CM1100 (DOCSIS 3.1, 2.5GbE)
 - [ ] CM1100 → zinc `enp1s0` (WAN, DHCP from Spectrum)
-- [ ] If Spectrum has old router MAC locked: call to release or wait ~24h
+- [ ] If Spectrum has old router MAC locked: call to release or wait ~24h for DHCP lease expiry
 
 ---
 
