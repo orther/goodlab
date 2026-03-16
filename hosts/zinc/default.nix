@@ -16,6 +16,7 @@
 
     ./../../services/tailscale.nix
     ./../../services/home-assistant-zinc.nix
+    ./../../services/unifi-zinc.nix
     ./../../services/cloudflare-tunnel-zinc.nix
   ];
 
