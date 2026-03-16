@@ -66,7 +66,8 @@ in {
 
   systemd.services."podman-create-unifi-net" = {
     description = "Create podman network for unifi stack";
-    after = ["network.target"];
+    after = ["network-online.target" "nss-lookup.target"];
+    wants = ["network-online.target"];
     wantedBy = ["multi-user.target"];
     serviceConfig = {
       Type = "oneshot";
@@ -157,12 +158,22 @@ in {
   systemd.tmpfiles.rules = [
     "d /nix/persist/var/lib/unifi/db 0755 root root - -"
     "d /nix/persist/var/lib/unifi/config 0755 root root - -"
+    "d /nix/persist/var/lib/containers 0755 root root - -"
   ];
 
   environment.persistence."/nix/persist" = {
     directories = [
       {
         directory = "/var/lib/unifi";
+        user = "root";
+        group = "root";
+        mode = "0755";
+      }
+      # Persist container images so pulls only happen on first boot or image updates,
+      # not on every reboot. Eliminates the boot-time DNS race where containers try
+      # to pull before DHCP delivers nameservers to systemd-resolved.
+      {
+        directory = "/var/lib/containers";
         user = "root";
         group = "root";
         mode = "0755";
