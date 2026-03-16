@@ -9,7 +9,8 @@
 # Cloudflare Zero Trust dashboard, not here. This config just connects.
 #
 # Subdomains to configure in Cloudflare Dashboard:
-#   - condo.ryatt.app -> http://localhost:8123
+#   - condo.ryatt.app  -> http://localhost:8123
+#   - unifi.ryatt.app  -> https://localhost:8443  (enable "No TLS Verify" in dashboard)
 #
 # Setup requirements:
 #   1. Create tunnel in Cloudflare Zero Trust Dashboard
