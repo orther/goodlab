@@ -8,6 +8,30 @@ check off items as they are completed.
 
 ---
 
+## Network Hardware — Current State (Condo Only)
+
+> **All active equipment is in the condo.** No garage deployment until a dedicated
+> wireless bridge is purchased. U6 Pro and U6 Lite are dual-band (2.4/5 GHz)
+> Wi-Fi 6 — **no 6 GHz, no wireless mesh**.
+
+```
+ISP (Spectrum Cable)
+  └─ Modem (Spectrum temp → Netgear CM1100)
+       └─ zinc enp1s0 (WAN — DHCP from Spectrum)
+            ↓ NAT
+       zinc enp2s0 (LAN) → USW 24 PoE (core switch)
+                                ├─ U6 Pro   (Kitchen AP — wired PoE)
+                                └─ U6 Lite  (Master Bedroom AP — wired PoE)
+       zinc enp4s0 (Mgmt) → 192.168.254.0/24
+```
+
+**Future garage phase (after wireless bridge purchase):**
+- Bridge: condo USW 24 ↔ garage USW Lite 16 PoE (Layer 2)
+- NAS + Jellyfin/pie move to garage
+- Add DHCP reservations for garage devices at that time
+
+---
+
 ## Phase 1: Pre-Router Prep (this PR — `feat/zinc-pre-router-prep`)
 
 ### Step 1.1a — Add LUKS Keyfile (keep remote-unlock enabled for now)
@@ -16,10 +40,13 @@ Deploy keyfile unlock in two sub-steps to preserve recovery path:
 - **1.1a** (this step): add keyfile + NixOS config, keep remote-unlock module enabled
 - **1.1b** (after 2–3 successful unattended reboots confirmed): remove remote-unlock
 
-> **Note:** `allowDiscards = true` enables TRIM/discard on the encrypted volume.
-> Tradeoff: leaks filesystem metadata (used space, fs type) to physical layer.
-> For a homelab condo this is acceptable, but it is a documented security tradeoff.
-> Omit if you prefer strict metadata opacity. *(Confirmed by cryptsetup man page)*
+> **Note on `allowDiscards = true`:** Enables TRIM/discard on the encrypted volume.
+> Tradeoff: leaks filesystem metadata (used space, fs type) to the physical layer.
+> Acceptable for a homelab condo. Omit if you prefer strict metadata opacity.
+> *(Confirmed by cryptsetup man page)*
+
+> **Note on remote-unlock:** `initrd-ssh.nix` supports both classic and systemd initrd
+> in nixpkgs 24.11 — removing it is a policy choice, not a technical requirement.
 
 **Imperative step (run once on zinc before deploying):**
 
@@ -51,8 +78,8 @@ ssh zinc "sudo cryptsetup luksDump /dev/sda2 | grep -E 'KeySlot|Keyslot'"
     allowDiscards = true; # see security note above
   };
   ```
-  > `boot.initrd.secrets` copies files into initrd at `nixos-rebuild switch` time
-  > (bootloader update stage). Build fails if source file is missing. *(Confirmed)*
+  > `boot.initrd.secrets` copies files into initrd at `nixos-rebuild switch` time.
+  > Build fails if source file is missing. *(Confirmed by nixpkgs stage-1.nix)*
 
 - [ ] **Leave `remote-unlock` import in place for now** — remove in Step 1.1b
 
@@ -60,7 +87,7 @@ ssh zinc "sudo cryptsetup luksDump /dev/sda2 | grep -E 'KeySlot|Keyslot'"
 - [ ] Run imperative step above
 - [ ] `just deploy zinc 192.168.1.158`
 - [ ] `ssh zinc "sudo reboot"`
-- [ ] After ~30s: `ssh zinc "uptime"` — confirms auto-unlock worked, no password prompt
+- [ ] After ~30s: `ssh zinc "uptime"` — no password prompt, connects automatically
 
 ---
 
@@ -69,23 +96,20 @@ ssh zinc "sudo cryptsetup luksDump /dev/sda2 | grep -E 'KeySlot|Keyslot'"
 Only proceed after **2–3 successful unattended reboots** in Step 1.1a are confirmed.
 
 - [ ] `hosts/zinc/default.nix` — remove `inputs.self.nixosModules."remote-unlock"` import
-  > Note: `initrd-ssh.nix` in nixpkgs 24.11 supports both classic and systemd initrd
-  > paths (it has conditional branches for each). Removing remote-unlock is a policy
-  > choice, not a technical requirement. *(Confirmed — initial plan claim was incorrect)*
-- [ ] Verify no other host imports `modules/nixos/remote-unlock.nix` before leaving the file
+- [ ] Verify no other host imports `modules/nixos/remote-unlock.nix`
 - [ ] `just deploy zinc 192.168.1.158`
-- [ ] `ssh zinc "sudo reboot"` — one final verification of clean unattended boot
+- [ ] `ssh zinc "sudo reboot"` — final verification of clean unattended boot
 
 ---
 
 ### Step 1.2 — Safe Deploy Recipes for Networking Changes
 
-Add to `justfile`. The critical fix vs. original plan: cancel **both** `.timer` and
-`.service` units, plus `reset-failed`. Stopping only the service leaves the timer armed
-and able to re-fire. *(Confirmed by systemd.timer man page)*
-
-Uses deterministic rollback: captures the pre-deploy generation path, schedules
-`${PREV_GEN}/bin/switch-to-configuration switch` (a valid NixOS action). *(Confirmed)*
+> **Critical fix vs. naive implementation:** Must cancel **both** `.timer` and `.service`
+> units plus `reset-failed`. Stopping only the service leaves the timer armed and able
+> to re-fire the rollback. *(Confirmed by systemd.timer man page)*
+>
+> Uses deterministic rollback: captures pre-deploy generation path, schedules
+> `${PREV_GEN}/bin/switch-to-configuration switch`. *(Confirmed valid NixOS action)*
 
 - [ ] Add `deploy-safe` recipe to `justfile`:
 
@@ -158,56 +182,53 @@ cancel-rollback ip:
 - Know your out-of-band recovery path (Tailscale, physical console)
 - Never bundle LUKS/initrd changes with routing/firewall changes in one deploy
 
-**Mandatory health checks before canceling rollback** (built into `deploy-safe`):
-```bash
-ssh orther@<ip> 'hostname && ip -brief addr && ip route && systemctl is-system-running'
-```
-
-**Exact cancel command** (stops timer + service, clears failed state):
+**Mandatory health checks** are run automatically by `deploy-safe` before confirming.
+Exact cancel command (stops timer + service, clears failed state):
 ```bash
 ssh orther@<ip> "sudo systemctl stop nixos-auto-rollback.timer nixos-auto-rollback.service; \
   sudo systemctl reset-failed nixos-auto-rollback.timer nixos-auto-rollback.service || true"
 ```
 
 **If SSH drops mid-deploy:** wait up to 10 minutes — previous generation auto-restores.
-Then reconnect on previous IP/Tailscale address.
+Then reconnect on previous IP or Tailscale address.
 ```
 
 ---
 
 ## Phase 2: UniFi Gear Reset + Adoption (Manual — physical access required)
 
-Do this AFTER Phase 1 PR is deployed and verified. The UniFi controller is already running
-on zinc at `https://192.168.1.158:8443`.
+Do this AFTER Phase 1 PR is deployed and verified. The UniFi controller is running on
+zinc at `https://192.168.1.158:8443`. Devices currently managed via unifi.ui.com (cloud).
+
+### Active devices (condo only — 3 devices)
 
 - [ ] Factory reset each device (hold reset ~10s until LED cycles):
-  - [ ] USW 24 PoE (condo — core switch)
-  - [ ] USW Lite 16 PoE (garage — secondary switch)
-  - [ ] U6 LR (condo — anchor AP + 6GHz backhaul)
-  - [ ] U6 Lite (condo — client AP)
-  - [ ] U6 Pro (garage — bridge AP)
+  - [ ] USW 24 PoE
+  - [ ] U6 Pro (Kitchen)
+  - [ ] U6 Lite (Master Bedroom)
 - [ ] For devices that don't auto-discover, SSH in and set inform URL:
   ```
   set-inform http://192.168.1.158:8080/inform
   ```
 - [ ] Adopt all devices in UniFi Network Application (`https://192.168.1.158:8443`)
-- [ ] Configure SSIDs and network layout using the 10.0.0.x plan (Phase 4)
-- [ ] Pre-configure all MAC→IP DHCP reservations (see Phase 4)
-- [ ] Re-establish U6 LR ↔ U6 Pro 6GHz wireless bridge (garage backhaul)
+- [ ] Configure SSIDs using the 10.0.0.x plan (Phase 4)
+- [ ] Pre-configure MAC→IP DHCP reservations for all active devices
 
 **Note:** Inform URL changes to `http://10.0.0.1:8080/inform` after router cutover.
-UniFi devices will be auto-redirected once controller config is updated.
+
+### NOT included yet (garage — future phase)
+
+USW Lite 16, NAS, pie are not deployed. Add when wireless bridge is purchased.
 
 ---
 
 ## Phase 3: Router Config (separate PR — `feat/zinc-router`)
 
-> **Caution:** Run this with `deploy-safe`, never plain `deploy`.
+> **Always use `deploy-safe` for this PR, never plain `deploy`.**
 > Test with Podman containers running — Podman mutates nftables rules and can conflict
-> with host NAT/firewall rule ordering. Validate during cutover. *(Best-practice)*
+> with host NAT/firewall rule ordering. Validate during cutover.
 >
-> Kea handles DHCP; dnsmasq handles DNS forwarding only — do not enable dnsmasq DHCP.
-> *(Mixed DHCP servers on same subnet = undefined behavior)*
+> Kea handles DHCP. Dnsmasq handles DNS forwarding only — do NOT enable dnsmasq DHCP.
 
 ### Interface Assignment
 
@@ -215,26 +236,27 @@ UniFi devices will be auto-redirected once controller config is updated.
 |------|-----------|------------|------|
 | Port 1 | `enp1s0` | `c6:7d` | WAN (Netgear CM1100 modem) |
 | Port 2 | `enp2s0` | `c6:7e` | LAN → USW 24 PoE |
-| Port 3 | `eno1` | `c6:7f` | LAN (spare / future) |
+| Port 3 | `eno1` | `c6:7f` | LAN (spare) |
 | Port 4 | `enp4s0` | `c6:80` | Management (`192.168.254.0/24`) |
 
 - [ ] `systemd.network.links` — pin interface names to MACs
 - [ ] `networking.nat` — NAT for LAN → WAN
-- [ ] `services.kea.dhcp4` — DHCP server for 10.0.0.0/24
+- [ ] `services.kea.dhcp4` — DHCP for 10.0.0.0/24
 - [ ] `services.dnsmasq` — DNS forwarding only (no DHCP)
-- [ ] `networking.useNetworkd = true` already set — keep consistent, do not mix backends
-- [ ] Firewall: nftables, locked down (only allow services we want)
-- [ ] No IPv6 — explicitly disable and audit all firewall/NAT assumptions
+- [ ] `networking.useNetworkd = true` — already set, keep consistent, no mixed backends
+- [ ] Firewall: nftables, locked down
+- [ ] No IPv6 — explicitly disable, audit all firewall/NAT assumptions
 - [ ] Update `home-assistant-zinc.nix`:
   ```nix
   internal_url = "http://10.0.0.1:8123";  # was 192.168.1.158:8123
   ```
-- [ ] Update UniFi inform URL to `http://10.0.0.1:8080/inform`
+- [ ] Update UniFi inform URL → `http://10.0.0.1:8080/inform`
+- [ ] Run `set-inform` on all UniFi devices after router swap
 
 ### Modem Swap
 - [ ] Replace Spectrum modem with Netgear CM1100 (DOCSIS 3.1, 2.5GbE)
 - [ ] CM1100 → zinc `enp1s0` (WAN, DHCP from Spectrum)
-- [ ] If Spectrum has old router MAC locked: call to release or wait ~24h for DHCP lease expiry
+- [ ] If Spectrum has old router MAC locked: call to release or wait ~24h
 
 ---
 
@@ -265,23 +287,22 @@ UniFi devices will be auto-redirected once controller config is updated.
 | `10.0.0.1` | zinc | Router · HA (`:8123`) · UniFi (`:8443`) |
 
 #### Network Infrastructure (`10.0.0.2–9`) — configured in UniFi
-| IP | Device | Location |
-|---|---|---|
-| `10.0.0.2` | USW 24 PoE | Condo — core switch |
-| `10.0.0.3` | USW Lite 16 PoE | Garage — secondary switch |
-| `10.0.0.4` | U6 LR | Condo — anchor AP + 6GHz backhaul |
-| `10.0.0.5` | U6 Lite | Condo — client AP |
-| `10.0.0.6` | U6 Pro | Garage — bridge AP |
-| `10.0.0.7–9` | — | Reserved |
+| IP | Device | Location | Status |
+|---|---|---|---|
+| `10.0.0.2` | USW 24 PoE | Condo — core switch | Active |
+| `10.0.0.3` | USW Lite 16 PoE | Reserved — future garage switch | Not deployed |
+| `10.0.0.4` | U6 Pro | Condo — Kitchen AP | Active |
+| `10.0.0.5` | U6 Lite | Condo — Master Bedroom AP | Active |
+| `10.0.0.6–9` | — | Reserved | — |
 
 #### Servers + NAS (`10.0.0.10–29`) — static
-| IP | Host | Notes |
-|---|---|---|
-| `10.0.0.10` | noir | NixOS miniPC (moving from old house) |
-| `10.0.0.11` | arson | NUC miniPC (moving from old house) |
-| `10.0.0.12` | nas | NAS — garage, wired to USW Lite 16 |
-| `10.0.0.13` | pie | NixOS Mac Mini — garage, media/Jellyfin |
-| `10.0.0.14–29` | — | Reserved |
+| IP | Host | Notes | Status |
+|---|---|---|---|
+| `10.0.0.10` | noir | NixOS miniPC (moving from old house) | Pending |
+| `10.0.0.11` | arson | NUC miniPC (moving from old house) | Pending |
+| `10.0.0.12` | nas | NAS — future garage (after bridge) | Not deployed |
+| `10.0.0.13` | pie | Mac Mini Jellyfin — future garage | Not deployed |
+| `10.0.0.14–29` | — | Reserved | — |
 
 #### Workstations — Wired (`10.0.0.30–49`) — static
 | IP | Host | Notes |
