@@ -12,11 +12,18 @@
     initrd = {
       # `readlink /sys/class/net/eno1/device/driver` indicates "igc" is the ethernet driver for this device
       availableKernelModules = ["nvme" "xhci_pci" "ahci" "usb_storage" "sd_mod" "igc"];
+      # Keyfile enables unattended reboots without typing LUKS passphrase.
+      # Copied into initrd at nixos-rebuild time from the persisted path on /nix.
+      # Build fails if source file is missing — run imperative setup steps first.
+      secrets = {
+        "/crypto_keyfile.bin" = "/nix/persist/etc/secrets/luks-keyfile";
+      };
       luks = {
         reusePassphrases = true;
         devices = {
           "cryptroot" = {
             device = "/dev/sda2";
+            keyFile = "/crypto_keyfile.bin";
             allowDiscards = true;
           };
         };
