@@ -75,28 +75,28 @@ Interfaces are pinned to MACs via `systemd.network.links`.
 
 ### Workstations — Wired (`10.0.0.30–49`) — static
 
-| IP | Host | Notes |
-|----|------|-------|
-| `10.0.0.30` | stud-eth | This MacBook, ethernet adapter |
-| `10.0.0.31` | mair-eth | Intel MacBook, ethernet |
-| `10.0.0.32–49` | — | Reserved |
+| IP | Host | MAC | Notes |
+|----|------|-----|-------|
+| `10.0.0.30` | stud-eth | `9c:76:0e:78:4d:52` | Mac Studio Ultra M1, ethernet |
+| `10.0.0.31` | mair-eth | TBD | Reyven's MacBook Air, ethernet |
+| `10.0.0.32–49` | — | — | Reserved |
 
 ### Workstations — WiFi (`10.0.0.50–69`) — static
 
-| IP | Host | Notes |
-|----|------|-------|
-| `10.0.0.50` | stud-wifi | This MacBook, wifi |
-| `10.0.0.51` | mair-wifi | Intel MacBook, wifi |
-| `10.0.0.52` | nblap-wifi | Work MacBook, wifi |
-| `10.0.0.53–69` | — | Reserved |
+| IP | Host | MAC | Notes |
+|----|------|-----|-------|
+| `10.0.0.50` | stud-wifi | `9c:76:0e:67:e9:6a` | Mac Studio Ultra M1, wifi |
+| `10.0.0.51` | mair-wifi | `3c:22:fb:2e:85:e5` | Reyven's MacBook Air, wifi |
+| `10.0.0.52` | nblap-wifi | TBD | Work MacBook (nblap), wifi |
+| `10.0.0.53–69` | — | — | Reserved |
 
 ### Personal Mobile (`10.0.0.100–119`) — DHCP reservation by MAC
 
-| IP | Device | Notes |
-|----|--------|-------|
-| `10.0.0.100` | brandon-iphone | Brandon's iPhone, wifi |
-| `10.0.0.101` | ryatt-tablet | Ryatt's tablet, wifi |
-| `10.0.0.102–119` | — | Reserved |
+| IP | Device | MAC | Notes |
+|----|--------|-----|-------|
+| `10.0.0.100` | brandon-iphone | `1c:3c:78:0e:b5:62` | Brandon's iPhone 16, wifi |
+| `10.0.0.101` | ryatt-tablet | TBD | Ryatt's tablet — add after cutover |
+| `10.0.0.102–119` | — | — | Reserved |
 
 ### Printers + Peripherals (`10.0.0.120–129`) — DHCP reservation
 
@@ -107,20 +107,23 @@ Interfaces are pinned to MACs via `systemd.network.links`.
 
 ### IoT + Home Automation (`10.0.0.130–159`) — DHCP reservation
 
-| IP | Device | Notes |
-|----|--------|-------|
-| `10.0.0.130` | unifi-led | UniFi LED panel |
-| `10.0.0.131–139` | esp32-* | ESP32-S3 presence sensors (multiple) |
-| `10.0.0.140` | lutron-caseta | Lutron Caseta smart bridge |
-| `10.0.0.141–149` | ha-hub-* | Other HA hubs/bridges (fill in during setup) |
-| `10.0.0.150–159` | — | Reserved IoT |
+| IP | Device | MAC | Notes |
+|----|--------|-----|-------|
+| `10.0.0.130` | unifi-led | TBD | UniFi LED panel |
+| `10.0.0.131–139` | esp32-* | TBD | ESP32-S3 presence sensors (multiple) |
+| `10.0.0.140` | lutron-caseta | TBD | Lutron Caseta smart bridge |
+| `10.0.0.141` | sleeptracker | `54:ef:fe:12:1f:96` | Beautyrest Sleeptracker |
+| `10.0.0.142` | bios-lamp | `60:09:c3:0f:01:88` | BIOS Lighting SkyView Table Lamp |
+| `10.0.0.143–149` | — | — | Reserved |
+| `10.0.0.150–159` | — | — | Reserved IoT |
 
 ### Streaming + Entertainment (`10.0.0.160–179`) — DHCP reservation
 
-| IP | Device | Notes |
-|----|--------|-------|
-| `10.0.0.160–164` | chromecast-* | Multiple Chromecasts |
-| `10.0.0.165–179` | — | Reserved (Apple TV, etc.) |
+| IP | Device | MAC | Notes |
+|----|--------|-----|-------|
+| `10.0.0.160` | chromecast-1 | `20:1f:3b:28:c2:7d` | Chromecast |
+| `10.0.0.161–164` | chromecast-* | TBD | Additional Chromecasts — add after cutover |
+| `10.0.0.165–179` | — | — | Reserved (Apple TV, etc.) |
 
 ### Dynamic Pool (`10.0.0.200–254`)
 
@@ -133,16 +136,14 @@ CM1100 connects directly to zinc's `enp1s0`. Spectrum uses DHCP on WAN — no PP
 If Spectrum has the old router's MAC locked, call to release it or wait ~24h for DHCP
 lease to expire.
 
-## Home Assistant Config Update (when network switches)
+## Home Assistant Config Update
 
-`services/home-assistant-zinc.nix` will need updating:
-```nix
-internal_url = "http://10.0.0.1:8123";  # currently 192.168.1.158:8123
-```
+✅ Done — `services/home-assistant-zinc.nix` updated to `internal_url = "http://10.0.0.1:8123"`.
 
 ## UniFi Controller URL Update (after router cutover)
 
-Inform URL changes from `http://192.168.1.158:8080/inform` to `http://10.0.0.1:8080/inform`.
+Before cutover: set **Settings → System → Controller Configuration → Hostname** to `10.0.0.1`
+in the UniFi controller. Devices will auto-update their inform URL to `http://10.0.0.1:8080/inform`.
 
 ## Pre-Cutover: UniFi Gear Reset + Local Controller Adoption
 

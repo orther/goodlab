@@ -56,9 +56,7 @@
         time_zone = "America/Los_Angeles";
         unit_system = "us_customary";
         external_url = "https://condo.ryatt.app";
-        # Requires a static DHCP reservation for zinc at 192.168.1.158.
-        # If the lease changes this will silently break companion app local access.
-        internal_url = "http://192.168.1.158:8123";
+        internal_url = "http://10.0.0.1:8123";
       };
 
       # Allow reverse proxy (Cloudflare Tunnel)

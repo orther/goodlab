@@ -14,6 +14,7 @@
     inputs.self.nixosModules."auto-update"
 
     ./../../services/tailscale.nix
+    ./../../services/router-zinc.nix
     ./../../services/home-assistant-zinc.nix
     ./../../services/unifi-zinc.nix
     ./../../services/cloudflare-tunnel-zinc.nix
@@ -35,18 +36,19 @@
   networking = {
     hostName = "zinc";
     useDHCP = false;
-    interfaces.enp1s0.useDHCP = true;
     useNetworkd = true;
     networkmanager.enable = lib.mkForce false;
   };
 
-  # Override Tailscale route for condo network (192.168.1.x)
+  # Advertise the condo LAN subnet over Tailscale
   services.tailscale.extraUpFlags = lib.mkForce [
-    "--advertise-routes=192.168.1.0/24"
+    "--advertise-routes=10.0.0.0/24"
     "--accept-dns=true"
   ];
 
-  # Disable problematic wait services during NetworkManager -> systemd-networkd transition
+  # Disable wait services — NetworkManager→networkd transition is complete,
+  # but networkd-wait-online without per-interface config can stall boot if
+  # enp2s0 (LAN) is unplugged. Leave disabled until routing is stable.
   systemd.services = {
     "NetworkManager-wait-online".enable = lib.mkForce false;
     "systemd-networkd-wait-online".enable = lib.mkForce false;
