@@ -67,7 +67,7 @@ in {
   systemd.services."podman-create-unifi-net" = {
     description = "Create podman network for unifi stack";
     after = ["network-online.target" "nss-lookup.target"];
-    wants = ["network-online.target"];
+    wants = ["network-online.target" "nss-lookup.target"];
     wantedBy = ["multi-user.target"];
     serviceConfig = {
       Type = "oneshot";
