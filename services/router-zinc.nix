@@ -50,6 +50,7 @@
 
   networking = {
     interfaces = {
+      enp1s0.useDHCP = true; # WAN — DHCP lease from ISP modem
       enp2s0.ipv4.addresses = [{
         address = "10.0.0.1";
         prefixLength = 24;
