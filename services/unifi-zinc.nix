@@ -86,6 +86,7 @@ in {
   };
   systemd.services."podman-unifi" = {
     after = ["podman-unifi-db.service"];
+    requires = ["podman-unifi-db.service"];
   };
 
   # ==========================================================================
