@@ -92,6 +92,7 @@
       interfaces-config.interfaces = ["enp2s0"];
 
       subnet4 = [{
+        id = 1;
         subnet = "10.0.0.0/24";
         pools = [{pool = "10.0.0.200 - 10.0.0.254";}];
         option-data = [
