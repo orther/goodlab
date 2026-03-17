@@ -163,6 +163,11 @@
   # with impermanence's bind mount at /var/lib/kea ("Device or resource busy").
   # Force DynamicUser off so kea runs as the static kea user and our
   # impermanence setup owns /var/lib/kea directly.
+  systemd.services.kea-dhcp4-server = {
+    after = ["sys-subsystem-net-devices-enp2s0.device"];
+    requires = ["sys-subsystem-net-devices-enp2s0.device"];
+  };
+
   systemd.services.kea-dhcp4-server.serviceConfig.DynamicUser = lib.mkForce false;
 
   systemd.services.dnsmasq = {
