@@ -38,6 +38,8 @@
       matchConfig.MACAddress = "00:e2:69:53:c6:7e";
       linkConfig.Name = "enp2s0";
     };
+    # Port 3 (MAC c6:7f) is an onboard NIC that enumerates as "eno1" — stable
+    # name comes from the kernel, no link file needed. Reserved as spare LAN port.
     "10-mgmt" = {
       matchConfig.MACAddress = "00:e2:69:53:c6:80";
       linkConfig.Name = "enp4s0";
@@ -61,7 +63,9 @@
       }];
     };
 
-    # NAT — masquerade LAN traffic behind the WAN IP
+    # NAT — masquerade LAN traffic behind the WAN IP.
+    # Note: networking.nftables is NOT enabled; NixOS defaults to iptables.
+    # networking.nat uses iptables MASQUERADE rules on externalInterface.
     nat = {
       enable = true;
       externalInterface = "enp1s0";
@@ -73,6 +77,9 @@
       allowedUDPPorts = [53 67];
       allowedTCPPorts = [53];
     };
+    # enp4s0 (192.168.254.0/24) is intentionally isolated — no NAT, no DNS/DHCP.
+    # Management subnet is for direct access to zinc only; LAN devices won't be
+    # on this interface in normal operation.
   };
 
   # ==========================================================================
@@ -133,6 +140,10 @@
   # ==========================================================================
   # Listens only on enp2s0 (10.0.0.1). Forwards upstream to Cloudflare.
   # Zinc's own resolver (systemd-resolved on 127.0.0.53) is unaffected.
+  #
+  # bind-interfaces = true requires enp2s0 to exist before dnsmasq starts.
+  # systemd-networkd-wait-online is disabled on zinc, so we explicitly order
+  # dnsmasq after the enp2s0 device unit to avoid a startup race.
 
   services.dnsmasq = {
     enable = true;
@@ -144,6 +155,11 @@
       server = ["1.1.1.1" "1.0.0.1"];
       cache-size = 1000;
     };
+  };
+
+  systemd.services.dnsmasq = {
+    after = ["sys-subsystem-net-devices-enp2s0.device"];
+    requires = ["sys-subsystem-net-devices-enp2s0.device"];
   };
 
   # ==========================================================================
