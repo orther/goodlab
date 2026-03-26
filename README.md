@@ -47,6 +47,12 @@ MacBook Air, and work WSL setup.
   - Start: `nix run .#devservices`
   - Stop: `nix run .#devservices -- stop`
 
+## AI / Claude Code workflow
+
+- Shared guidance: `CLAUDE.md`
+- Initial setup + usage: `docs/claude-code-setup.md`
+- Mental model: `docs/claude-workflow-mental-model.md`
+
 ## Getting started
 
 ### macOS
