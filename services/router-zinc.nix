@@ -234,6 +234,16 @@
     };
   };
 
+  # Point zinc's own resolver (systemd-resolved) at dnscrypt-proxy too.
+  # Without this, zinc itself uses ISP DNS (from DHCP on enp1s0) which returns
+  # AAAA records for dual-stack domains. Since zinc has no working IPv6 routing,
+  # tools like `ping google.com` hang trying the IPv6 address.
+  services.resolved.settings.Resolve.DNS = ["127.0.0.1:5053"];
+
+  # Stop the WAN DHCP client from injecting ISP DNS into systemd-resolved.
+  systemd.network.networks."40-enp1s0".dhcpV4Config.UseDNS = false;
+  systemd.network.networks."40-enp1s0".dhcpV6Config.UseDNS = false;
+
   # Ensure dnsmasq starts after dnscrypt-proxy is ready
   systemd.services.dnsmasq = {
     after = ["sys-subsystem-net-devices-enp2s0.device" "dnscrypt-proxy.service"];
