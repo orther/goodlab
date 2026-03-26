@@ -249,9 +249,11 @@ Quick reference for what might break with each hardening change and how to fix i
 **Symptom:** Devices can't get packets through zinc (unlikely).
 **Cause:** `rp_filter=1` (strict mode) dropping packets with unexpected source IPs.
 **Fix:**
+
 ```bash
 sudo sysctl net.ipv4.conf.all.rp_filter=0
 ```
+
 Then remove the sysctl line from `router-zinc.nix` and redeploy.
 
 ### Change 2: dnsmasq security options
@@ -260,11 +262,13 @@ Then remove the sysctl line from `router-zinc.nix` and redeploy.
 **Cause:** `stop-dns-rebind` blocking legitimate responses with private IPs, or
 `domain-needed` blocking short hostnames.
 **Fix:**
+
 ```bash
 sudo systemctl stop dnsmasq
 # Temporarily use Cloudflare directly on stud:
 # macOS: System Settings > Network > DNS > add 1.1.1.1
 ```
+
 Then remove the offending dnsmasq option and redeploy.
 
 ### Change 3: SSH firewall restriction
@@ -278,10 +282,12 @@ Then revert `openFirewall` change and redeploy.
 
 **Symptom:** Routing table gets extra entries, traffic misrouted (very unlikely).
 **Fix:**
+
 ```bash
 sudo tailscale down
 sudo tailscale up --advertise-routes=10.0.0.0/24 --accept-dns=true
 ```
+
 Then revert the extraUpFlags change and redeploy.
 
 ### Change 5: Encrypted DNS (dnscrypt-proxy)
@@ -289,11 +295,13 @@ Then revert the extraUpFlags change and redeploy.
 **Symptom:** All DNS fails for LAN devices.
 **Cause:** dnscrypt-proxy not running or can't reach upstream.
 **Fix (immediate, restores DNS in seconds):**
+
 ```bash
 # Point dnsmasq back to Cloudflare directly
 sudo sh -c 'echo "server=1.1.1.1" >> /etc/dnsmasq.d/emergency.conf'
 sudo systemctl restart dnsmasq
 ```
+
 Then revert the dnscrypt-proxy changes and redeploy.
 
 **This change should use `just deploy-safe` with the 10-minute auto-rollback.**
@@ -302,6 +310,7 @@ Then revert the dnscrypt-proxy changes and redeploy.
 
 **Symptom:** Your own IP gets banned.
 **Fix:**
+
 ```bash
 sudo fail2ban-client set sshd unbanip <your-ip>
 # Or just:
