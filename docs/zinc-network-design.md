@@ -4,7 +4,7 @@
 
 ```
 ISP (Spectrum Cable)
-  └─ Modem (Spectrum temp → Netgear CM1100, DOCSIS 3.1, 2.5GbE)
+  └─ Modem (Arris EN2251, DOCSIS 3.1, Spectrum-provided)
        └─ zinc enp1s0 (WAN — DHCP from Spectrum)
             ↓ NAT
        zinc enp2s0 (LAN) → USW 24 PoE (core switch, condo)
@@ -21,7 +21,7 @@ ISP (Spectrum Cable)
 
 | Port | Interface | MAC suffix | Role |
 |------|-----------|-----------|------|
-| Port 1 | `enp1s0` | `c6:7d` | WAN (CM1100 modem) |
+| Port 1 | `enp1s0` | `c6:7d` | WAN (modem) |
 | Port 2 | `enp2s0` | `c6:7e` | LAN → USW 24 PoE |
 | Port 3 | `eno1` | `c6:7f` | LAN (spare / future) |
 | Port 4 | `enp4s0` | `c6:80` | Management (`192.168.254.0/24`) |
@@ -129,12 +129,15 @@ Interfaces are pinned to MACs via `systemd.network.links`.
 
 Guests, new devices, anything without a MAC reservation.
 
-## Modem Swap Note
+## Modem
 
-Replacing Spectrum modem with **Netgear CM1100** (DOCSIS 3.1, 2.5GbE WAN port).
-CM1100 connects directly to zinc's `enp1s0`. Spectrum uses DHCP on WAN — no PPPoE.
-If Spectrum has the old router's MAC locked, call to release it or wait ~24h for DHCP
-lease to expire.
+**Current:** Arris EN2251 (DOCSIS 3.1, Spectrum-provided rental).
+Connects directly to zinc's `enp1s0`. Spectrum uses DHCP on WAN — no PPPoE.
+
+**Planned swap (~4 weeks):** Replace with **Netgear CM1100** (DOCSIS 3.1, 2.5GbE)
+once old house internet is shut down.
+If Spectrum has the old modem's MAC locked, call to release it or wait ~24h for
+DHCP lease to expire.
 
 ## Home Assistant Config Update
 
