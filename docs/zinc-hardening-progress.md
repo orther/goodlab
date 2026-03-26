@@ -595,5 +595,5 @@ If you do Change 9 before Change 8, Change 8 may become unnecessary.
 | 5 | Encrypted DNS | 2026-03-25 | PASS | dnscrypt-proxy active, Cloudflare DoH 19ms RTT, DNS resolves |
 | 6 | fail2ban | 2026-03-25 | PASS | Active, sshd jail monitoring, persist dir created |
 | 7 | nftables migration | | | DEFERRED — separate session, needs physical access |
-| 8 | HA SSDP log fix | | | DEFERRED — may be fixed by Change 9 |
+| 8 | HA SSDP log fix | 2026-03-25 | PASS | Logger suppresses SSDP errors at critical level |
 | 9 | Enable IPv6 (DHCPv6-PD) | | | DEFERRED — do after Change 7 (nftables) |
