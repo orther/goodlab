@@ -78,14 +78,18 @@
   networking = {
     interfaces = {
       enp1s0.useDHCP = true; # WAN — DHCP lease from ISP modem
-      enp2s0.ipv4.addresses = [{
-        address = "10.0.0.1";
-        prefixLength = 24;
-      }];
-      enp4s0.ipv4.addresses = [{
-        address = "192.168.254.1";
-        prefixLength = 24;
-      }];
+      enp2s0.ipv4.addresses = [
+        {
+          address = "10.0.0.1";
+          prefixLength = 24;
+        }
+      ];
+      enp4s0.ipv4.addresses = [
+        {
+          address = "192.168.254.1";
+          prefixLength = 24;
+        }
+      ];
     };
 
     # NAT — masquerade LAN traffic behind the WAN IP.
@@ -133,39 +137,90 @@
     settings = {
       interfaces-config.interfaces = ["enp2s0"];
 
-      subnet4 = [{
-        id = 1;
-        subnet = "10.0.0.0/24";
-        pools = [{pool = "10.0.0.200 - 10.0.0.254";}];
-        option-data = [
-          {name = "routers";            data = "10.0.0.1";}
-          {name = "domain-name-servers"; data = "10.0.0.1";}
-          {name = "broadcast-address";  data = "10.0.0.255";}
-        ];
-        reservations = [
-          # --- Network infrastructure ---
-          {hw-address = "74:ac:b9:e4:bb:36"; ip-address = "10.0.0.2";   hostname = "usw24";}
-          {hw-address = "d0:21:f9:51:a9:71"; ip-address = "10.0.0.4";   hostname = "u6pro";}
-          {hw-address = "74:ac:b9:a3:c2:85"; ip-address = "10.0.0.5";   hostname = "u6lite";}
+      subnet4 = [
+        {
+          id = 1;
+          subnet = "10.0.0.0/24";
+          pools = [{pool = "10.0.0.200 - 10.0.0.254";}];
+          option-data = [
+            {
+              name = "routers";
+              data = "10.0.0.1";
+            }
+            {
+              name = "domain-name-servers";
+              data = "10.0.0.1";
+            }
+            {
+              name = "broadcast-address";
+              data = "10.0.0.255";
+            }
+          ];
+          reservations = [
+            # --- Network infrastructure ---
+            {
+              hw-address = "74:ac:b9:e4:bb:36";
+              ip-address = "10.0.0.2";
+              hostname = "usw24";
+            }
+            {
+              hw-address = "d0:21:f9:51:a9:71";
+              ip-address = "10.0.0.4";
+              hostname = "u6pro";
+            }
+            {
+              hw-address = "74:ac:b9:a3:c2:85";
+              ip-address = "10.0.0.5";
+              hostname = "u6lite";
+            }
 
-          # --- Workstations ---
-          {hw-address = "9c:76:0e:78:4d:52"; ip-address = "10.0.0.30";  hostname = "stud-eth";}
-          {hw-address = "9c:76:0e:67:e9:6a"; ip-address = "10.0.0.50";  hostname = "stud-wifi";}
-          {hw-address = "3c:22:fb:2e:85:e5"; ip-address = "10.0.0.51";  hostname = "mair-wifi";}
+            # --- Workstations ---
+            {
+              hw-address = "9c:76:0e:78:4d:52";
+              ip-address = "10.0.0.30";
+              hostname = "stud-eth";
+            }
+            {
+              hw-address = "9c:76:0e:67:e9:6a";
+              ip-address = "10.0.0.50";
+              hostname = "stud-wifi";
+            }
+            {
+              hw-address = "3c:22:fb:2e:85:e5";
+              ip-address = "10.0.0.51";
+              hostname = "mair-wifi";
+            }
 
-          # --- Personal mobile ---
-          {hw-address = "1c:3c:78:0e:b5:62"; ip-address = "10.0.0.100"; hostname = "brandon-iphone";}
-          # ryatt-tablet: add after cutover when tablet is home
+            # --- Personal mobile ---
+            {
+              hw-address = "1c:3c:78:0e:b5:62";
+              ip-address = "10.0.0.100";
+              hostname = "brandon-iphone";
+            }
+            # ryatt-tablet: add after cutover when tablet is home
 
-          # --- IoT / Home Automation ---
-          {hw-address = "54:ef:fe:12:1f:96"; ip-address = "10.0.0.141"; hostname = "sleeptracker";}
-          {hw-address = "60:09:c3:0f:01:88"; ip-address = "10.0.0.142"; hostname = "bios-lamp";}
+            # --- IoT / Home Automation ---
+            {
+              hw-address = "54:ef:fe:12:1f:96";
+              ip-address = "10.0.0.141";
+              hostname = "sleeptracker";
+            }
+            {
+              hw-address = "60:09:c3:0f:01:88";
+              ip-address = "10.0.0.142";
+              hostname = "bios-lamp";
+            }
 
-          # --- Streaming ---
-          {hw-address = "20:1f:3b:28:c2:7d"; ip-address = "10.0.0.160"; hostname = "chromecast-1";}
-          # Additional Chromecasts / Apple TV: add after cutover
-        ];
-      }];
+            # --- Streaming ---
+            {
+              hw-address = "20:1f:3b:28:c2:7d";
+              ip-address = "10.0.0.160";
+              hostname = "chromecast-1";
+            }
+            # Additional Chromecasts / Apple TV: add after cutover
+          ];
+        }
+      ];
 
       lease-database = {
         type = "memfile";
@@ -199,11 +254,11 @@
       cache-size = 1000;
 
       # Security hardening
-      stop-dns-rebind = true;    # Reject upstream answers containing private IPs
+      stop-dns-rebind = true; # Reject upstream answers containing private IPs
       rebind-localhost-ok = true; # Allow 127.x responses (some services need this)
-      domain-needed = true;       # Don't forward bare names (e.g. "printer") upstream
-      bogus-priv = true;          # Don't forward reverse lookups for private ranges
-      dns-forward-max = 150;      # Cap concurrent upstream queries (DoS protection)
+      domain-needed = true; # Don't forward bare names (e.g. "printer") upstream
+      bogus-priv = true; # Don't forward reverse lookups for private ranges
+      dns-forward-max = 150; # Cap concurrent upstream queries (DoS protection)
     };
   };
 

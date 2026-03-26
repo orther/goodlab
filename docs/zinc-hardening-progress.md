@@ -7,17 +7,20 @@
 ## Changes
 
 ### 1. Kernel sysctl hardening + IPv6 forward-chain lockdown
+
 - **File:** `services/router-zinc.nix`
 - **Risk:** ZERO
 - **Deploy:** `just deploy zinc 100.100.101.31`
 - **Status:** PENDING
 
 **Includes:**
+
 - IPv4 sysctl hardening (SYN cookies, anti-spoofing, martian logging, etc.)
 - IPv6 FORWARD chain set to DROP (zinc doesn't route IPv6 traffic today, but the
   chain is currently ACCEPT with no rules — closing this hole)
 
 **Verify:**
+
 ```bash
 ssh orther@10.0.0.1 "sudo sysctl net.ipv4.tcp_syncookies net.ipv4.conf.all.rp_filter net.ipv4.conf.all.log_martians net.ipv4.conf.all.accept_redirects net.ipv4.conf.all.send_redirects"
 # Expected: all 1 except accept_redirects and send_redirects = 0
@@ -28,6 +31,7 @@ ssh orther@10.0.0.1 "sudo ip6tables -L FORWARD -n -v | head -5"
 ```
 
 **If broken — immediate fix:**
+
 ```bash
 ssh orther@10.0.0.1 "sudo sysctl net.ipv4.conf.all.rp_filter=0"
 # If IPv6 forward DROP somehow breaks something (very unlikely since no IPv6 routing):
@@ -37,12 +41,14 @@ ssh orther@10.0.0.1 "sudo ip6tables -P FORWARD ACCEPT"
 ---
 
 ### 2. dnsmasq security hardening
+
 - **File:** `services/router-zinc.nix`
 - **Risk:** NEAR-ZERO
 - **Deploy:** `just deploy zinc 100.100.101.31`
 - **Status:** PENDING
 
 **Verify:**
+
 ```bash
 # From stud:
 dig @10.0.0.1 google.com        # Should resolve
@@ -51,6 +57,7 @@ curl -s https://example.com      # Full internet works
 ```
 
 **If broken — immediate fix:**
+
 ```bash
 # On stud — temporarily use Cloudflare directly:
 # macOS: System Settings > Network > DNS > add 1.1.1.1
@@ -61,12 +68,14 @@ ssh orther@10.0.0.1 "sudo systemctl restart dnsmasq"
 ---
 
 ### 3. Restrict SSH to LAN + Tailscale
+
 - **File:** `hosts/zinc/default.nix`
 - **Risk:** LOW
 - **Deploy:** `just deploy zinc 100.100.101.31`
 - **Status:** PENDING
 
 **Verify:**
+
 ```bash
 ssh orther@10.0.0.1 "echo LAN SSH works"           # Should work
 ssh orther@100.100.101.31 "echo Tailscale SSH works" # Should work
@@ -75,6 +84,7 @@ ssh orther@10.0.0.1 "sudo journalctl -u sshd --no-pager -n 20"
 ```
 
 **If broken — immediate fix:**
+
 ```bash
 # If LAN SSH fails, use Tailscale:
 ssh orther@100.100.101.31
@@ -86,12 +96,14 @@ sudo /nix/var/nix/profiles/system-N-link/bin/switch-to-configuration switch
 ---
 
 ### 4. Tailscale exit node + accept-routes
+
 - **File:** `hosts/zinc/default.nix`
 - **Risk:** LOW
 - **Deploy:** `just deploy zinc 100.100.101.31`
 - **Status:** PENDING
 
 **Verify:**
+
 ```bash
 ssh orther@10.0.0.1 "tailscale status"
 # Should show zinc offering exit node
@@ -99,6 +111,7 @@ ssh orther@10.0.0.1 "tailscale status"
 ```
 
 **If broken — immediate fix:**
+
 ```bash
 ssh orther@10.0.0.1 "sudo tailscale down && sudo tailscale up --advertise-routes=10.0.0.0/24 --accept-dns=true"
 ```
@@ -106,12 +119,14 @@ ssh orther@10.0.0.1 "sudo tailscale down && sudo tailscale up --advertise-routes
 ---
 
 ### 5. Encrypted upstream DNS (dnscrypt-proxy)
+
 - **File:** `services/router-zinc.nix`
 - **Risk:** MEDIUM
 - **Deploy:** `just deploy-safe zinc 100.100.101.31` (10-min auto-rollback!)
 - **Status:** PENDING
 
 **Verify:**
+
 ```bash
 # DNS still works:
 dig @10.0.0.1 google.com
@@ -124,6 +139,7 @@ ssh orther@10.0.0.1 "sudo timeout 5 tcpdump -i enp1s0 port 53 -c 5 2>&1 || echo 
 ```
 
 **If broken — immediate fix:**
+
 ```bash
 # If deploy-safe: wait 10 minutes for auto-rollback
 # If manual fix needed:
@@ -135,18 +151,21 @@ ssh orther@10.0.0.1 "sudo systemctl stop dnscrypt-proxy2 && sudo systemctl resta
 ---
 
 ### 6. fail2ban
+
 - **File:** `hosts/zinc/default.nix`
 - **Risk:** LOW
 - **Deploy:** `just deploy zinc 100.100.101.31`
 - **Status:** PENDING
 
 **Verify:**
+
 ```bash
 ssh orther@10.0.0.1 "systemctl status fail2ban"
 ssh orther@10.0.0.1 "sudo fail2ban-client status sshd"
 ```
 
 **If broken — immediate fix:**
+
 ```bash
 # If your IP gets banned:
 ssh orther@100.100.101.31 "sudo fail2ban-client set sshd unbanip 10.0.0.30"
@@ -161,6 +180,7 @@ ssh orther@100.100.101.31 "sudo systemctl stop fail2ban"
 ## Future Changes (Separate Session)
 
 ### 7. Migrate iptables to nftables
+
 - **Files:** `hosts/zinc/default.nix`, `services/router-zinc.nix`, `services/unifi-zinc.nix`
 - **Risk:** HIGH — changes the entire firewall backend
 - **Deploy:** `just deploy-safe zinc 100.100.101.31` (mandatory — auto-rollback)
@@ -170,6 +190,7 @@ ssh orther@100.100.101.31 "sudo systemctl stop fail2ban"
 #### Why
 
 nftables is the modern replacement for iptables on Linux. It offers:
+
 - Atomic rule updates (no brief window of no-rules during reload)
 - Better performance (single-pass packet classification)
 - Cleaner syntax and rule organization
@@ -204,6 +225,7 @@ natively.
 If you enable nftables, fail2ban will use nftables actions automatically.
 
 **Other hosts with custom iptables rules** (not zinc, but relevant if migrating fleet-wide):
+
 - `services/scrypted.nix` — raw `iptables -A nixos-fw` rules allowing `10.0.10.0/24`
 - `services/research-relay/odoo.nix` — raw `iptables -A nixos-fw` allowing Docker bridge `172.17.0.0/16` to PostgreSQL
 - `hosts/lildoofy/default.nix` — Tailscale interface-specific port rules
@@ -214,6 +236,7 @@ If you enable nftables, fail2ban will use nftables actions automatically.
 #### Implementation Plan
 
 **Phase A: Research (no deploy)**
+
 1. SSH into zinc and check Netavark's firewall driver:
    ```bash
    ssh orther@10.0.0.1 "cat /etc/containers/containers.conf 2>/dev/null; podman info | grep -i firewall"
@@ -232,6 +255,7 @@ If you enable nftables, fail2ban will use nftables actions automatically.
    ```
 
 **Phase B: NixOS config changes**
+
 1. Enable nftables:
    ```nix
    # hosts/zinc/default.nix
@@ -242,6 +266,7 @@ If you enable nftables, fail2ban will use nftables actions automatically.
    `networking.nat.*` options should translate automatically.
 
 3. Handle Podman compatibility (choose based on Phase A findings):
+
    ```nix
    # If Netavark supports nftables driver:
    virtualisation.podman.defaultNetwork.settings.firewall_driver = "nftables";
@@ -260,8 +285,10 @@ If you enable nftables, fail2ban will use nftables actions automatically.
    ```
 
 **Phase C: Deploy and verify**
+
 1. `just deploy-safe zinc 100.100.101.31` — 10-minute auto-rollback armed
 2. Verify checklist:
+
    ```bash
    # Firewall backend is nftables:
    ssh orther@10.0.0.1 "sudo nft list ruleset | head -30"
@@ -279,6 +306,7 @@ If you enable nftables, fail2ban will use nftables actions automatically.
    # Tailscale still works:
    ssh orther@100.100.101.31 "tailscale status"
    ```
+
 3. If anything fails, wait for auto-rollback (10 min) or:
    ```bash
    ssh orther@10.0.0.1 "sudo nix-env --list-generations --profile /nix/var/nix/profiles/system"
@@ -286,6 +314,7 @@ If you enable nftables, fail2ban will use nftables actions automatically.
    ```
 
 #### References
+
 - [NixOS Firewall Wiki](https://nixos.wiki/wiki/Firewall)
 - [nixos-nftables-firewall docs](https://thelegy.github.io/nixos-nftables-firewall/)
 - [Francis Begyn — NixOS Home Router](https://francis.begyn.be/blog/nixos-home-router)
@@ -294,6 +323,7 @@ If you enable nftables, fail2ban will use nftables actions automatically.
 ---
 
 ### 8. Fix Home Assistant SSDP log noise
+
 - **File:** `services/home-assistant-zinc.nix`
 - **Risk:** ZERO — cosmetic log fix
 - **Deploy:** `just deploy zinc 100.100.101.31`
@@ -310,6 +340,7 @@ no global IPv6 address and IPv6 forwarding is enabled (Tailscale sets
 #### Root Cause Analysis
 
 The SSDP integration in Home Assistant sends multicast to:
+
 - `239.255.255.250:1900` (IPv4 — works fine)
 - `[ff02::c]:1900` / `[ff05::c]:1900` (IPv6 — fails because no routable IPv6)
 
@@ -407,6 +438,7 @@ ssh orther@10.0.0.1 "sudo journalctl -u home-assistant --no-pager -n 30"
 ---
 
 ### 9. Enable IPv6 with DHCPv6-PD and stateful firewall
+
 - **Files:** `services/router-zinc.nix`, `hosts/zinc/default.nix`
 - **Risk:** HIGH — firewall misconfiguration exposes all LAN devices directly to internet
 - **Deploy:** `just deploy-safe zinc 100.100.101.31` (mandatory — auto-rollback)
@@ -417,6 +449,7 @@ ssh orther@10.0.0.1 "sudo journalctl -u home-assistant --no-pager -n 30"
 #### Current State (as of 2026-03-25)
 
 Spectrum IS providing IPv6 to zinc:
+
 - **WAN address:** `2602:107:4e11:1a:6c2d:1b9c:24da:ccca/128` via DHCPv6
 - **Delegated prefix:** `2603:8002:8c00:91c9::/64` via DHCPv6-PD (unused)
 - **ISP gateway:** `fe80::800:ff:fe00:103` on enp1s0 (learned via RA)
@@ -494,6 +527,7 @@ systemd.network.networks."20-lan" = {
 **Phase B: IPv6 firewall (CRITICAL)**
 
 With nftables (after Change 7):
+
 ```nix
 networking.firewall.extraForwardRules = ''
   # IPv6 forwarding: stateful, default deny
@@ -509,6 +543,7 @@ networking.firewall.extraInputRules = ''
 ```
 
 With iptables (if Change 7 not done yet):
+
 ```nix
 networking.firewall.extraCommands = ''
   # Block unsolicited inbound IPv6 forwarding
@@ -570,6 +605,7 @@ ssh orther@10.0.0.1 "ip -6 route show"                    # Check default route 
 ```
 
 #### References
+
 - [systemd-networkd DHCPv6-PD](https://major.io/p/dhcpv6-prefix-delegation-with-systemd-networkd/)
 - [ThingLab: NixOS Router IPv6 (2025)](https://thinglab.org/2025/01/nixos_router_ipv6/)
 - [Spectrum IPv6 Support](https://www.spectrum.net/support/internet/ipv6)
@@ -586,14 +622,14 @@ If you do Change 9 before Change 8, Change 8 may become unnecessary.
 
 ## Completion Log
 
-| # | Change | Deployed | Verified | Notes |
-|---|--------|----------|----------|-------|
-| 1 | Kernel sysctl + IPv6 fwd lockdown | 2026-03-25 | PASS | All sysctls correct, FORWARD policy DROP, internet works |
-| 2 | dnsmasq security | 2026-03-25 | PASS | DNS resolves, private reverse blocked, internet works |
-| 3 | SSH restriction | 2026-03-25 | PASS | LAN SSH works, Tailscale SSH works, 0 brute force attempts |
-| 4 | Tailscale exit node | 2026-03-25 | PASS | Exit node advertised, accept-routes REMOVED (broke LAN routing) |
-| 5 | Encrypted DNS | 2026-03-25 | PASS | dnscrypt-proxy active, Cloudflare DoH 19ms RTT, DNS resolves |
-| 6 | fail2ban | 2026-03-25 | PASS | Active, sshd jail monitoring, persist dir created |
-| 7 | nftables migration | | | DEFERRED — separate session, needs physical access |
-| 8 | HA SSDP log fix | 2026-03-25 | PASS | Logger suppresses SSDP errors at critical level |
-| 9 | Enable IPv6 (DHCPv6-PD) | | | DEFERRED — do after Change 7 (nftables) |
+| #   | Change                            | Deployed   | Verified | Notes                                                           |
+| --- | --------------------------------- | ---------- | -------- | --------------------------------------------------------------- |
+| 1   | Kernel sysctl + IPv6 fwd lockdown | 2026-03-25 | PASS     | All sysctls correct, FORWARD policy DROP, internet works        |
+| 2   | dnsmasq security                  | 2026-03-25 | PASS     | DNS resolves, private reverse blocked, internet works           |
+| 3   | SSH restriction                   | 2026-03-25 | PASS     | LAN SSH works, Tailscale SSH works, 0 brute force attempts      |
+| 4   | Tailscale exit node               | 2026-03-25 | PASS     | Exit node advertised, accept-routes REMOVED (broke LAN routing) |
+| 5   | Encrypted DNS                     | 2026-03-25 | PASS     | dnscrypt-proxy active, Cloudflare DoH 19ms RTT, DNS resolves    |
+| 6   | fail2ban                          | 2026-03-25 | PASS     | Active, sshd jail monitoring, persist dir created               |
+| 7   | nftables migration                |            |          | DEFERRED — separate session, needs physical access              |
+| 8   | HA SSDP log fix                   | 2026-03-25 | PASS     | Logger suppresses SSDP errors at critical level                 |
+| 9   | Enable IPv6 (DHCPv6-PD)           |            |          | DEFERRED — do after Change 7 (nftables)                         |

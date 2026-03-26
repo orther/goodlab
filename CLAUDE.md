@@ -44,11 +44,11 @@ just deploy zinc 100.100.101.31     # Deploy to zinc (always use Tailscale IP)
 
 #### Choosing the Right Deploy Command
 
-| Command | When to Use |
-|---------|-------------|
-| `just deploy <host> [ip]` | All normal changes: services, config, packages. **Default choice.** |
+| Command                        | When to Use                                                                                                                                                  |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `just deploy <host> [ip]`      | All normal changes: services, config, packages. **Default choice.**                                                                                          |
 | `just deploy-safe <host> <ip>` | **Required** for: firewall rules, routing config, NAT, interface renames, bridge changes. Arms a 10-minute auto-rollback to the exact pre-deploy generation. |
-| `just cancel-rollback <ip>` | Use after `deploy-safe` if you need more than 10 minutes to verify before the timer fires. |
+| `just cancel-rollback <ip>`    | Use after `deploy-safe` if you need more than 10 minutes to verify before the timer fires.                                                                   |
 
 **Preconditions for `deploy-safe`:** confirm SSH works first; know your out-of-band
 recovery path (Tailscale, physical console). Never bundle LUKS/initrd changes with
@@ -56,6 +56,7 @@ routing/firewall changes in one deploy.
 
 **Mandatory health checks** are run automatically by `deploy-safe` before confirming.
 Exact cancel command (timer + service + reset-failed):
+
 ```bash
 ssh orther@<ip> "sudo systemctl stop nixos-auto-rollback.timer nixos-auto-rollback.service; \
   sudo systemctl reset-failed nixos-auto-rollback.timer nixos-auto-rollback.service || true"
