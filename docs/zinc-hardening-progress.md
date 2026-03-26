@@ -591,7 +591,7 @@ If you do Change 9 before Change 8, Change 8 may become unnecessary.
 | 1 | Kernel sysctl + IPv6 fwd lockdown | 2026-03-25 | PASS | All sysctls correct, FORWARD policy DROP, internet works |
 | 2 | dnsmasq security | 2026-03-25 | PASS | DNS resolves, private reverse blocked, internet works |
 | 3 | SSH restriction | 2026-03-25 | PASS | LAN SSH works, Tailscale SSH works, 0 brute force attempts |
-| 4 | Tailscale exit node | 2026-03-25 | PASS | Exit node advertised (0.0.0.0/0, ::/0), accept-routes on, approve in admin console |
+| 4 | Tailscale exit node | 2026-03-25 | PASS | Exit node advertised, accept-routes REMOVED (broke LAN routing) |
 | 5 | Encrypted DNS | 2026-03-25 | PASS | dnscrypt-proxy active, Cloudflare DoH 19ms RTT, DNS resolves |
 | 6 | fail2ban | 2026-03-25 | PASS | Active, sshd jail monitoring, persist dir created |
 | 7 | nftables migration | | | DEFERRED — separate session, needs physical access |

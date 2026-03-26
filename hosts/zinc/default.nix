@@ -46,7 +46,9 @@
   services.tailscale.extraUpFlags = lib.mkForce [
     "--advertise-routes=10.0.0.0/24"
     "--advertise-exit-node"
-    "--accept-routes"
+    # Do NOT use --accept-routes on zinc — it causes zinc to route its own
+    # LAN subnet (10.0.0.0/24) through Tailscale instead of enp2s0, breaking
+    # all LAN connectivity. Zinc is the subnet router, not a client.
     "--accept-dns=true"
   ];
 

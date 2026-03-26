@@ -99,6 +99,11 @@
 
     # Firewall — LAN-side DHCP and DNS
     firewall = {
+      # Use loose rpfilter — Tailscale's policy routing rules cause strict
+      # rpfilter (in the mangle table) to drop legitimate LAN traffic because
+      # the "best" return path goes through Tailscale's routing table, not
+      # directly back through enp2s0.
+      checkReversePath = "loose";
       interfaces.enp2s0 = {
         allowedUDPPorts = [53 67];
         allowedTCPPorts = [53];
