@@ -18,10 +18,35 @@
 # ==============================================================================
 {lib, ...}: {
   # ==========================================================================
-  # IP forwarding
+  # IP forwarding + kernel hardening
   # ==========================================================================
 
-  boot.kernel.sysctl."net.ipv4.ip_forward" = 1;
+  boot.kernel.sysctl = {
+    # Routing
+    "net.ipv4.ip_forward" = 1;
+
+    # SYN flood protection
+    "net.ipv4.tcp_syncookies" = 1;
+
+    # Disable ICMP redirects (router should never accept or send these)
+    "net.ipv4.conf.all.accept_redirects" = 0;
+    "net.ipv4.conf.default.accept_redirects" = 0;
+    "net.ipv4.conf.all.send_redirects" = 0;
+
+    # Disable source-routed packets (used in IP spoofing attacks)
+    "net.ipv4.conf.all.accept_source_route" = 0;
+    "net.ipv4.conf.default.accept_source_route" = 0;
+
+    # Log packets with impossible source addresses
+    "net.ipv4.conf.all.log_martians" = 1;
+
+    # Ignore bogus ICMP error responses
+    "net.ipv4.icmp_ignore_bogus_error_responses" = 1;
+
+    # Strict reverse-path filtering (anti-spoofing)
+    "net.ipv4.conf.all.rp_filter" = 1;
+    "net.ipv4.conf.default.rp_filter" = 1;
+  };
 
   # ==========================================================================
   # Interface pinning (MAC → predictable name)
@@ -73,13 +98,30 @@
     };
 
     # Firewall — LAN-side DHCP and DNS
-    firewall.interfaces.enp2s0 = {
-      allowedUDPPorts = [53 67];
-      allowedTCPPorts = [53];
+    firewall = {
+      # Use loose rpfilter — Tailscale's policy routing rules cause strict
+      # rpfilter (in the mangle table) to drop legitimate LAN traffic because
+      # the "best" return path goes through Tailscale's routing table, not
+      # directly back through enp2s0.
+      checkReversePath = "loose";
+      interfaces.enp2s0 = {
+        allowedUDPPorts = [53 67];
+        allowedTCPPorts = [53];
+      };
+      # enp4s0 (192.168.254.0/24) is intentionally isolated — no NAT, no DNS/DHCP.
+      # Management subnet is for direct access to zinc only; LAN devices won't be
+      # on this interface in normal operation.
+
+      # IPv6 forward-chain lockdown — zinc receives a delegated /64 from Spectrum
+      # via DHCPv6-PD but does not route IPv6 traffic today. The ip6tables FORWARD
+      # chain defaults to ACCEPT with no rules — lock it down.
+      extraCommands = ''
+        ip6tables -P FORWARD DROP
+      '';
+      extraStopCommands = ''
+        ip6tables -P FORWARD ACCEPT
+      '';
     };
-    # enp4s0 (192.168.254.0/24) is intentionally isolated — no NAT, no DNS/DHCP.
-    # Management subnet is for direct access to zinc only; LAN devices won't be
-    # on this interface in normal operation.
   };
 
   # ==========================================================================
@@ -153,8 +195,15 @@
       bind-interfaces = true;
       # Don't read /etc/resolv.conf — it points to systemd-resolved stub
       no-resolv = true;
-      server = ["1.1.1.1" "1.0.0.1"];
+      server = ["127.0.0.1#5053"]; # dnscrypt-proxy (encrypted upstream)
       cache-size = 1000;
+
+      # Security hardening
+      stop-dns-rebind = true;    # Reject upstream answers containing private IPs
+      rebind-localhost-ok = true; # Allow 127.x responses (some services need this)
+      domain-needed = true;       # Don't forward bare names (e.g. "printer") upstream
+      bogus-priv = true;          # Don't forward reverse lookups for private ranges
+      dns-forward-max = 150;      # Cap concurrent upstream queries (DoS protection)
     };
   };
 
@@ -170,9 +219,41 @@
 
   systemd.services.kea-dhcp4-server.serviceConfig.DynamicUser = lib.mkForce false;
 
+  # ==========================================================================
+  # Encrypted DNS upstream (dnscrypt-proxy)
+  # ==========================================================================
+  # Listens on 127.0.0.1:5053. dnsmasq forwards to it instead of plaintext
+  # Cloudflare. Encrypts all upstream DNS queries via DoH/DNSCrypt so the ISP
+  # cannot snoop on DNS traffic.
+
+  services.dnscrypt-proxy = {
+    enable = true;
+    settings = {
+      listen_addresses = ["127.0.0.1:5053"];
+      # Use Cloudflare's encrypted resolvers
+      server_names = ["cloudflare" "cloudflare-ipv6"];
+      # Require DNSSEC and no-logging from upstream
+      require_dnssec = true;
+      require_nofilter = true;
+      require_nolog = true;
+    };
+  };
+
+  # Point zinc's own resolver (systemd-resolved) at dnscrypt-proxy too.
+  # Without this, zinc itself uses ISP DNS (from DHCP on enp1s0) which returns
+  # AAAA records for dual-stack domains. Since zinc has no working IPv6 routing,
+  # tools like `ping google.com` hang trying the IPv6 address.
+  services.resolved.settings.Resolve.DNS = ["127.0.0.1:5053"];
+
+  # Stop the WAN DHCP client from injecting ISP DNS into systemd-resolved.
+  systemd.network.networks."40-enp1s0".dhcpV4Config.UseDNS = false;
+  systemd.network.networks."40-enp1s0".dhcpV6Config.UseDNS = false;
+
+  # Ensure dnsmasq starts after dnscrypt-proxy is ready
   systemd.services.dnsmasq = {
-    after = ["sys-subsystem-net-devices-enp2s0.device"];
+    after = ["sys-subsystem-net-devices-enp2s0.device" "dnscrypt-proxy.service"];
     requires = ["sys-subsystem-net-devices-enp2s0.device"];
+    wants = ["dnscrypt-proxy.service"];
   };
 
   # ==========================================================================

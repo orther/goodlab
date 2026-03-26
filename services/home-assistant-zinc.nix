@@ -68,6 +68,12 @@
         ];
       };
 
+      # Suppress SSDP multicast errors (Network is unreachable every ~10 min)
+      logger = {
+        default = "info";
+        logs."homeassistant.components.ssdp" = "critical";
+      };
+
       # Ensure automations.yaml etc. exist for UI-based editing
       automation = "!include automations.yaml";
       scene = "!include scenes.yaml";

@@ -36,9 +36,10 @@ just deploy <hostname>
 just deploy <hostname> <ip-address>
 
 # Examples:
-just deploy stud           # Deploy to local macOS (Apple Silicon)
-just deploy mair          # Deploy to local macOS (Intel)
-just deploy noir 10.0.10.2 # Deploy to remote NixOS server
+just deploy stud                    # Deploy to local macOS (Apple Silicon)
+just deploy mair                    # Deploy to local macOS (Intel)
+just deploy noir 10.0.0.10          # Deploy to remote NixOS server (condo LAN)
+just deploy zinc 100.100.101.31     # Deploy to zinc (always use Tailscale IP)
 ```
 
 #### Choosing the Right Deploy Command
@@ -133,7 +134,7 @@ This is a **Nix flakes-based homelab configuration** using modern flake orchestr
 #### NixOS (Linux)
 
 - `noir`: Homelab server (x86_64)
-- `zinc`: Homelab server (x86_64)
+- `zinc`: Condo router + HA server (x86_64) — deploy via Tailscale: `just deploy zinc 100.100.101.31`
 - `vm`: Test VM (aarch64)
 
 #### Special Configurations
