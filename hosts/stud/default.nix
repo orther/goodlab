@@ -58,7 +58,7 @@
 
   # WireGuard VPN tunnel to shops-btc-01
   local.wireguard.interfaces."shops-btc-01" = {
-    address = "10.100.0.2/24";
+    address = "10.100.0.2/32";
     privateKeySecret = "wireguard-shops-btc-01-private-key";
     peers = [
       {
