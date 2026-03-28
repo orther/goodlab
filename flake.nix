@@ -360,6 +360,7 @@
         # Export reusable module sets for downstream reuse and internal imports
         darwinModules = {
           base = import ./modules/macos/base.nix;
+          wireguard = import ./modules/macos/wireguard.nix;
         };
 
         nixosModules = {
