@@ -5,6 +5,21 @@
   ...
 }: let
   cfg = config.local.wireguard;
+
+  genPeerSection = peer:
+    "[Peer]\n"
+    + "PublicKey = ${peer.publicKey}\n"
+    + lib.optionalString (peer.endpoint != null) "Endpoint = ${peer.endpoint}\n"
+    + "AllowedIPs = ${lib.concatStringsSep ", " peer.allowedIPs}\n"
+    + lib.optionalString (peer.persistentKeepalive != null) "PersistentKeepalive = ${toString peer.persistentKeepalive}\n";
+
+  genConfigText = name: iface: ''
+    [Interface]
+    Address = ${iface.address}
+    PostUp = wg set %i private-key ${config.sops.secrets.${iface.privateKeySecret}.path}
+
+    ${lib.concatMapStringsSep "\n" genPeerSection iface.peers}
+  '';
 in {
   options.local.wireguard = {
     interfaces = lib.mkOption {
@@ -63,42 +78,10 @@ in {
       lib.nameValuePair iface.privateKeySecret {})
     cfg.interfaces;
 
-    # Generate wg-quick configs at activation time from SOPS-decrypted keys
-    system.activationScripts.setupWireguard.text = let
-      genPeer = peer:
-        ''
-          [Peer]
-          PublicKey = ${peer.publicKey}
-        ''
-        + lib.optionalString (peer.endpoint != null) ''
-          Endpoint = ${peer.endpoint}
-        ''
-        + ''
-          AllowedIPs = ${lib.concatStringsSep ", " peer.allowedIPs}
-        ''
-        + lib.optionalString (peer.persistentKeepalive != null) ''
-          PersistentKeepalive = ${toString peer.persistentKeepalive}
-        '';
-
-      genConfig = name: iface: ''
-        echo >&2 "Generating WireGuard config for ${name}..."
-        mkdir -p /etc/wireguard
-        chmod 700 /etc/wireguard
-
-        PRIVKEY=$(cat ${config.sops.secrets.${iface.privateKeySecret}.path})
-        cat > /etc/wireguard/${name}.conf << 'WGEOF'
-        [Interface]
-        PrivateKey = PRIVKEY_PLACEHOLDER
-        Address = ${iface.address}
-
-        ${lib.concatMapStringsSep "\n" genPeer iface.peers}
-        WGEOF
-
-        # Substitute the private key (avoids key in Nix store)
-        sed -i "" "s|PRIVKEY_PLACEHOLDER|$PRIVKEY|" /etc/wireguard/${name}.conf
-        chmod 600 /etc/wireguard/${name}.conf
-      '';
-    in
-      lib.concatStringsSep "\n" (lib.mapAttrsToList genConfig cfg.interfaces);
+    environment.etc = lib.mapAttrs' (name: iface:
+      lib.nameValuePair "wireguard/${name}.conf" {
+        text = genConfigText name iface;
+      })
+    cfg.interfaces;
   };
 }
