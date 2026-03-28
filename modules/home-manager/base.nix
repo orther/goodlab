@@ -69,6 +69,14 @@
       enable = true;
       enableFishIntegration = true;
       nix-direnv.enable = true;
+      stdlib = ''
+        # Source devenv integration for `use devenv` in .envrc files
+        eval "$(devenv direnvrc 2>/dev/null)"
+      '';
+    };
+    carapace = {
+      enable = true;
+      enableFishIntegration = true;
     };
     fastfetch.enable = true;
   };

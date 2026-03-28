@@ -76,6 +76,10 @@
       enableFishIntegration = true;
       nix-direnv.enable = true;
     };
+    carapace = {
+      enable = true;
+      enableFishIntegration = true;
+    };
     fastfetch.enable = true;
   };
 
