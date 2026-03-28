@@ -24,7 +24,7 @@
   users.users.orther = {
     isNormalUser = true;
     description = "orther";
-    shell = pkgs.zsh;
+    shell = pkgs.fish;
   };
 
   programs.zsh.enable = true;

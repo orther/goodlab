@@ -13,7 +13,7 @@
     + "AllowedIPs = ${lib.concatStringsSep ", " peer.allowedIPs}\n"
     + lib.optionalString (peer.persistentKeepalive != null) "PersistentKeepalive = ${toString peer.persistentKeepalive}\n";
 
-  genConfigText = name: iface: ''
+  genConfigText = _name: iface: ''
     [Interface]
     Address = ${iface.address}
     PostUp = wg set %i private-key ${config.sops.secrets.${iface.privateKeySecret}.path}
