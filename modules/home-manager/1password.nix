@@ -3,6 +3,10 @@
   pkgs,
   ...
 }: {
+  home.sessionVariables = {
+    OP_BIOMETRIC_UNLOCK_ENABLED = "true";
+  };
+
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
