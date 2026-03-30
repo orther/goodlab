@@ -366,6 +366,10 @@
   # Remove plex line when removing plex.nix import
   users.users.plex.extraGroups = ["video" "render"];
 
+  # Radarr/Sonarr need nzbget group to read completed downloads from /var/lib/nzbget/
+  users.users.radarr.extraGroups = ["nzbget"];
+  users.users.sonarr.extraGroups = ["nzbget"];
+
   # ==========================================================================
   # Service Persistence (Impermanence)
   # ==========================================================================
