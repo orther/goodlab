@@ -12,7 +12,37 @@
 #   - stash-password: Admin password (username: admin)
 #
 # ==============================================================================
-{config, ...}: {
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}: let
+  # Stash community plugins import `stashapi` at runtime and try to
+  # `pip install stashapp-tools` when the module is missing.  NixOS's
+  # Python has no pip, so we provide a Python that already includes
+  # the package.
+  stashapp-tools = pkgs.python3Packages.buildPythonPackage {
+    pname = "stashapp-tools";
+    version = "0.2.59";
+    pyproject = true;
+    src = pkgs.fetchurl {
+      url = "https://files.pythonhosted.org/packages/ad/a8/60680ce6651cb66aa982720366b08ce23237b084078d787f7edfaf023a1c/stashapp-tools-0.2.59.tar.gz";
+      hash = "sha256-Y52YueWHp8C2FsnJ01YMBkz4O2z4d7RBeCswWGr8SjY=";
+    };
+    build-system = [pkgs.python3Packages.setuptools];
+    dependencies = [pkgs.python3Packages.requests];
+    doCheck = false;
+  };
+
+  pythonForStashPlugins = pkgs.python3.withPackages (ps: [
+    stashapp-tools
+    ps.requests
+    ps.watchdog
+    ps.schedule
+    ps.pyyaml
+  ]);
+in {
   # ==========================================================================
   # SOPS Secrets
   # ==========================================================================
@@ -64,6 +94,10 @@
   systemd.services.stash = {
     after = ["mnt-docker\\x2ddata.mount"];
     wants = ["mnt-docker\\x2ddata.mount"];
+    # Ensure our Python (with stashapi) shadows the module's bare python3.
+    # systemd ExecSearchPath puts earlier entries first; mkBefore ensures
+    # our path entry comes before the module's default python3.
+    path = lib.mkBefore [pythonForStashPlugins];
   };
 
   # ==========================================================================
