@@ -1,81 +1,61 @@
 # ==============================================================================
-# Cloudflare Tunnel for Noir Homelab Server
+# Cloudflare Tunnel for Noir - Media Management & Automation Server
 # ==============================================================================
 #
-# Provides secure subdomain-based access to services via Cloudflare Tunnel.
-# This is a zero-trust solution - no ports exposed to the internet.
+# Locally-managed tunnel with ingress routes defined in Nix config.
+# Routes are deployed with `just deploy` — no Cloudflare dashboard needed.
 #
-# This uses a REMOTELY-MANAGED tunnel - ingress rules are configured in the
-# Cloudflare Zero Trust dashboard, not here. This config just connects.
+# Tunnel ID: 26f62c4f-fdca-4f21-9a92-7f81187df681
+# Domain: ryatt.app
 #
-# Subdomains to configure in Cloudflare Dashboard:
-#   - hass.ryatt.app → http://localhost:8123
-#
-# Setup requirements:
-#   1. Create tunnel in Cloudflare Zero Trust Dashboard
-#   2. Add tunnel token to secrets/secrets.yaml as "cloudflare-tunnel-noir-token"
-#   3. Configure public hostnames (ingress) in Cloudflare Dashboard
-#
+# To add/remove routes: edit the ingress rules below and redeploy.
 # ==============================================================================
-{
-  config,
-  pkgs,
-  ...
-}: {
+{config, ...}: {
   # ==========================================================================
-  # SOPS Secret for Tunnel Token
+  # SOPS Secret for Tunnel Credentials
   # ==========================================================================
-  # The tunnel token is the long string from "cloudflared service install <token>"
-  # Add to secrets/secrets.yaml: cloudflare-tunnel-noir-token: "<token>"
 
-  sops.secrets."cloudflare-tunnel-noir-token" = {
-    # Mode 0444 allows the DynamicUser to read the token
-    # Token is still encrypted at rest, only decrypted to tmpfs at runtime
+  sops.secrets."cloudflare/tunnel-noir-credentials" = {
     mode = "0444";
   };
 
   # ==========================================================================
-  # Cloudflare Tunnel Service
+  # Cloudflare Tunnel
   # ==========================================================================
-  # For remotely-managed tunnels, we just run cloudflared with the token.
-  # All ingress configuration is done in Cloudflare's dashboard.
 
-  systemd.services."cloudflared-tunnel-noir" = {
-    description = "Cloudflare Tunnel for Noir Homelab Server";
-    after = ["network-online.target"];
-    wants = ["network-online.target"];
-    wantedBy = ["multi-user.target"];
+  services.cloudflared = {
+    enable = true;
+    tunnels."26f62c4f-fdca-4f21-9a92-7f81187df681" = {
+      credentialsFile = config.sops.secrets."cloudflare/tunnel-noir-credentials".path;
+      default = "http_status:404";
 
-    serviceConfig = {
-      Type = "simple";
-      Restart = "always";
-      RestartSec = "5s";
+      ingress = {
+        # Home automation
+        "hass.ryatt.app" = "http://localhost:8123";
 
-      # Run as dedicated user for security
-      DynamicUser = true;
-      User = "cloudflared";
+        # Media management (*arr stack)
+        "sonarr.ryatt.app" = "http://localhost:8989";
+        "radarr.ryatt.app" = "http://localhost:7878";
+        "prowlarr.ryatt.app" = "http://localhost:9696";
+        "nzbget.ryatt.app" = "http://localhost:6789";
 
-      # Read token from SOPS secret and run tunnel
-      ExecStart = pkgs.writeShellScript "cloudflared-tunnel-noir" ''
-        exec ${pkgs.cloudflared}/bin/cloudflared tunnel run --token "$(cat ${config.sops.secrets."cloudflare-tunnel-noir-token".path})"
-      '';
+        # Media requests & user management
+        "seerr.ryatt.app" = "http://localhost:5055";
+        "wizarr.ryatt.app" = "http://localhost:5690";
 
-      # Security hardening
-      NoNewPrivileges = true;
-      ProtectSystem = "strict";
-      ProtectHome = true;
-      PrivateTmp = true;
-      PrivateDevices = true;
-      ProtectKernelTunables = true;
-      ProtectKernelModules = true;
-      ProtectControlGroups = true;
+        # Adult content management
+        "whisparr.ryatt.app" = "http://localhost:6969";
+
+        # Monitoring
+        "tautulli.ryatt.app" = "http://localhost:8181";
+        "jellystat.ryatt.app" = "http://localhost:3000";
+      };
     };
   };
 
   # ==========================================================================
   # Persistence (for impermanence systems)
   # ==========================================================================
-  # Cloudflared may store some state, but for token-based tunnels it's minimal
 
   environment.persistence."/nix/persist" = {
     directories = [
