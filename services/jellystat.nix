@@ -60,6 +60,7 @@
       ];
       environment = {
         POSTGRES_USER = "jellystat";
+        POSTGRES_DB = "jellystat";
         POSTGRES_IP = "127.0.0.1";
         POSTGRES_PORT = "5432";
       };
