@@ -46,6 +46,9 @@
     # NZBGet - Usenet downloader
     ./../../services/nzbget.nix
 
+    # Whisparr - Adult content management (Radarr fork, OCI container)
+    ./../../services/whisparr.nix
+
     # TEMPORARY: Plex for migration period (remove after family migrates to Jellyfin)
     ./../../services/plex.nix
   ];
