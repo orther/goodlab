@@ -14,6 +14,7 @@
 # ==============================================================================
 {
   config,
+  lib,
   pkgs,
   ...
 }: let
@@ -87,9 +88,10 @@ in {
   systemd.services.stash = {
     after = ["mnt-docker\\x2ddata.mount"];
     wants = ["mnt-docker\\x2ddata.mount"];
-    # Prepend our Python (with stashapi) so plugins find the module
-    # without needing pip.
-    path = [pythonWithStashApi];
+    # Ensure our Python (with stashapi) shadows the module's bare python3.
+    # systemd ExecSearchPath puts earlier entries first; mkBefore ensures
+    # our path entry comes before the module's default python3.
+    path = lib.mkBefore [pythonWithStashApi];
   };
 
   # ==========================================================================
