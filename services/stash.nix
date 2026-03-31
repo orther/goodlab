@@ -35,7 +35,13 @@
     doCheck = false;
   };
 
-  pythonWithStashApi = pkgs.python3.withPackages (_: [stashapp-tools]);
+  pythonForStashPlugins = pkgs.python3.withPackages (ps: [
+    stashapp-tools
+    ps.requests
+    ps.watchdog
+    ps.schedule
+    ps.pyyaml
+  ]);
 in {
   # ==========================================================================
   # SOPS Secrets
@@ -91,7 +97,7 @@ in {
     # Ensure our Python (with stashapi) shadows the module's bare python3.
     # systemd ExecSearchPath puts earlier entries first; mkBefore ensures
     # our path entry comes before the module's default python3.
-    path = lib.mkBefore [pythonWithStashApi];
+    path = lib.mkBefore [pythonForStashPlugins];
   };
 
   # ==========================================================================
