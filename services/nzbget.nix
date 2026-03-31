@@ -6,6 +6,11 @@
 # - Category-based download organization (Movies, Series, Music, Software)
 # - Web UI on port 6789
 #
+# Download path strategy:
+#   All I/O-heavy operations (downloading, par2 repair, unpacking) happen on
+#   local NVMe storage (/var/lib/nzbget/) for speed. Radarr/Sonarr then move
+#   completed files to the NAS (/mnt/media/movies, /mnt/media/tv).
+#
 # SOPS secrets are injected at service start for:
 # - Control credentials (web UI login)
 # - News server configuration (hosts, usernames, passwords)
@@ -13,13 +18,16 @@
 # Post-installation setup:
 #   1. Access NZBGet at http://pie:6789
 #   2. Verify news server connections in Settings → News-Servers
-#   3. Configure integration with Sonarr/Radarr download clients
+#   3. In Radarr: Settings → Download Clients → NZBGet (127.0.0.1:6789, category: Movies)
+#   4. In Sonarr: Settings → Download Clients → NZBGet (127.0.0.1:6789, category: Series)
 {
   config,
   pkgs,
   lib,
   ...
-}: {
+}: let
+  mainDir = "/var/lib/nzbget";
+in {
   # ==========================================================================
   # SOPS Secrets
   # ==========================================================================
@@ -46,15 +54,17 @@
     user = "nzbget";
     group = "nzbget";
     settings = {
-      # Paths on NAS
-      MainDir = "/mnt/docker-data/usenet";
-      DestDir = "/mnt/docker-data/usenet/completed";
-      InterDir = "/mnt/docker-data/usenet/intermediate";
-      NzbDir = "/mnt/docker-data/usenet/nzb";
-      QueueDir = "/mnt/docker-data/usenet/queue";
-      TempDir = "/mnt/docker-data/usenet/tmp";
+      # All working directories on local NVMe for fast I/O.
+      # /var/lib/nzbget is already persisted via impermanence.
+      # Radarr/Sonarr move completed files to NAS (/mnt/media/).
+      MainDir = mainDir;
+      DestDir = "${mainDir}/completed";
+      InterDir = "${mainDir}/intermediate";
+      NzbDir = "${mainDir}/nzb";
+      QueueDir = "${mainDir}/queue";
+      TempDir = "${mainDir}/tmp";
 
-      # Categories matching existing setup
+      # Categories matching existing Debian DockSTARTer setup
       "Category1.Name" = "Movies";
       "Category1.Unpack" = "yes";
       "Category2.Name" = "Series";
@@ -64,6 +74,8 @@
       "Category3.Unpack" = "yes";
       "Category4.Name" = "Software";
       "Category4.Unpack" = "yes";
+      "Category5.Name" = "Pr0n";
+      "Category5.Unpack" = "yes";
 
       AppendCategoryDir = "no";
 
@@ -106,14 +118,13 @@
   # ==========================================================================
   # Systemd Service Adjustments
   # ==========================================================================
-  # Ensure NZBGet waits for network and NAS mount before starting.
+  # NZBGet downloads to local NVMe, so it no longer requires the NAS mount.
+  # It only needs network for Usenet server connections.
   # Inject SOPS-encrypted credentials into config at service start.
-  # Note: hyphen in path becomes \x2d in systemd unit names
 
   systemd.services.nzbget = {
-    after = ["network-online.target" "mnt-docker\\x2ddata.mount"];
+    after = ["network-online.target"];
     wants = ["network-online.target"];
-    requires = ["mnt-docker\\x2ddata.mount"];
 
     preStart = lib.mkAfter ''
       CONFIG="/var/lib/nzbget/nzbget.conf"
@@ -144,8 +155,9 @@
   # ==========================================================================
   # Persistence (for impermanence systems)
   # ==========================================================================
-  # NZBGet stores its configuration and state in /var/lib/nzbget.
-  # This must be persisted across reboots to keep download queue and history.
+  # NZBGet stores config, state, and active downloads in /var/lib/nzbget.
+  # This must be persisted across reboots to keep download queue, history,
+  # and in-progress downloads on local NVMe storage.
 
   environment.persistence."/nix/persist" = {
     directories = [
