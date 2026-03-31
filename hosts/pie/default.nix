@@ -1,17 +1,14 @@
-# NixOS configuration for Pie Media Server on 2018 Mac Mini
+# NixOS configuration for Pie - Media Playback & Transcoding Server (2018 Mac Mini)
 #
-# This configuration provides a media server with:
-# - Jellyfin as the primary media server (free, open source, no ads)
-# - Intel Quick Sync Video hardware transcoding
+# Pie is a dedicated media playback box with hardware transcoding:
+# - Jellyfin (via nixflix) with Intel Quick Sync Video (VAAPI)
+# - Plex for family members
 # - Apple T2 chip support via nixos-hardware
-# - NFS media mount from NAS
-# - Nixflix for declarative media server configuration
+# - NFS media mount from Synology NAS
 #
-# NOTE: Plex is included TEMPORARILY (2-4 weeks) for migration purposes.
-# Family members currently use Plex clients. Once migrated to Jellyfin,
-# remove the plex.nix import and users.users.plex.extraGroups line.
+# All media management services (*arr stack, NZBGet, request/invite tools)
+# run on noir. Pie only serves and transcodes media.
 {
-  config,
   inputs,
   outputs,
   lib,
@@ -40,16 +37,7 @@
     ./../../services/nas.nix # Mounts /mnt/docker-data from NAS
     ./../../services/cloudflare-tunnel-pie.nix # Subdomain routing via Cloudflare Tunnel
 
-    # Wizarr - User invitation management for media servers
-    ./../../services/wizarr.nix
-
-    # NZBGet - Usenet downloader
-    ./../../services/nzbget.nix
-
-    # Whisparr - Adult content management (Radarr fork, OCI container)
-    ./../../services/whisparr.nix
-
-    # TEMPORARY: Plex for migration period (remove after family migrates to Jellyfin)
+    # Plex - Media server for family
     ./../../services/plex.nix
   ];
 
@@ -94,10 +82,6 @@
   # ==========================================================================
   # Using systemd-networkd with explicit interface matching. The primary NIC
   # (enp1s0, Aquantia AQC107) is stable on this Mac Mini 2018 hardware.
-  #
-  # IMPORTANT: Do NOT use matchConfig.Type = "ether" — it matches podman veth
-  # interfaces and T2/USB adapters, causing systemd-networkd to fight with
-  # netavark over container networking and breaking podman bridge connectivity.
 
   networking = {
     hostName = "pie";
@@ -198,30 +182,10 @@
   ];
 
   # ==========================================================================
-  # SOPS Secrets for Media Services
-  # ==========================================================================
-  # API keys extracted from running *arr services and stored encrypted.
-  # These are read at runtime by nixflix to configure service integration.
-
-  sops.secrets."nixflix/radarr-api-key" = {
-    owner = "radarr";
-    mode = "0400";
-  };
-  sops.secrets."nixflix/sonarr-api-key" = {
-    owner = "sonarr";
-    mode = "0400";
-  };
-  sops.secrets."nixflix/prowlarr-api-key" = {
-    owner = "prowlarr";
-    mode = "0400";
-  };
-
-  # ==========================================================================
   # Nixflix - Declarative Media Server Configuration
   # ==========================================================================
-  # Nixflix provides declarative configuration for media services.
-  # Jellyfin serves media, *arr services handle automated acquisition,
-  # and Jellyseerr provides a request interface for users.
+  # Nixflix manages Jellyfin on pie. All *arr services and request management
+  # have been moved to noir.
 
   nixflix = {
     enable = true;
@@ -231,7 +195,7 @@
     stateDir = "/var/lib/nixflix";
 
     # Users that need access to media files
-    mediaUsers = ["orther" "plex" "nzbget"];
+    mediaUsers = ["orther" "plex"];
 
     # Wait for NAS mount before starting services
     serviceDependencies = ["mnt-docker\\x2ddata.mount"];
@@ -252,42 +216,6 @@
       users.admin = {
         policy.isAdministrator = true;
       };
-    };
-
-    # ========================================================================
-    # Sonarr - TV Series Management
-    # ========================================================================
-    sonarr = {
-      enable = true;
-      openFirewall = true;
-      config.apiKeyPath = config.sops.secrets."nixflix/sonarr-api-key".path;
-    };
-
-    # ========================================================================
-    # Radarr - Movie Management
-    # ========================================================================
-    radarr = {
-      enable = true;
-      openFirewall = true;
-      config.apiKeyPath = config.sops.secrets."nixflix/radarr-api-key".path;
-    };
-
-    # ========================================================================
-    # Prowlarr - Indexer Manager
-    # ========================================================================
-    prowlarr = {
-      enable = true;
-      openFirewall = true;
-      config.apiKeyPath = config.sops.secrets."nixflix/prowlarr-api-key".path;
-    };
-
-    # ========================================================================
-    # Jellyseerr - Media Request Manager
-    # ========================================================================
-    jellyseerr = {
-      enable = true;
-      openFirewall = true;
-      vpn.enable = false;
     };
   };
 
@@ -343,22 +271,6 @@
   systemd.services.jellyfin-users-config.serviceConfig.ExecStart = lib.mkForce (pkgs.writeShellScript "jellyfin-users-noop" ''
     echo "Jellyfin users configured manually — skipping"
   '');
-  systemd.services.jellyseerr-setup.serviceConfig.ExecStart = lib.mkForce (pkgs.writeShellScript "jellyseerr-setup-noop" ''
-    echo "Jellyseerr setup configured manually via web UI — skipping"
-  '');
-  systemd.services.jellyseerr-radarr.serviceConfig.ExecStart = lib.mkForce (pkgs.writeShellScript "jellyseerr-radarr-noop" ''
-    echo "Jellyseerr Radarr integration configured manually via web UI — skipping"
-  '');
-  systemd.services.jellyseerr-sonarr.serviceConfig.ExecStart = lib.mkForce (pkgs.writeShellScript "jellyseerr-sonarr-noop" ''
-    echo "Jellyseerr Sonarr integration configured manually via web UI — skipping"
-  '');
-  systemd.services.jellyseerr-user-settings.serviceConfig.ExecStart = lib.mkForce (pkgs.writeShellScript "jellyseerr-user-settings-noop" ''
-    echo "Jellyseerr user settings configured manually via web UI — skipping"
-  '');
-  systemd.services.jellyseerr-libraries.serviceConfig.ExecStart = lib.mkForce (pkgs.writeShellScript "jellyseerr-libraries-noop" ''
-    echo "Jellyseerr libraries configured manually via web UI — skipping"
-  '');
-
   # ==========================================================================
   # User Configuration
   # ==========================================================================
@@ -366,12 +278,7 @@
   # GPU access for hardware transcoding (VAAPI)
   # Both media servers need video/render groups for Intel Quick Sync
   users.users.jellyfin.extraGroups = ["video" "render"];
-  # Remove plex line when removing plex.nix import
   users.users.plex.extraGroups = ["video" "render"];
-
-  # Radarr/Sonarr need nzbget group to read completed downloads from /var/lib/nzbget/
-  users.users.radarr.extraGroups = ["nzbget"];
-  users.users.sonarr.extraGroups = ["nzbget"];
 
   # ==========================================================================
   # Service Persistence (Impermanence)
