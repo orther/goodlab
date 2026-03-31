@@ -3,10 +3,8 @@
 # Monitors Plex usage, viewing history, and statistics.
 # Web UI on port 8181.
 #
-# Post-installation setup:
-#   1. Access Tautulli at http://noir:8181
-#   2. Connect to Plex server at pie's IP (e.g., 10.0.0.X:32400)
-#   3. Sign in with your Plex account
+# Note: The NixOS tautulli module uses the legacy "plexpy" path and user
+# (from when Tautulli was called PlexPy). Data lives in /var/lib/plexpy.
 {...}: {
   # ==========================================================================
   # Tautulli Service
@@ -20,10 +18,12 @@
   # ==========================================================================
   # Persistence (for impermanence systems)
   # ==========================================================================
+  # NixOS module stores data in /var/lib/plexpy (legacy PlexPy path),
+  # running as user plexpy.
 
   environment.persistence."/nix/persist" = {
     directories = [
-      "/var/lib/tautulli"
+      "/var/lib/plexpy"
     ];
   };
 }
