@@ -15,23 +15,33 @@
     inputs.self.nixosModules."remote-unlock"
     inputs.self.nixosModules."auto-update"
 
+    # Infrastructure
     ./../../services/nas.nix
     ./../../services/tailscale.nix
     ./../../services/_acme.nix
     ./../../services/_nginx.nix
-    ./../../services/home-assistant.nix
-    ./../../services/stash.nix
     ./../../services/cloudflare-tunnel-noir.nix
-    #./../../services/netdata.nix
-    #./../../services/nextcloud.nix
-    #./../../services/nixarr.nix
 
-    # Research Relay services disabled - spamming errors
-    # ./../../services/research-relay/_common-hardening.nix
-    # ./../../services/research-relay/odoo.nix
-    # ./../../services/research-relay/pdf-intake.nix
-    # ./../../services/research-relay/age-gate.nix
-    # ./../../services/research-relay/secrets.nix
+    # Home automation
+    ./../../services/home-assistant.nix
+
+    # Media management (*arr stack)
+    ./../../services/sonarr.nix
+    ./../../services/radarr.nix
+    ./../../services/prowlarr.nix
+    ./../../services/nzbget.nix
+
+    # Media request & user management
+    ./../../services/jellyseerr.nix
+    ./../../services/wizarr.nix
+
+    # Adult content management
+    ./../../services/stash.nix
+    ./../../services/whisparr.nix
+
+    # Monitoring
+    ./../../services/tautulli.nix
+    ./../../services/jellystat.nix
   ];
 
   home-manager = {
@@ -74,27 +84,22 @@
     useDHCP = false;
     interfaces.enp2s0.useDHCP = true;
     useNetworkd = true;
-    networkmanager.enable = lib.mkForce false; # Override base.nix NetworkManager setting
-    firewall.allowedTCPPorts = [];
-
-    # Local DNS resolution for Odoo subdomain
-    # Tailscale MagicDNS will handle this for Tailscale clients
-    # For local network clients without Tailscale, add noir's local IP to their /etc/hosts:
-    #   10.0.10.X odoo.orther.dev
-    hosts = {
-      "127.0.0.1" = ["odoo.orther.dev"];
-    };
+    networkmanager.enable = lib.mkForce false;
   };
+
+  # ==========================================================================
+  # Media Directory Symlink
+  # ==========================================================================
+  # Create symlink for cleaner media paths (matches pie's layout):
+  #   /mnt/media -> /mnt/docker-data/media
+
+  systemd.tmpfiles.rules = [
+    "L+ /mnt/media - - - - /mnt/docker-data/media"
+  ];
 
   # Disable problematic wait services during NetworkManager -> systemd-networkd transition
   systemd.services = {
     "NetworkManager-wait-online".enable = lib.mkForce false;
     "systemd-networkd-wait-online".enable = lib.mkForce false;
   };
-
-  # Research Relay services disabled - spamming errors and not in use
-  # services.researchRelay = {
-  #   odoo.enable = false;
-  #   pdfIntake.enable = false;
-  # };
 }
