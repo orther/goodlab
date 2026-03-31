@@ -60,7 +60,7 @@
       ];
       environment = {
         POSTGRES_USER = "jellystat";
-        POSTGRES_IP = "host.containers.internal";
+        POSTGRES_IP = "127.0.0.1";
         POSTGRES_PORT = "5432";
       };
       # Inject secrets as env vars from SOPS-generated files
@@ -69,8 +69,8 @@
         config.sops.secrets."jellystat/jwt-secret".path
       ];
       extraOptions = [
-        # Allow container to reach host services (PostgreSQL)
-        "--network=slirp4netns:allow_host_loopback=true"
+        # Host networking so container can reach PostgreSQL on localhost
+        "--network=host"
       ];
       log-driver = "journald";
     };

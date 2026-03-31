@@ -23,12 +23,7 @@
 
   environment.persistence."/nix/persist" = {
     directories = [
-      {
-        directory = "/var/lib/tautulli";
-        user = "tautulli";
-        group = "tautulli";
-        mode = "0750";
-      }
+      "/var/lib/tautulli"
     ];
   };
 }

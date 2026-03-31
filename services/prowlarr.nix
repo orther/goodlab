@@ -7,7 +7,7 @@
 # to all connected *arr applications.
 #
 # Post-migration setup:
-#   1. Copy database from pie: /nix/persist/var/lib/nixflix/prowlarr/ → noir:/nix/persist/var/lib/prowlarr/
+#   1. Copy database from pie: /nix/persist/var/lib/nixflix/prowlarr/ → noir:/nix/persist/var/lib/private/prowlarr/
 #   2. Verify app connections point to localhost for Sonarr/Radarr
 {...}: {
   # ==========================================================================
@@ -22,15 +22,14 @@
   # ==========================================================================
   # Persistence (for impermanence systems)
   # ==========================================================================
+  # Prowlarr uses DynamicUser=true, so systemd stores state in
+  # /var/lib/private/prowlarr (not /var/lib/prowlarr directly).
+  # We must persist the private path to avoid conflicting with
+  # systemd's StateDirectory management.
 
   environment.persistence."/nix/persist" = {
     directories = [
-      {
-        directory = "/var/lib/prowlarr";
-        user = "prowlarr";
-        group = "prowlarr";
-        mode = "0750";
-      }
+      "/var/lib/private/prowlarr"
     ];
   };
 }
