@@ -12,7 +12,31 @@
 #   - stash-password: Admin password (username: admin)
 #
 # ==============================================================================
-{config, ...}: {
+{
+  config,
+  pkgs,
+  ...
+}: let
+  # Stash community plugins import `stashapi` at runtime and try to
+  # `pip install stashapp-tools` when the module is missing.  NixOS's
+  # Python has no pip, so we provide a Python that already includes
+  # the package.
+  stashapp-tools = pkgs.python3Packages.buildPythonPackage {
+    pname = "stashapp-tools";
+    version = "0.2.59";
+    pyproject = true;
+    src = pkgs.fetchPypi {
+      pname = "stashapp_tools";
+      version = "0.2.59";
+      hash = "sha256-Y52YueWHp8C2FsnJ01YMBkz4O2z4d7RBeCswWGr8SjY=";
+    };
+    build-system = [pkgs.python3Packages.setuptools];
+    dependencies = [pkgs.python3Packages.requests];
+    doCheck = false;
+  };
+
+  pythonWithStashApi = pkgs.python3.withPackages (_: [stashapp-tools]);
+in {
   # ==========================================================================
   # SOPS Secrets
   # ==========================================================================
@@ -64,6 +88,9 @@
   systemd.services.stash = {
     after = ["mnt-docker\\x2ddata.mount"];
     wants = ["mnt-docker\\x2ddata.mount"];
+    # Prepend our Python (with stashapi) so plugins find the module
+    # without needing pip.
+    path = [pythonWithStashApi];
   };
 
   # ==========================================================================
