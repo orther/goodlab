@@ -38,7 +38,7 @@ just deploy <hostname> <ip-address>
 # Examples:
 just deploy stud                    # Deploy to local macOS (Apple Silicon)
 just deploy mair                    # Deploy to local macOS (Intel)
-just deploy noir 10.0.0.10          # Deploy to remote NixOS server (condo LAN)
+just deploy noir 10.4.0.26          # Deploy to remote NixOS server (condo LAN)
 just deploy zinc 100.100.101.31     # Deploy to zinc (always use Tailscale IP)
 ```
 
@@ -134,7 +134,8 @@ This is a **Nix flakes-based homelab configuration** using modern flake orchestr
 
 #### NixOS (Linux)
 
-- `noir`: Homelab server (x86_64)
+- `noir`: Media management & automation server (x86_64, N6005, 64GB RAM) — deploy: `just deploy noir 10.4.0.26`
+- `pie`: Media playback & transcoding server (x86_64, 2018 Mac Mini, i7-8700B, 32GB RAM) — deploy: `just deploy pie 10.4.0.212`
 - `zinc`: Condo router + HA server (x86_64) — deploy via Tailscale: `just deploy zinc 100.100.101.31`
 - `vm`: Test VM (aarch64)
 
@@ -176,16 +177,29 @@ The configuration follows a **composition-based module system**:
 
 ### Service Architecture
 
-#### Self-hosted Services (services/)
+#### Pie — Media Playback & Transcoding
 
-```
-services/
-├── nas.nix          # File sharing and storage
-├── tailscale.nix    # VPN mesh networking
-├── nextcloud.nix    # Cloud storage and collaboration
-├── jellyfin.css     # Media server styling
-└── nixarr.nix       # Media acquisition stack
-```
+- **Jellyfin** (via nixflix): Primary media server with Intel Quick Sync hardware transcoding
+- **Plex**: Media server for family
+- **Cloudflare Tunnel**: Locally-managed, routes `jellyfin.ryatt.app`, `plex.ryatt.app`
+
+#### Noir — Media Management & Automation
+
+- **Sonarr/Radarr/Prowlarr**: \*arr stack for TV, movies, and indexer management
+- **NZBGet**: Usenet downloader (downloads to local NVMe, \*arr apps move to NAS)
+- **Whisparr**: Adult content management (Podman container)
+- **Jellyseerr**: Media request portal (Podman container)
+- **Wizarr**: User invitation management (Podman container)
+- **Stash**: Adult media organizer (native NixOS service)
+- **Tautulli**: Plex monitoring
+- **Jellystat**: Jellyfin monitoring (Podman container + PostgreSQL)
+- **Home Assistant**: Smart home automation
+- **Cloudflare Tunnel**: Locally-managed, routes all `*.ryatt.app` management subdomains
+
+#### Infrastructure Services (both machines)
+
+- **NAS mount**: Synology NFS at `10.4.0.50:/volume1/docker-data` → `/mnt/docker-data`
+- **Tailscale**: VPN mesh networking
 
 #### Development Services
 
