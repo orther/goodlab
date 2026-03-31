@@ -2,54 +2,66 @@
 # Cloudflare Tunnel for Noir - Media Management & Automation Server
 # ==============================================================================
 #
-# Locally-managed tunnel with ingress routes defined in Nix config.
-# Routes are deployed with `just deploy` — no Cloudflare dashboard needed.
+# Remotely-managed tunnel — routes configured via Cloudflare Zero Trust dashboard
+# and synced by the goodlab-tunnel-management API token.
 #
-# Tunnel ID: 26f62c4f-fdca-4f21-9a92-7f81187df681
-# Domain: ryatt.app
+# Published routes (Cloudflare Dashboard):
+#   - hass.ryatt.app      → http://localhost:8123
+#   - stash.ryatt.app     → http://localhost:9999
+#   - sonarr.ryatt.app    → http://localhost:8989
+#   - radarr.ryatt.app    → http://localhost:7878
+#   - prowlarr.ryatt.app  → http://localhost:9696
+#   - nzbget.ryatt.app    → http://localhost:6789
+#   - seerr.ryatt.app     → http://localhost:5055
+#   - wizarr.ryatt.app    → http://localhost:5690
+#   - whisparr.ryatt.app  → http://localhost:6969
+#   - tautulli.ryatt.app  → http://localhost:8181
+#   - jellystat.ryatt.app → http://localhost:3000
 #
-# To add/remove routes: edit the ingress rules below and redeploy.
 # ==============================================================================
-{config, ...}: {
+{
+  config,
+  pkgs,
+  ...
+}: {
   # ==========================================================================
-  # SOPS Secret for Tunnel Credentials
+  # SOPS Secret for Tunnel Token
   # ==========================================================================
 
-  sops.secrets."cloudflare/tunnel-noir-credentials" = {
+  sops.secrets."cloudflare-tunnel-noir-token" = {
     mode = "0444";
   };
 
   # ==========================================================================
-  # Cloudflare Tunnel
+  # Cloudflare Tunnel Service
   # ==========================================================================
 
-  services.cloudflared = {
-    enable = true;
-    tunnels."26f62c4f-fdca-4f21-9a92-7f81187df681" = {
-      credentialsFile = config.sops.secrets."cloudflare/tunnel-noir-credentials".path;
-      default = "http_status:404";
+  systemd.services."cloudflared-tunnel-noir" = {
+    description = "Cloudflare Tunnel for Noir Automation Server";
+    after = ["network-online.target"];
+    wants = ["network-online.target"];
+    wantedBy = ["multi-user.target"];
 
-      ingress = {
-        # Home automation
-        "hass.ryatt.app" = "http://localhost:8123";
+    serviceConfig = {
+      Type = "simple";
+      Restart = "always";
+      RestartSec = "5s";
 
-        # Media management (*arr stack)
-        "sonarr.ryatt.app" = "http://localhost:8989";
-        "radarr.ryatt.app" = "http://localhost:7878";
-        "prowlarr.ryatt.app" = "http://localhost:9696";
-        "nzbget.ryatt.app" = "http://localhost:6789";
+      DynamicUser = true;
+      User = "cloudflared";
 
-        # Media requests & user management
-        "seerr.ryatt.app" = "http://localhost:5055";
-        "wizarr.ryatt.app" = "http://localhost:5690";
+      ExecStart = pkgs.writeShellScript "cloudflared-tunnel-noir" ''
+        exec ${pkgs.cloudflared}/bin/cloudflared tunnel run --token "$(cat ${config.sops.secrets."cloudflare-tunnel-noir-token".path})"
+      '';
 
-        # Adult content management
-        "whisparr.ryatt.app" = "http://localhost:6969";
-
-        # Monitoring
-        "tautulli.ryatt.app" = "http://localhost:8181";
-        "jellystat.ryatt.app" = "http://localhost:3000";
-      };
+      NoNewPrivileges = true;
+      ProtectSystem = "strict";
+      ProtectHome = true;
+      PrivateTmp = true;
+      PrivateDevices = true;
+      ProtectKernelTunables = true;
+      ProtectKernelModules = true;
+      ProtectControlGroups = true;
     };
   };
 

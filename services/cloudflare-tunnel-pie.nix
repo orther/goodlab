@@ -2,37 +2,57 @@
 # Cloudflare Tunnel for Pie - Media Playback Server
 # ==============================================================================
 #
-# Locally-managed tunnel with ingress routes defined in Nix config.
-# Routes are deployed with `just deploy` — no Cloudflare dashboard needed.
+# Remotely-managed tunnel — routes configured via Cloudflare Zero Trust dashboard
+# and synced by the goodlab-tunnel-management API token.
 #
-# Tunnel ID: 850330bb-5ed9-4599-9716-e3ba8ec3fce8
-# Domain: ryatt.app
+# Published routes (Cloudflare Dashboard):
+#   - jellyfin.ryatt.app → http://localhost:8096
+#   - plex.ryatt.app     → http://localhost:32400
 #
-# To add/remove routes: edit the ingress rules below and redeploy.
 # ==============================================================================
-{config, ...}: {
+{
+  config,
+  pkgs,
+  ...
+}: {
   # ==========================================================================
-  # SOPS Secret for Tunnel Credentials
+  # SOPS Secret for Tunnel Token
   # ==========================================================================
 
-  sops.secrets."cloudflare/tunnel-pie-credentials" = {
+  sops.secrets."cloudflare-tunnel-pie-token" = {
     mode = "0444";
   };
 
   # ==========================================================================
-  # Cloudflare Tunnel
+  # Cloudflare Tunnel Service
   # ==========================================================================
 
-  services.cloudflared = {
-    enable = true;
-    tunnels."850330bb-5ed9-4599-9716-e3ba8ec3fce8" = {
-      credentialsFile = config.sops.secrets."cloudflare/tunnel-pie-credentials".path;
-      default = "http_status:404";
+  systemd.services."cloudflared-tunnel-pie" = {
+    description = "Cloudflare Tunnel for Pie Media Server";
+    after = ["network-online.target"];
+    wants = ["network-online.target"];
+    wantedBy = ["multi-user.target"];
 
-      ingress = {
-        "jellyfin.ryatt.app" = "http://localhost:8096";
-        "plex.ryatt.app" = "http://localhost:32400";
-      };
+    serviceConfig = {
+      Type = "simple";
+      Restart = "always";
+      RestartSec = "5s";
+
+      DynamicUser = true;
+      User = "cloudflared";
+
+      ExecStart = pkgs.writeShellScript "cloudflared-tunnel-pie" ''
+        exec ${pkgs.cloudflared}/bin/cloudflared tunnel run --token "$(cat ${config.sops.secrets."cloudflare-tunnel-pie-token".path})"
+      '';
+
+      NoNewPrivileges = true;
+      ProtectSystem = "strict";
+      ProtectHome = true;
+      PrivateTmp = true;
+      PrivateDevices = true;
+      ProtectKernelTunables = true;
+      ProtectKernelModules = true;
+      ProtectControlGroups = true;
     };
   };
 
