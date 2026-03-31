@@ -1,0 +1,12 @@
+{
+  // Example: enable locally to auto-format after edits.
+  // Copy to .claude/hooks.json and adjust if your Claude Code version supports hooks.
+  "hooks": {
+    "postToolUse": [
+      {
+        "matcher": "^(Write|Edit|MultiEdit)$",
+        "command": "nix fmt || true"
+      }
+    ]
+  }
+}
