@@ -147,6 +147,20 @@ in {
   };
 
   # ==========================================================================
+  # Working Directories
+  # ==========================================================================
+  # Ensure NZBGet's working directories exist at boot. Containers like
+  # Whisparr mount /var/lib/nzbget and expect these paths to exist.
+
+  systemd.tmpfiles.rules = [
+    "d ${mainDir}/completed 0750 nzbget nzbget"
+    "d ${mainDir}/intermediate 0750 nzbget nzbget"
+    "d ${mainDir}/nzb 0750 nzbget nzbget"
+    "d ${mainDir}/queue 0750 nzbget nzbget"
+    "d ${mainDir}/tmp 0750 nzbget nzbget"
+  ];
+
+  # ==========================================================================
   # Firewall
   # ==========================================================================
 
