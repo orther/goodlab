@@ -25,9 +25,8 @@
     pname = "stashapp-tools";
     version = "0.2.59";
     pyproject = true;
-    src = pkgs.fetchPypi {
-      pname = "stashapp_tools";
-      version = "0.2.59";
+    src = pkgs.fetchurl {
+      url = "https://files.pythonhosted.org/packages/ad/a8/60680ce6651cb66aa982720366b08ce23237b084078d787f7edfaf023a1c/stashapp-tools-0.2.59.tar.gz";
       hash = "sha256-Y52YueWHp8C2FsnJ01YMBkz4O2z4d7RBeCswWGr8SjY=";
     };
     build-system = [pkgs.python3Packages.setuptools];
